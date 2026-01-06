@@ -1,0 +1,1 @@
+Craft a product title using relevant keywords from the list above and following on the following format: "Existing Product Name | Relevant Keyword #1 | Relevant Keyword #2" (e.g., "Octopus Figurine | Antique Brass Figure | Miniature Display")
