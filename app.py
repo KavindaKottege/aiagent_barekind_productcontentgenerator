@@ -308,12 +308,65 @@ def process_products(llm, product_data, general_info, prompts, char_limits, prog
     return results, total_input_tokens, total_output_tokens, total_cost, image_stats
 
 
+def render_progress_ring(reviewed_count, total_count, approved_count, rejected_count):
+    """Render a progress ring showing review progress with color based on approval ratio."""
+    if total_count == 0:
+        progress = 0
+        color = "#6c757d"  # Gray when empty
+    else:
+        progress = reviewed_count / total_count
+        if reviewed_count == 0:
+            color = "#6c757d"  # Gray
+        else:
+            approval_ratio = approved_count / reviewed_count if reviewed_count > 0 else 0
+            # Green to red gradient based on approval ratio
+            if approval_ratio >= 0.7:
+                color = "#28a745"  # Green
+            elif approval_ratio >= 0.4:
+                color = "#ffc107"  # Yellow
+            else:
+                color = "#dc3545"  # Red
+
+    # SVG progress ring
+    radius = 45
+    circumference = 2 * 3.14159 * radius
+    stroke_dashoffset = circumference * (1 - progress)
+
+    svg = f"""
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#e9ecef" stroke-width="10"/>
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color}" stroke-width="10"
+                    stroke-dasharray="{circumference}" stroke-dashoffset="{stroke_dashoffset}"
+                    transform="rotate(-90 60 60)" stroke-linecap="round"/>
+            <text x="60" y="55" text-anchor="middle" font-size="20" font-weight="bold" fill="{color}">{reviewed_count}</text>
+            <text x="60" y="75" text-anchor="middle" font-size="12" fill="#6c757d">of {total_count}</text>
+        </svg>
+        <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 12px;">
+            <span style="color: #28a745;">✓ {approved_count}</span>
+            <span style="color: #dc3545;">✗ {rejected_count}</span>
+        </div>
+    </div>
+    """
+    return svg
+
+
 def main():
     st.title("📝 Product Content Generator")
     st.markdown("Generate product titles and descriptions using AI")
 
+    # Initialize review session state
+    if 'review_data' not in st.session_state:
+        st.session_state['review_data'] = None
+    if 'review_statuses' not in st.session_state:
+        st.session_state['review_statuses'] = {}  # {index: 'approved'|'rejected'|None}
+    if 'current_review_index' not in st.session_state:
+        st.session_state['current_review_index'] = 0
+    if 'review_in_progress' not in st.session_state:
+        st.session_state['review_in_progress'] = False
+
     # Main content area - Tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📁 Data Upload", "📝 Prompts", "⚙️ Settings", "🚀 Generate"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📁 Data Upload", "📝 Prompts", "⚙️ Settings", "🚀 Generate", "👁️ Review"])
 
     # Tab 1: Data Upload
     with tab1:
@@ -576,14 +629,277 @@ def main():
                 results_df.to_excel(writer, index=False, sheet_name='Results')
             output.seek(0)
 
+            col1, col2 = st.columns(2)
+            with col1:
+                st.download_button(
+                    label="📥 Download Results (Excel)",
+                    data=output,
+                    file_name="product_content_results.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True
+                )
+            with col2:
+                if st.button("👁️ Send to Review", use_container_width=True):
+                    st.session_state['review_data'] = results_df.copy()
+                    st.session_state['review_statuses'] = {}
+                    st.session_state['current_review_index'] = 0
+                    st.session_state['review_in_progress'] = True
+                    st.success("Results sent to Review tab!")
+                    st.rerun()
+
+    # Tab 5: Review
+    with tab5:
+        st.header("Review Generated Content")
+
+        # File upload for review (separate from generation)
+        with st.expander("📁 Upload Results for Review", expanded=st.session_state.get('review_data') is None):
+            review_upload = st.file_uploader(
+                "Upload results Excel file",
+                type=['xlsx', 'xls'],
+                key="review_file_upload",
+                help="Upload a previously generated results file or resume a review in progress"
+            )
+
+            if review_upload:
+                # Check if review is in progress
+                if st.session_state.get('review_in_progress') and st.session_state.get('review_data') is not None:
+                    st.warning("⚠️ You have a review in progress. Uploading a new file will discard your current progress.")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Continue with current review", use_container_width=True):
+                            st.rerun()
+                    with col2:
+                        if st.button("Load new file (discard progress)", type="primary", use_container_width=True):
+                            st.session_state['review_in_progress'] = False
+                            st.session_state['review_statuses'] = {}
+                            st.session_state['current_review_index'] = 0
+                            # Will load the file below
+                else:
+                    st.session_state['review_in_progress'] = False
+
+                if not st.session_state.get('review_in_progress') or st.session_state.get('review_data') is None:
+                    try:
+                        # Try to load as multi-sheet (resumed review)
+                        xlsx = pd.ExcelFile(review_upload, engine='openpyxl')
+                        sheet_names = xlsx.sheet_names
+
+                        if 'Reviewed' in sheet_names and 'Incorrect' in sheet_names and 'Un-Reviewed' in sheet_names:
+                            # Resume review from categorized file
+                            reviewed_df = pd.read_excel(xlsx, sheet_name='Reviewed')
+                            incorrect_df = pd.read_excel(xlsx, sheet_name='Incorrect')
+                            unreviewed_df = pd.read_excel(xlsx, sheet_name='Un-Reviewed')
+
+                            # Combine all into one dataframe
+                            all_data = pd.concat([reviewed_df, incorrect_df, unreviewed_df], ignore_index=True)
+                            st.session_state['review_data'] = all_data
+
+                            # Reconstruct review statuses
+                            statuses = {}
+                            for i in range(len(reviewed_df)):
+                                statuses[i] = 'approved'
+                            for i in range(len(reviewed_df), len(reviewed_df) + len(incorrect_df)):
+                                statuses[i] = 'rejected'
+                            # Un-reviewed items don't have a status
+
+                            st.session_state['review_statuses'] = statuses
+                            st.session_state['current_review_index'] = len(reviewed_df) + len(incorrect_df)
+                            st.session_state['review_in_progress'] = True
+
+                            st.success(f"Resumed review: {len(reviewed_df)} approved, {len(incorrect_df)} rejected, {len(unreviewed_df)} remaining")
+
+                        elif 'Results' in sheet_names or 'Product Content' in sheet_names:
+                            # Fresh results file
+                            sheet_name = 'Results' if 'Results' in sheet_names else 'Product Content'
+                            review_df = pd.read_excel(xlsx, sheet_name=sheet_name)
+                            st.session_state['review_data'] = review_df
+                            st.session_state['review_statuses'] = {}
+                            st.session_state['current_review_index'] = 0
+                            st.session_state['review_in_progress'] = True
+                            st.success(f"Loaded {len(review_df)} products for review")
+                        else:
+                            # Try first sheet
+                            review_df = pd.read_excel(xlsx, sheet_name=0)
+                            st.session_state['review_data'] = review_df
+                            st.session_state['review_statuses'] = {}
+                            st.session_state['current_review_index'] = 0
+                            st.session_state['review_in_progress'] = True
+                            st.success(f"Loaded {len(review_df)} products for review")
+
+                    except Exception as e:
+                        st.error(f"Error loading file: {str(e)}")
+
+        # Main review interface
+        if st.session_state.get('review_data') is not None and len(st.session_state['review_data']) > 0:
+            review_df = st.session_state['review_data']
+            total_products = len(review_df)
+            current_idx = st.session_state['current_review_index']
+            statuses = st.session_state['review_statuses']
+
+            # Calculate stats
+            approved_count = sum(1 for s in statuses.values() if s == 'approved')
+            rejected_count = sum(1 for s in statuses.values() if s == 'rejected')
+            reviewed_count = approved_count + rejected_count
+
+            # Header with progress
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.subheader(f"Product {current_idx + 1} of {total_products}")
+            with col2:
+                st.markdown(render_progress_ring(reviewed_count, total_products, approved_count, rejected_count), unsafe_allow_html=True)
+
+            st.divider()
+
+            # Get current product
+            if current_idx < total_products:
+                product = review_df.iloc[current_idx]
+
+                # Product name
+                st.markdown(f"### {product.get('Product Name', 'Unknown Product')}")
+
+                # Images
+                review_images = product.get('Review Images', '')
+                if pd.notna(review_images) and review_images:
+                    image_urls = [url.strip() for url in str(review_images).split('\n') if url.strip()]
+                    if image_urls:
+                        st.markdown("**Product Images:**")
+                        img_cols = st.columns(min(3, len(image_urls)))
+                        for i, url in enumerate(image_urls[:3]):
+                            with img_cols[i]:
+                                st.image(url, use_container_width=True)
+
+                # Title
+                st.markdown("**Generated Title:**")
+                title_text = product.get('Product Title', '')
+                st.info(title_text)
+                st.caption(f"Character count: {len(str(title_text))}")
+
+                # Description (scrollable)
+                st.markdown("**Generated Description:**")
+                desc_text = product.get('Product Description', '')
+                st.text_area(
+                    "Description",
+                    value=desc_text,
+                    height=300,
+                    disabled=True,
+                    label_visibility="collapsed"
+                )
+                st.caption(f"Character count: {len(str(desc_text))}")
+
+                # Current status indicator
+                current_status = statuses.get(current_idx)
+                if current_status == 'approved':
+                    st.success("✓ Marked as Approved")
+                elif current_status == 'rejected':
+                    st.error("✗ Marked as Incorrect")
+
+                st.divider()
+
+                # Action buttons
+                st.markdown("**Review Actions:**")
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    if st.button("✓ Approve", type="primary", use_container_width=True, key="approve_btn"):
+                        st.session_state['review_statuses'][current_idx] = 'approved'
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                with col2:
+                    if st.button("✗ Reject", use_container_width=True, key="reject_btn"):
+                        st.session_state['review_statuses'][current_idx] = 'rejected'
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                with col3:
+                    if st.button("⏭️ Skip", use_container_width=True, key="skip_btn"):
+                        # Remove any existing status (keep as un-reviewed)
+                        if current_idx in st.session_state['review_statuses']:
+                            del st.session_state['review_statuses'][current_idx]
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                # Navigation
+                st.markdown("**Navigation:**")
+                nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
+
+                with nav_col1:
+                    if st.button("← Previous", use_container_width=True, disabled=current_idx == 0):
+                        st.session_state['current_review_index'] = current_idx - 1
+                        st.rerun()
+
+                with nav_col2:
+                    jump_to = st.number_input(
+                        "Go to product",
+                        min_value=1,
+                        max_value=total_products,
+                        value=current_idx + 1,
+                        key="jump_to_input"
+                    )
+                    if jump_to != current_idx + 1:
+                        st.session_state['current_review_index'] = jump_to - 1
+                        st.rerun()
+
+                with nav_col3:
+                    if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1):
+                        st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+            # Download section
+            st.divider()
+            st.markdown("### Download Results")
+
+            # Prepare categorized data
+            approved_indices = [i for i, s in statuses.items() if s == 'approved']
+            rejected_indices = [i for i, s in statuses.items() if s == 'rejected']
+            unreviewed_indices = [i for i in range(total_products) if i not in statuses]
+
+            reviewed_df_out = review_df.iloc[approved_indices] if approved_indices else pd.DataFrame()
+            incorrect_df_out = review_df.iloc[rejected_indices] if rejected_indices else pd.DataFrame()
+            unreviewed_df_out = review_df.iloc[unreviewed_indices] if unreviewed_indices else pd.DataFrame()
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Approved", len(approved_indices))
+            col2.metric("Incorrect", len(rejected_indices))
+            col3.metric("Un-Reviewed", len(unreviewed_indices))
+
+            # Create downloadable Excel with three sheets
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                if not reviewed_df_out.empty:
+                    reviewed_df_out.to_excel(writer, index=False, sheet_name='Reviewed')
+                else:
+                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Reviewed')
+
+                if not incorrect_df_out.empty:
+                    incorrect_df_out.to_excel(writer, index=False, sheet_name='Incorrect')
+                else:
+                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Incorrect')
+
+                if not unreviewed_df_out.empty:
+                    unreviewed_df_out.to_excel(writer, index=False, sheet_name='Un-Reviewed')
+                else:
+                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Un-Reviewed')
+
+            output.seek(0)
+
             st.download_button(
-                label="📥 Download Results (Excel)",
+                label="📥 Download Categorized Results",
                 data=output,
-                file_name="product_content_results.xlsx",
+                file_name="product_content_reviewed.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 use_container_width=True
             )
+
+            if len(unreviewed_indices) > 0:
+                st.info(f"💡 You can download at any time. Un-reviewed items ({len(unreviewed_indices)}) will be in a separate sheet.")
+
+        else:
+            st.info("No data to review. Either upload a results file above, or generate content in the Generate tab and click 'Send to Review'.")
 
 
 if __name__ == "__main__":
