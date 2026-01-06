@@ -427,13 +427,25 @@ def main():
 
         # API Key
         st.subheader("OpenAI API Key")
+
+        # Check if API key is already in session state
+        if 'api_key' not in st.session_state:
+            st.session_state['api_key'] = ""
+
         api_key = st.text_input(
             "Enter your API key",
+            value=st.session_state.get('api_key', ''),
             type="password",
-            help="Your API key is not stored and only used for this session"
+            help="Your API key is stored in your browser session only",
+            key="api_key_input"
         )
+
+        # Store in session state
+        st.session_state['api_key'] = api_key
+
         if api_key:
-            st.success("API key provided")
+            st.success("✓ API key provided (stored for this session)")
+            st.info("💡 **Tip:** Use your browser's password manager to save your API key for easier access in future sessions.")
         else:
             st.warning("Please enter your OpenAI API key")
 
@@ -457,6 +469,9 @@ def main():
     # Tab 4: Generate
     with tab4:
         st.header("Generate Content")
+
+        # Get API key from session state
+        api_key = st.session_state.get('api_key', '')
 
         # Check prerequisites
         ready = True
