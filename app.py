@@ -1377,64 +1377,60 @@ def main():
                 current_status = statuses.get(current_idx)
 
                 # Product card
-                st.markdown('<div class="product-review-card">', unsafe_allow_html=True)
+                with st.container(border=True):
+                    # Product header with status badge
+                    status_html = ""
+                    if current_status == 'approved':
+                        status_html = '<span class="status-badge status-success">✓ Approved</span>'
+                    elif current_status == 'rejected':
+                        status_html = '<span class="status-badge status-error">✗ Rejected</span>'
 
-                # Product header with status badge
-                status_html = ""
-                if current_status == 'approved':
-                    status_html = '<span class="status-badge status-success">✓ Approved</span>'
-                elif current_status == 'rejected':
-                    status_html = '<span class="status-badge status-error">✗ Rejected</span>'
-
-                st.markdown(f"""
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                    <div>
-                        <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
-                        <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product.get('Product Name', 'Unknown Product')}</h3>
+                    st.markdown(f"""
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
+                            <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product.get('Product Name', 'Unknown Product')}</h3>
+                        </div>
+                        {status_html}
                     </div>
-                    {status_html}
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
-                # Images
-                review_images = product.get('Review Images', '')
-                if pd.notna(review_images) and review_images:
-                    image_urls = [url.strip() for url in str(review_images).split('\n') if url.strip()]
-                    if image_urls:
-                        st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">PRODUCT IMAGES</div>', unsafe_allow_html=True)
-                        img_cols = st.columns(min(3, len(image_urls)))
-                        for i, url in enumerate(image_urls[:3]):
-                            with img_cols[i]:
-                                st.image(url, use_container_width=True)
-                        st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                    # Images
+                    review_images = product.get('Review Images', '')
+                    if pd.notna(review_images) and review_images:
+                        image_urls = [url.strip() for url in str(review_images).split('\n') if url.strip()]
+                        if image_urls:
+                            st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">PRODUCT IMAGES</div>', unsafe_allow_html=True)
+                            img_cols = st.columns(min(3, len(image_urls)))
+                            for i, url in enumerate(image_urls[:3]):
+                                with img_cols[i]:
+                                    st.image(url, use_container_width=True)
 
-                # Title section
-                title_text = product.get('Product Title', '')
-                st.markdown(f"""
-                <div style="margin-bottom: 1.5rem;">
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED TITLE</div>
-                    <div class="product-title-display">
-                        <div class="product-title-text">{title_text}</div>
-                        <div class="char-count">{len(str(title_text))} characters</div>
+                    # Title section
+                    title_text = product.get('Product Title', '')
+                    st.markdown(f"""
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED TITLE</div>
+                        <div class="product-title-display">
+                            <div class="product-title-text">{title_text}</div>
+                            <div class="char-count">{len(str(title_text))} characters</div>
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
-                # Description section
-                st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED DESCRIPTION</div>', unsafe_allow_html=True)
-                desc_text = product.get('Product Description', '')
-                st.text_area(
-                    "Description",
-                    value=desc_text,
-                    height=280,
-                    disabled=True,
-                    label_visibility="collapsed"
-                )
-                st.markdown(f'<div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">{len(str(desc_text))} characters</div>', unsafe_allow_html=True)
+                    # Description section
+                    st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED DESCRIPTION</div>', unsafe_allow_html=True)
+                    desc_text = product.get('Product Description', '')
+                    st.text_area(
+                        "Description",
+                        value=desc_text,
+                        height=280,
+                        disabled=True,
+                        label_visibility="collapsed"
+                    )
+                    st.markdown(f'<div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">{len(str(desc_text))} characters</div>', unsafe_allow_html=True)
 
-                st.markdown('</div>', unsafe_allow_html=True)  # Close product card
-
-                st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
                 # Action buttons in a card
                 with st.container(border=True):
