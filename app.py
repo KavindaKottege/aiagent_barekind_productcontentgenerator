@@ -848,31 +848,37 @@ def main():
 
                 # Navigation
                 st.markdown("**Navigation:**")
-                nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
+
+                # Create a container with flexbox alignment
+                nav_col1, nav_col2, nav_col3 = st.columns([1, 1, 1])
 
                 with nav_col1:
-                    st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
-                    if st.button("← Previous", use_container_width=True, disabled=current_idx == 0):
+                    if st.button("← Previous", use_container_width=True, disabled=current_idx == 0, key="prev_btn"):
                         st.session_state['current_review_index'] = current_idx - 1
                         st.rerun()
 
                 with nav_col2:
+                    # Center the text showing current position
+                    st.markdown(f"<div style='text-align: center; padding: 8px 0; color: #495057; font-weight: 500;'>{current_idx + 1} / {total_products}</div>", unsafe_allow_html=True)
+
+                with nav_col3:
+                    if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1, key="next_btn"):
+                        st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                # Jump to specific product (separate row)
+                jump_col1, jump_col2, jump_col3 = st.columns([1, 1, 1])
+                with jump_col2:
                     jump_to = st.number_input(
-                        "Go to product",
+                        "Jump to product",
                         min_value=1,
                         max_value=total_products,
                         value=current_idx + 1,
                         key="jump_to_input",
-                        label_visibility="collapsed"
+                        label_visibility="visible"
                     )
                     if jump_to != current_idx + 1:
                         st.session_state['current_review_index'] = jump_to - 1
-                        st.rerun()
-
-                with nav_col3:
-                    st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
-                    if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1):
-                        st.session_state['current_review_index'] = current_idx + 1
                         st.rerun()
 
             # Download section
