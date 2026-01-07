@@ -851,6 +851,7 @@ def main():
                 nav_col1, nav_col2, nav_col3 = st.columns([1, 2, 1])
 
                 with nav_col1:
+                    st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
                     if st.button("← Previous", use_container_width=True, disabled=current_idx == 0):
                         st.session_state['current_review_index'] = current_idx - 1
                         st.rerun()
@@ -861,13 +862,15 @@ def main():
                         min_value=1,
                         max_value=total_products,
                         value=current_idx + 1,
-                        key="jump_to_input"
+                        key="jump_to_input",
+                        label_visibility="collapsed"
                     )
                     if jump_to != current_idx + 1:
                         st.session_state['current_review_index'] = jump_to - 1
                         st.rerun()
 
                 with nav_col3:
+                    st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
                     if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1):
                         st.session_state['current_review_index'] = current_idx + 1
                         st.rerun()
