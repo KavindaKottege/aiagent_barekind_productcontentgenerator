@@ -748,15 +748,35 @@ def main():
 
         with col2:
             st.markdown("""
-            <div class="ui-card" style="height: 100%;">
-                <div class="ui-card-header">📋 Required Format</div>
-                <div style="font-size: 0.85rem; color: #64748b;">
-                    <p style="margin-bottom: 0.5rem;"><strong>Sheet 1:</strong> Products</p>
-                    <p style="margin-bottom: 0.5rem;"><strong>Sheet 2:</strong> General Details</p>
-                    <p style="color: #94a3b8; font-size: 0.8rem;">Columns: Product Name, Category, Description, SEO Details, Images, Made In</p>
-                </div>
-            </div>
+            <div class="ui-card">
+                <div class="ui-card-header">📋 Template Preview</div>
             """, unsafe_allow_html=True)
+
+            # Create template tabs
+            template_tab1, template_tab2 = st.tabs(["Products Sheet", "General Details"])
+
+            with template_tab1:
+                # Sample Products template
+                products_template = pd.DataFrame({
+                    'Product Token': ['SKU001', 'SKU002'],
+                    'Product Name': ['Product A', 'Product B'],
+                    'Product Category': ['Category 1', 'Category 2'],
+                    'Product Description': ['Description...', 'Description...'],
+                    'SEO Details': ['keyword1, keyword2', 'keyword3, keyword4'],
+                    'Images': ['https://...', 'https://...'],
+                    'Made In': ['Country', 'Country']
+                })
+                st.dataframe(products_template, use_container_width=True, hide_index=True, height=108)
+
+            with template_tab2:
+                # Sample General Details template
+                general_template = pd.DataFrame({
+                    'Field': ['Language', 'Brand', 'Story'],
+                    'Value': ['English', 'Your Brand', 'Brand story...']
+                })
+                st.dataframe(general_template, use_container_width=True, hide_index=True, height=143)
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
         if uploaded_file:
             try:
