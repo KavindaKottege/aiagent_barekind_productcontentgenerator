@@ -927,75 +927,67 @@ def main():
         st.markdown('<p class="section-header">Settings</p>', unsafe_allow_html=True)
 
         # API Key Section
-        st.markdown("""
-        <div class="ui-card">
-            <div class="ui-card-header">🔑 OpenAI API Key</div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("**🔑 OpenAI API Key**")
 
-        # Check if API key is already in session state
-        if 'api_key' not in st.session_state:
-            st.session_state['api_key'] = ""
+            # Check if API key is already in session state
+            if 'api_key' not in st.session_state:
+                st.session_state['api_key'] = ""
 
-        api_key = st.text_input(
-            "Enter your API key",
-            value=st.session_state.get('api_key', ''),
-            type="password",
-            help="Your API key is stored in your browser session only",
-            key="api_key_input",
-            label_visibility="collapsed",
-            placeholder="sk-..."
-        )
+            api_key = st.text_input(
+                "Enter your API key",
+                value=st.session_state.get('api_key', ''),
+                type="password",
+                help="Your API key is stored in your browser session only",
+                key="api_key_input",
+                label_visibility="collapsed",
+                placeholder="sk-..."
+            )
 
-        # Store in session state
-        st.session_state['api_key'] = api_key
+            # Store in session state
+            st.session_state['api_key'] = api_key
 
-        if api_key:
-            st.markdown("""
-            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #dcfce7; border-radius: 8px; margin-top: 0.5rem;">
-                <span style="color: #166534;">✓</span>
-                <span style="color: #166534; font-size: 0.9rem;">API key configured for this session</span>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #fef3c7; border-radius: 8px; margin-top: 0.5rem;">
-                <span style="color: #92400e;">⚠</span>
-                <span style="color: #92400e; font-size: 0.9rem;">Please enter your OpenAI API key to continue</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
-
-        # Character Limits Section
-        st.markdown("""
-        <div class="ui-card">
-            <div class="ui-card-header">📏 Character Limits</div>
-            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">Set the minimum, target, and maximum character counts for generated content</p>
-        """, unsafe_allow_html=True)
-
-        st.markdown("**Product Title**")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            title_min = st.number_input("Minimum", value=30, key="title_min", help="Minimum characters for title")
-        with col2:
-            title_target = st.number_input("Target", value=50, key="title_target", help="Target characters for title")
-        with col3:
-            title_max = st.number_input("Maximum", value=60, key="title_max", help="Maximum characters for title")
+            if api_key:
+                st.markdown("""
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #dcfce7; border-radius: 8px; margin-top: 0.5rem;">
+                    <span style="color: #166534;">✓</span>
+                    <span style="color: #166534; font-size: 0.9rem;">API key configured for this session</span>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #fef3c7; border-radius: 8px; margin-top: 0.5rem;">
+                    <span style="color: #92400e;">⚠</span>
+                    <span style="color: #92400e; font-size: 0.9rem;">Please enter your OpenAI API key to continue</span>
+                </div>
+                """, unsafe_allow_html=True)
 
         st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-        st.markdown("**Product Description**")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            desc_min = st.number_input("Minimum", value=2000, key="desc_min", help="Minimum characters for description")
-        with col2:
-            desc_target = st.number_input("Target", value=2500, key="desc_target", help="Target characters for description")
-        with col3:
-            desc_max = st.number_input("Maximum", value=3000, key="desc_max", help="Maximum characters for description")
+        # Character Limits Section
+        with st.container(border=True):
+            st.markdown("**📏 Character Limits**")
+            st.caption("Set the minimum, target, and maximum character counts for generated content")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("**Product Title**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                title_min = st.number_input("Minimum", value=30, key="title_min", help="Minimum characters for title")
+            with col2:
+                title_target = st.number_input("Target", value=50, key="title_target", help="Target characters for title")
+            with col3:
+                title_max = st.number_input("Maximum", value=60, key="title_max", help="Maximum characters for title")
+
+            st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+
+            st.markdown("**Product Description**")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                desc_min = st.number_input("Minimum", value=2000, key="desc_min", help="Minimum characters for description")
+            with col2:
+                desc_target = st.number_input("Target", value=2500, key="desc_target", help="Target characters for description")
+            with col3:
+                desc_max = st.number_input("Maximum", value=3000, key="desc_max", help="Maximum characters for description")
 
     # Tab 4: Generate
     with tab4:
@@ -1021,23 +1013,19 @@ def main():
             ready = False
 
         # Readiness checklist
-        st.markdown("""
-        <div class="ui-card">
-            <div class="ui-card-header">📋 Pre-flight Checklist</div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("**📋 Pre-flight Checklist**")
 
-        for icon, label, status, state in checklist_items:
-            color = '#166534' if state == 'success' else '#dc2626'
-            bg = '#dcfce7' if state == 'success' else '#fee2e2'
-            st.markdown(f"""
-            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: {bg}; border-radius: 8px; margin-bottom: 0.5rem;">
-                <span style="color: {color}; font-weight: 600;">{icon}</span>
-                <span style="color: {color}; font-weight: 500;">{label}:</span>
-                <span style="color: {color};">{status}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            for icon, label, status, state in checklist_items:
+                color = '#166534' if state == 'success' else '#dc2626'
+                bg = '#dcfce7' if state == 'success' else '#fee2e2'
+                st.markdown(f"""
+                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: {bg}; border-radius: 8px; margin-bottom: 0.5rem;">
+                    <span style="color: {color}; font-weight: 600;">{icon}</span>
+                    <span style="color: {color}; font-weight: 500;">{label}:</span>
+                    <span style="color: {color};">{status}</span>
+                </div>
+                """, unsafe_allow_html=True)
 
         if ready:
             # Cost estimate card
@@ -1449,151 +1437,143 @@ def main():
                 st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
                 # Action buttons in a card
-                st.markdown("""
-                <div class="ui-card">
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 1rem;">REVIEW ACTIONS</div>
-                """, unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">REVIEW ACTIONS</div>', unsafe_allow_html=True)
 
-                col1, col2, col3 = st.columns(3)
+                    col1, col2, col3 = st.columns(3)
 
-                with col1:
-                    approve_clicked = st.button("✓ Approve", use_container_width=True, key="approve_btn")
-                    if approve_clicked:
-                        st.session_state['review_statuses'][current_idx] = 'approved'
-                        if current_idx < total_products - 1:
+                    with col1:
+                        approve_clicked = st.button("✓ Approve", use_container_width=True, key="approve_btn")
+                        if approve_clicked:
+                            st.session_state['review_statuses'][current_idx] = 'approved'
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                    with col2:
+                        reject_clicked = st.button("✗ Reject", use_container_width=True, key="reject_btn")
+                        if reject_clicked:
+                            st.session_state['review_statuses'][current_idx] = 'rejected'
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                    with col3:
+                        skip_clicked = st.button("⏭ Skip", use_container_width=True, key="skip_btn")
+                        if skip_clicked:
+                            if current_idx in st.session_state['review_statuses']:
+                                del st.session_state['review_statuses'][current_idx]
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                    st.markdown("<div style='height: 0.75rem;'></div>", unsafe_allow_html=True)
+                    st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">NAVIGATION</div>', unsafe_allow_html=True)
+
+                    nav_col1, nav_col2, nav_col3 = st.columns([1, 1, 1])
+
+                    with nav_col1:
+                        if st.button("← Previous", use_container_width=True, disabled=current_idx == 0, key="prev_btn"):
+                            st.session_state['current_review_index'] = current_idx - 1
+                            st.rerun()
+
+                    with nav_col2:
+                        st.markdown(f"<div style='text-align: center; padding: 8px 0; color: #475569; font-weight: 600; font-size: 1.1rem;'>{current_idx + 1} / {total_products}</div>", unsafe_allow_html=True)
+
+                    with nav_col3:
+                        if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1, key="next_btn"):
                             st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
+                            st.rerun()
 
-                with col2:
-                    reject_clicked = st.button("✗ Reject", use_container_width=True, key="reject_btn")
-                    if reject_clicked:
-                        st.session_state['review_statuses'][current_idx] = 'rejected'
-                        if current_idx < total_products - 1:
-                            st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
-
-                with col3:
-                    skip_clicked = st.button("⏭ Skip", use_container_width=True, key="skip_btn")
-                    if skip_clicked:
-                        if current_idx in st.session_state['review_statuses']:
-                            del st.session_state['review_statuses'][current_idx]
-                        if current_idx < total_products - 1:
-                            st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
-
-                st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
-                st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">NAVIGATION</div>', unsafe_allow_html=True)
-
-                nav_col1, nav_col2, nav_col3 = st.columns([1, 1, 1])
-
-                with nav_col1:
-                    if st.button("← Previous", use_container_width=True, disabled=current_idx == 0, key="prev_btn"):
-                        st.session_state['current_review_index'] = current_idx - 1
-                        st.rerun()
-
-                with nav_col2:
-                    st.markdown(f"<div style='text-align: center; padding: 8px 0; color: #475569; font-weight: 600; font-size: 1.1rem;'>{current_idx + 1} / {total_products}</div>", unsafe_allow_html=True)
-
-                with nav_col3:
-                    if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1, key="next_btn"):
-                        st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
-
-                # Jump to specific product
-                jump_col1, jump_col2, jump_col3 = st.columns([1, 1, 1])
-                with jump_col2:
-                    jump_to = st.number_input(
-                        "Jump to",
-                        min_value=1,
-                        max_value=total_products,
-                        value=current_idx + 1,
-                        key="jump_to_input",
-                        label_visibility="visible"
-                    )
-                    if jump_to != current_idx + 1:
-                        st.session_state['current_review_index'] = jump_to - 1
-                        st.rerun()
-
-                st.markdown('</div>', unsafe_allow_html=True)  # Close action card
+                    # Jump to specific product
+                    jump_col1, jump_col2, jump_col3 = st.columns([1, 1, 1])
+                    with jump_col2:
+                        jump_to = st.number_input(
+                            "Jump to",
+                            min_value=1,
+                            max_value=total_products,
+                            value=current_idx + 1,
+                            key="jump_to_input",
+                            label_visibility="visible"
+                        )
+                        if jump_to != current_idx + 1:
+                            st.session_state['current_review_index'] = jump_to - 1
+                            st.rerun()
 
             # Download section
             st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-            st.markdown("""
-            <div class="ui-card">
-                <div class="ui-card-header">📥 Export Results</div>
-            """, unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("**📥 Export Results**")
 
-            # Prepare categorized data
-            approved_indices = [i for i, s in statuses.items() if s == 'approved']
-            rejected_indices = [i for i, s in statuses.items() if s == 'rejected']
-            unreviewed_indices = [i for i in range(total_products) if i not in statuses]
+                # Prepare categorized data
+                approved_indices = [i for i, s in statuses.items() if s == 'approved']
+                rejected_indices = [i for i, s in statuses.items() if s == 'rejected']
+                unreviewed_indices = [i for i in range(total_products) if i not in statuses]
 
-            reviewed_df_out = review_df.iloc[approved_indices] if approved_indices else pd.DataFrame()
-            incorrect_df_out = review_df.iloc[rejected_indices] if rejected_indices else pd.DataFrame()
-            unreviewed_df_out = review_df.iloc[unreviewed_indices] if unreviewed_indices else pd.DataFrame()
+                reviewed_df_out = review_df.iloc[approved_indices] if approved_indices else pd.DataFrame()
+                incorrect_df_out = review_df.iloc[rejected_indices] if rejected_indices else pd.DataFrame()
+                unreviewed_df_out = review_df.iloc[unreviewed_indices] if unreviewed_indices else pd.DataFrame()
 
-            exp_col1, exp_col2, exp_col3 = st.columns(3)
+                exp_col1, exp_col2, exp_col3 = st.columns(3)
 
-            with exp_col1:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 1.75rem; font-weight: 700; color: #166534;">{len(approved_indices)}</div>
-                    <div style="font-size: 0.8rem; color: #166534;">Approved</div>
-                </div>
-                """, unsafe_allow_html=True)
+                with exp_col1:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #166534;">{len(approved_indices)}</div>
+                        <div style="font-size: 0.8rem; color: #166534;">Approved</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            with exp_col2:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 1rem; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
-                    <div style="font-size: 1.75rem; font-weight: 700; color: #991b1b;">{len(rejected_indices)}</div>
-                    <div style="font-size: 0.8rem; color: #991b1b;">Rejected</div>
-                </div>
-                """, unsafe_allow_html=True)
+                with exp_col2:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 1rem; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #991b1b;">{len(rejected_indices)}</div>
+                        <div style="font-size: 0.8rem; color: #991b1b;">Rejected</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            with exp_col3:
-                st.markdown(f"""
-                <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 1.75rem; font-weight: 700; color: #475569;">{len(unreviewed_indices)}</div>
-                    <div style="font-size: 0.8rem; color: #64748b;">Remaining</div>
-                </div>
-                """, unsafe_allow_html=True)
+                with exp_col3:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div style="font-size: 1.75rem; font-weight: 700; color: #475569;">{len(unreviewed_indices)}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Remaining</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height: 0.75rem;'></div>", unsafe_allow_html=True)
 
-            # Create downloadable Excel with three sheets
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                if not reviewed_df_out.empty:
-                    reviewed_df_out.to_excel(writer, index=False, sheet_name='Reviewed')
-                else:
-                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Reviewed')
+                # Create downloadable Excel with three sheets
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    if not reviewed_df_out.empty:
+                        reviewed_df_out.to_excel(writer, index=False, sheet_name='Reviewed')
+                    else:
+                        pd.DataFrame().to_excel(writer, index=False, sheet_name='Reviewed')
 
-                if not incorrect_df_out.empty:
-                    incorrect_df_out.to_excel(writer, index=False, sheet_name='Incorrect')
-                else:
-                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Incorrect')
+                    if not incorrect_df_out.empty:
+                        incorrect_df_out.to_excel(writer, index=False, sheet_name='Incorrect')
+                    else:
+                        pd.DataFrame().to_excel(writer, index=False, sheet_name='Incorrect')
 
-                if not unreviewed_df_out.empty:
-                    unreviewed_df_out.to_excel(writer, index=False, sheet_name='Un-Reviewed')
-                else:
-                    pd.DataFrame().to_excel(writer, index=False, sheet_name='Un-Reviewed')
+                    if not unreviewed_df_out.empty:
+                        unreviewed_df_out.to_excel(writer, index=False, sheet_name='Un-Reviewed')
+                    else:
+                        pd.DataFrame().to_excel(writer, index=False, sheet_name='Un-Reviewed')
 
-            output.seek(0)
+                output.seek(0)
 
-            st.download_button(
-                label="📥 Download Categorized Results",
-                data=output,
-                file_name="product_content_reviewed.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                type="primary",
-                use_container_width=True
-            )
+                st.download_button(
+                    label="📥 Download Categorized Results",
+                    data=output,
+                    file_name="product_content_reviewed.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    use_container_width=True
+                )
 
-            if len(unreviewed_indices) > 0:
-                st.caption(f"💡 Download includes {len(unreviewed_indices)} un-reviewed items in a separate sheet")
-
-            st.markdown('</div>', unsafe_allow_html=True)
+                if len(unreviewed_indices) > 0:
+                    st.caption(f"💡 Download includes {len(unreviewed_indices)} un-reviewed items in a separate sheet")
 
         else:
             # Empty state for Review tab
