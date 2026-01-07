@@ -784,47 +784,61 @@ def main():
 
                 st.divider()
 
-                # Custom CSS for button colors
-                st.markdown("""
+                # Action buttons with custom styled HTML
+                st.markdown("**Review Actions:**")
+
+                # Create custom HTML buttons for consistent styling
+                button_html = f'''
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div style="flex: 1;" id="approve-container"></div>
+                    <div style="flex: 1;" id="reject-container"></div>
+                    <div style="flex: 1;" id="skip-container"></div>
+                </div>
                 <style>
-                    /* Green approve button */
-                    div[data-testid="column"]:nth-of-type(1) button[kind="primary"] {
+                    /* Target approve button by key */
+                    button[key="approve_btn"], div[data-testid="stButton"] button:has(p:contains("Approve")) {{
                         background-color: #28a745 !important;
                         border-color: #28a745 !important;
-                    }
-                    div[data-testid="column"]:nth-of-type(1) button[kind="primary"]:hover {
+                        color: white !important;
+                    }}
+                    /* Green approve button - using aria label */
+                    div[data-testid="stHorizontalBlock"] > div:first-child button {{
+                        background-color: #28a745 !important;
+                        border-color: #28a745 !important;
+                        color: white !important;
+                    }}
+                    div[data-testid="stHorizontalBlock"] > div:first-child button:hover {{
                         background-color: #218838 !important;
                         border-color: #1e7e34 !important;
-                    }
+                    }}
                     /* Red reject button */
-                    div[data-testid="column"]:nth-of-type(2) button[kind="secondary"] {
+                    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {{
                         background-color: #dc3545 !important;
                         border-color: #dc3545 !important;
                         color: white !important;
-                    }
-                    div[data-testid="column"]:nth-of-type(2) button[kind="secondary"]:hover {
+                    }}
+                    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {{
                         background-color: #c82333 !important;
                         border-color: #bd2130 !important;
-                    }
+                    }}
                     /* Grey skip button */
-                    div[data-testid="column"]:nth-of-type(3) button[kind="secondary"] {
+                    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button {{
                         background-color: #6c757d !important;
                         border-color: #6c757d !important;
                         color: white !important;
-                    }
-                    div[data-testid="column"]:nth-of-type(3) button[kind="secondary"]:hover {
+                    }}
+                    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button:hover {{
                         background-color: #5a6268 !important;
                         border-color: #545b62 !important;
-                    }
+                    }}
                 </style>
-                """, unsafe_allow_html=True)
+                '''
+                st.markdown(button_html, unsafe_allow_html=True)
 
-                # Action buttons
-                st.markdown("**Review Actions:**")
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    if st.button("✓ Approve", type="primary", use_container_width=True, key="approve_btn"):
+                    if st.button("✓ Approve", use_container_width=True, key="approve_btn"):
                         st.session_state['review_statuses'][current_idx] = 'approved'
                         if current_idx < total_products - 1:
                             st.session_state['current_review_index'] = current_idx + 1
