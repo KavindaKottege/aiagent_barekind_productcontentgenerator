@@ -8,9 +8,364 @@ from io import BytesIO
 # Page config
 st.set_page_config(
     page_title="Product Content Generator",
-    page_icon="📝",
-    layout="wide"
+    page_icon="✨",
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+# =============================================================================
+# GLOBAL STYLING - Modern, Clean UI
+# =============================================================================
+st.markdown("""
+<style>
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Global font and background */
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Main container spacing */
+.main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1200px;
+}
+
+/* Hide default Streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Custom header styling */
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem 2.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+}
+
+.main-header h1 {
+    color: white;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.02em;
+}
+
+.main-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Tab styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: #f8f9fa;
+    padding: 8px;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 48px;
+    padding: 0 24px;
+    background-color: transparent;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #64748b;
+    border: none;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: white !important;
+    color: #667eea !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Card component */
+.ui-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+.ui-card-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Section headers */
+.section-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #667eea;
+    display: inline-block;
+}
+
+/* Metric cards */
+.metric-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.status-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+/* File uploader styling */
+[data-testid="stFileUploader"] {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 2px dashed #cbd5e1;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: #667eea;
+    background: #f1f5f9;
+}
+
+/* Input styling */
+.stTextInput input, .stTextArea textarea, .stNumberInput input {
+    border-radius: 8px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+}
+
+.stTextInput input:focus, .stTextArea textarea:focus, .stNumberInput input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Button styling */
+.stButton button {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.stButton button[kind="primary"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+}
+
+.stButton button[kind="primary"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+}
+
+.stButton button[kind="secondary"] {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+}
+
+.stButton button[kind="secondary"]:hover {
+    background: #f8fafc;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background: #f8fafc;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* Progress bar */
+.stProgress > div > div {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 999px;
+}
+
+/* Dataframe styling */
+.stDataFrame {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Divider */
+hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+    margin: 2rem 0;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 2px dashed #e2e8f0;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+/* Review product card */
+.product-review-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+}
+
+.product-title-display {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border-left: 4px solid #667eea;
+    margin: 1rem 0;
+}
+
+.product-title-text {
+    font-size: 1.1rem;
+    color: #1e293b;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.char-count {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+/* Image gallery */
+.image-gallery {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+/* Action button colors (Review tab) */
+div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(1) button {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35) !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(2) button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(3) button {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 14px rgba(100, 116, 139, 0.35) !important;
+}
+
+/* Success/Error/Info/Warning alerts */
+.stAlert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Metrics */
+[data-testid="stMetric"] {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+[data-testid="stMetricValue"] {
+    font-weight: 700;
+}
+
+/* Download button */
+.stDownloadButton button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Default prompts
 DEFAULT_SYSTEM_PROMPT = """You are a well seasoned product copywriter. You are very precise with word and character count."""
@@ -341,8 +696,13 @@ def render_progress_ring(reviewed_count, total_count, approved_count, rejected_c
 
 
 def main():
-    st.title("📝 Product Content Generator")
-    st.markdown("Generate product titles and descriptions using AI")
+    # Custom header
+    st.markdown("""
+    <div class="main-header">
+        <h1>✨ Product Content Generator</h1>
+        <p>Transform your product data into compelling titles and descriptions with AI</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Initialize review session state
     if 'review_data' not in st.session_state:
@@ -355,17 +715,48 @@ def main():
         st.session_state['review_in_progress'] = False
 
     # Main content area - Tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📁 Data Upload", "📝 Prompts", "⚙️ Settings", "🚀 Generate", "👁️ Review"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📁 Upload", "📝 Prompts", "⚙️ Settings", "🚀 Generate", "👁️ Review"])
 
     # Tab 1: Data Upload
     with tab1:
-        st.header("Upload Your Data")
+        st.markdown('<p class="section-header">Upload Your Data</p>', unsafe_allow_html=True)
 
-        uploaded_file = st.file_uploader(
-            "Upload Excel file with product data",
-            type=['xlsx', 'xls'],
-            help="Excel file should have 'Products' and 'General Details' sheets"
-        )
+        # Check if data already loaded
+        if 'product_data' in st.session_state:
+            st.markdown(f"""
+            <div class="ui-card">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 1rem; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 1.5rem;">✓</span>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; color: #166534; font-size: 1.1rem;">Data Loaded Successfully</div>
+                        <div style="color: #64748b; font-size: 0.9rem;">{len(st.session_state['product_data'])} products ready for processing</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            uploaded_file = st.file_uploader(
+                "Drop your Excel file here or click to browse",
+                type=['xlsx', 'xls'],
+                help="Excel file should have 'Products' and 'General Details' sheets"
+            )
+
+        with col2:
+            st.markdown("""
+            <div class="ui-card" style="height: 100%;">
+                <div class="ui-card-header">📋 Required Format</div>
+                <div style="font-size: 0.85rem; color: #64748b;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Sheet 1:</strong> Products</p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Sheet 2:</strong> General Details</p>
+                    <p style="color: #94a3b8; font-size: 0.8rem;">Columns: Product Name, Category, Description, SEO Details, Images, Made In</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         if uploaded_file:
             try:
@@ -384,25 +775,73 @@ def main():
                     'brand_story': general_dict.get("Story", "")
                 }
 
-                st.success(f"Loaded {len(product_data)} products")
+                st.success(f"✓ Successfully loaded {len(product_data)} products")
 
-                with st.expander("Preview Product Data"):
-                    st.dataframe(product_data.head(10))
+                # Product preview in a card
+                with st.expander("📊 Preview Product Data", expanded=True):
+                    st.dataframe(product_data.head(10), use_container_width=True)
 
-                with st.expander("General Details"):
-                    st.write(f"**Language:** {st.session_state['general_info']['language']}")
-                    st.write(f"**Brand:** {st.session_state['general_info']['brand_name']}")
-                    st.write(f"**Story:** {st.session_state['general_info']['brand_story']}")
+                # Brand details in styled cards
+                st.markdown("#### Brand Information")
+                info_col1, info_col2, info_col3 = st.columns(3)
+
+                with info_col1:
+                    st.markdown(f"""
+                    <div class="ui-card">
+                        <div style="color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">LANGUAGE</div>
+                        <div style="font-weight: 600; color: #1e293b;">{st.session_state['general_info']['language']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with info_col2:
+                    st.markdown(f"""
+                    <div class="ui-card">
+                        <div style="color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">BRAND</div>
+                        <div style="font-weight: 600; color: #1e293b;">{st.session_state['general_info']['brand_name'] or 'Not specified'}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with info_col3:
+                    st.markdown(f"""
+                    <div class="ui-card">
+                        <div style="color: #64748b; font-size: 0.8rem; margin-bottom: 0.25rem;">PRODUCTS</div>
+                        <div style="font-weight: 600; color: #1e293b;">{len(product_data)}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                if st.session_state['general_info']['brand_story']:
+                    with st.expander("📖 Brand Story"):
+                        st.write(st.session_state['general_info']['brand_story'])
 
             except Exception as e:
                 st.error(f"Error loading file: {str(e)}")
+        elif 'product_data' not in st.session_state:
+            # Empty state
+            st.markdown("""
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <div class="empty-state-title">No data uploaded yet</div>
+                <div class="empty-state-text">Upload an Excel file with your product data to get started</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     # Tab 2: Prompts
     with tab2:
-        st.header("Configure Prompts")
+        st.markdown('<p class="section-header">Configure Prompts</p>', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="ui-card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #fbbf24;">
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">💡</span>
+                <div style="font-size: 0.9rem; color: #92400e;">
+                    <strong>Pro tip:</strong> You can upload .txt files to quickly load your prompts, or edit them directly below. Changes are saved automatically for this session.
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # System Prompt
-        with st.expander("System Prompt", expanded=False):
+        with st.expander("🤖 System Prompt", expanded=False):
             system_upload = st.file_uploader("Upload system prompt (optional)", type=['txt'], key="system_upload")
             if system_upload:
                 st.session_state['system_prompt'] = system_upload.read().decode('utf-8')
@@ -412,13 +851,14 @@ def main():
                 "System prompt",
                 value=st.session_state['system_prompt'],
                 height=100,
-                key="system_prompt_input"
+                key="system_prompt_input",
+                label_visibility="collapsed"
             )
             st.session_state['system_prompt'] = system_prompt
 
         # Brand Prompt (Optional)
-        with st.expander("Brand Guidelines (Optional)", expanded=False):
-            st.markdown("*This will be appended to the system prompt if provided*")
+        with st.expander("🎨 Brand Guidelines (Optional)", expanded=False):
+            st.caption("This will be appended to the system prompt if provided")
             brand_upload = st.file_uploader("Upload brand guidelines (optional)", type=['txt'], key="brand_upload")
             if brand_upload:
                 st.session_state['brand_prompt'] = brand_upload.read().decode('utf-8')
@@ -429,12 +869,13 @@ def main():
                 value=st.session_state['brand_prompt'],
                 height=150,
                 placeholder="Enter brand guidelines, tone of voice, style preferences...",
-                key="brand_prompt_input"
+                key="brand_prompt_input",
+                label_visibility="collapsed"
             )
             st.session_state['brand_prompt'] = brand_prompt
 
         # Task 1 Prompt
-        with st.expander("Task 1: Product Title Prompt", expanded=False):
+        with st.expander("📌 Task 1: Product Title Prompt", expanded=False):
             task1_upload = st.file_uploader("Upload title prompt (optional)", type=['txt'], key="task1_upload")
             if task1_upload:
                 st.session_state['task1_prompt'] = task1_upload.read().decode('utf-8')
@@ -444,12 +885,13 @@ def main():
                 "Title generation prompt",
                 value=st.session_state['task1_prompt'],
                 height=150,
-                key="task1_prompt_input"
+                key="task1_prompt_input",
+                label_visibility="collapsed"
             )
             st.session_state['task1_prompt'] = task1_prompt
 
         # Task 2 Prompt
-        with st.expander("Task 2: Product Description Prompt", expanded=False):
+        with st.expander("📝 Task 2: Product Description Prompt", expanded=False):
             task2_upload = st.file_uploader("Upload description prompt (optional)", type=['txt'], key="task2_upload")
             if task2_upload:
                 st.session_state['task2_prompt'] = task2_upload.read().decode('utf-8')
@@ -459,16 +901,20 @@ def main():
                 "Description generation prompt",
                 value=st.session_state['task2_prompt'],
                 height=400,
-                key="task2_prompt_input"
+                key="task2_prompt_input",
+                label_visibility="collapsed"
             )
             st.session_state['task2_prompt'] = task2_prompt
 
     # Tab 3: Settings
     with tab3:
-        st.header("Settings")
+        st.markdown('<p class="section-header">Settings</p>', unsafe_allow_html=True)
 
-        # API Key
-        st.subheader("OpenAI API Key")
+        # API Key Section
+        st.markdown("""
+        <div class="ui-card">
+            <div class="ui-card-header">🔑 OpenAI API Key</div>
+        """, unsafe_allow_html=True)
 
         # Check if API key is already in session state
         if 'api_key' not in st.session_state:
@@ -479,58 +925,123 @@ def main():
             value=st.session_state.get('api_key', ''),
             type="password",
             help="Your API key is stored in your browser session only",
-            key="api_key_input"
+            key="api_key_input",
+            label_visibility="collapsed",
+            placeholder="sk-..."
         )
 
         # Store in session state
         st.session_state['api_key'] = api_key
 
         if api_key:
-            st.success("✓ API key provided (stored for this session)")
-            st.info("💡 **Tip:** Use your browser's password manager to save your API key for easier access in future sessions.")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #dcfce7; border-radius: 8px; margin-top: 0.5rem;">
+                <span style="color: #166534;">✓</span>
+                <span style="color: #166534; font-size: 0.9rem;">API key configured for this session</span>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.warning("Please enter your OpenAI API key")
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: #fef3c7; border-radius: 8px; margin-top: 0.5rem;">
+                <span style="color: #92400e;">⚠</span>
+                <span style="color: #92400e; font-size: 0.9rem;">Please enter your OpenAI API key to continue</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.divider()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # Character Limits
-        st.subheader("Character Limits")
+        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-        st.markdown("**Title**")
+        # Character Limits Section
+        st.markdown("""
+        <div class="ui-card">
+            <div class="ui-card-header">📏 Character Limits</div>
+            <p style="color: #64748b; font-size: 0.875rem; margin-bottom: 1.5rem;">Set the minimum, target, and maximum character counts for generated content</p>
+        """, unsafe_allow_html=True)
+
+        st.markdown("**Product Title**")
         col1, col2, col3 = st.columns(3)
-        title_min = col1.number_input("Min", value=30, key="title_min")
-        title_target = col2.number_input("Target", value=50, key="title_target")
-        title_max = col3.number_input("Max", value=60, key="title_max")
+        with col1:
+            title_min = st.number_input("Minimum", value=30, key="title_min", help="Minimum characters for title")
+        with col2:
+            title_target = st.number_input("Target", value=50, key="title_target", help="Target characters for title")
+        with col3:
+            title_max = st.number_input("Maximum", value=60, key="title_max", help="Maximum characters for title")
 
-        st.markdown("**Description**")
+        st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+
+        st.markdown("**Product Description**")
         col1, col2, col3 = st.columns(3)
-        desc_min = col1.number_input("Min", value=2000, key="desc_min")
-        desc_target = col2.number_input("Target", value=2500, key="desc_target")
-        desc_max = col3.number_input("Max", value=3000, key="desc_max")
+        with col1:
+            desc_min = st.number_input("Minimum", value=2000, key="desc_min", help="Minimum characters for description")
+        with col2:
+            desc_target = st.number_input("Target", value=2500, key="desc_target", help="Target characters for description")
+        with col3:
+            desc_max = st.number_input("Maximum", value=3000, key="desc_max", help="Maximum characters for description")
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # Tab 4: Generate
     with tab4:
-        st.header("Generate Content")
+        st.markdown('<p class="section-header">Generate Content</p>', unsafe_allow_html=True)
 
         # Get API key from session state
         api_key = st.session_state.get('api_key', '')
 
-        # Check prerequisites
+        # Check prerequisites with styled cards
         ready = True
-        if not api_key:
-            st.error("Please enter your OpenAI API key in the Settings tab")
+        checklist_items = []
+
+        if api_key:
+            checklist_items.append(('✓', 'API Key', 'Configured', 'success'))
+        else:
+            checklist_items.append(('!', 'API Key', 'Not configured', 'error'))
             ready = False
-        if 'product_data' not in st.session_state:
-            st.error("Please upload your product data in the Data Upload tab")
+
+        if 'product_data' in st.session_state:
+            checklist_items.append(('✓', 'Product Data', f'{len(st.session_state["product_data"])} products loaded', 'success'))
+        else:
+            checklist_items.append(('!', 'Product Data', 'Not uploaded', 'error'))
             ready = False
+
+        # Readiness checklist
+        st.markdown("""
+        <div class="ui-card">
+            <div class="ui-card-header">📋 Pre-flight Checklist</div>
+        """, unsafe_allow_html=True)
+
+        for icon, label, status, state in checklist_items:
+            color = '#166534' if state == 'success' else '#dc2626'
+            bg = '#dcfce7' if state == 'success' else '#fee2e2'
+            st.markdown(f"""
+            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: {bg}; border-radius: 8px; margin-bottom: 0.5rem;">
+                <span style="color: {color}; font-weight: 600;">{icon}</span>
+                <span style="color: {color}; font-weight: 500;">{label}:</span>
+                <span style="color: {color};">{status}</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if ready:
-            st.success(f"Ready to process {len(st.session_state['product_data'])} products")
-
-            # Cost estimate
+            # Cost estimate card
             num_products = len(st.session_state['product_data'])
-            est_cost = num_products * 0.05  # Rough estimate
-            st.info(f"Estimated cost: ~${est_cost:.2f} (actual cost may vary based on content)")
+            est_cost = num_products * 0.05
+
+            st.markdown(f"""
+            <div class="ui-card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #1e40af; font-size: 1.1rem;">Ready to Generate</div>
+                        <div style="color: #1e40af; font-size: 0.9rem; margin-top: 0.25rem;">Estimated cost: ~${est_cost:.2f} (varies based on content)</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 2rem; font-weight: 700; color: #1e40af;">{num_products}</div>
+                        <div style="font-size: 0.8rem; color: #1e40af;">products</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             if st.button("🚀 Start Generation", type="primary", use_container_width=True):
                 try:
@@ -588,23 +1099,79 @@ def main():
 
         # Show results if available
         if 'results' in st.session_state:
-            st.divider()
-            st.subheader("Results")
+            st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
-            # Token usage summary
+            st.markdown("""
+            <div class="ui-card" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-color: #22c55e;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 2rem;">✓</div>
+                    <div>
+                        <div style="font-weight: 600; color: #166534; font-size: 1.25rem;">Generation Complete</div>
+                        <div style="color: #166534; font-size: 0.9rem;">Your product content has been generated successfully</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Token usage summary in styled cards
+            st.markdown("#### Usage Summary")
             col1, col2, col3 = st.columns(3)
-            col1.metric("Input Tokens", f"{st.session_state['total_input']:,}")
-            col2.metric("Output Tokens", f"{st.session_state['total_output']:,}")
-            col3.metric("Total Cost", f"${st.session_state['total_cost']:.4f}")
+
+            with col1:
+                st.markdown(f"""
+                <div class="ui-card" style="text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #667eea;">{st.session_state['total_input']:,}</div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">Input Tokens</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                <div class="ui-card" style="text-align: center;">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #764ba2;">{st.session_state['total_output']:,}</div>
+                    <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">Output Tokens</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f"""
+                <div class="ui-card" style="text-align: center; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #166534;">${st.session_state['total_cost']:.4f}</div>
+                    <div style="font-size: 0.85rem; color: #166534; margin-top: 0.25rem;">Total Cost</div>
+                </div>
+                """, unsafe_allow_html=True)
 
             # Image processing summary
             if 'image_stats' in st.session_state:
                 img_stats = st.session_state['image_stats']
-                st.markdown("**Image Processing Summary:**")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("✅ Images Loaded", img_stats.get('success', 0))
-                col2.metric("⚠️ Images Failed", img_stats.get('failed', 0))
-                col3.metric("📝 No Images", img_stats.get('no_images', 0))
+
+                st.markdown("#### Image Processing")
+                img_col1, img_col2, img_col3 = st.columns(3)
+
+                with img_col1:
+                    st.markdown(f"""
+                    <div class="ui-card" style="text-align: center; border-left: 4px solid #22c55e;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #166534;">{img_stats.get('success', 0)}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Images Loaded</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with img_col2:
+                    failed = img_stats.get('failed', 0)
+                    st.markdown(f"""
+                    <div class="ui-card" style="text-align: center; border-left: 4px solid {'#f59e0b' if failed > 0 else '#e2e8f0'};">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: {'#92400e' if failed > 0 else '#64748b'};">{failed}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">Failed</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with img_col3:
+                    st.markdown(f"""
+                    <div class="ui-card" style="text-align: center; border-left: 4px solid #64748b;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #475569;">{img_stats.get('no_images', 0)}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">No Images</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
                 if img_stats.get('failed', 0) > 0:
                     st.warning(f"{img_stats['failed']} product(s) had image loading failures. These were processed using text only.")
@@ -618,10 +1185,11 @@ def main():
                 results_df.to_excel(writer, index=False, sheet_name='Results')
             output.seek(0)
 
+            st.markdown("#### Next Steps")
             col1, col2 = st.columns(2)
             with col1:
                 st.download_button(
-                    label="📥 Download Results (Excel)",
+                    label="📥 Download Results",
                     data=output,
                     file_name="product_content_results.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -629,20 +1197,19 @@ def main():
                     use_container_width=True
                 )
             with col2:
-                if st.button("👁️ Send to Review", use_container_width=True):
+                if st.button("👁️ Review Content", use_container_width=True, type="secondary"):
                     st.session_state['review_data'] = results_df.copy()
                     st.session_state['review_statuses'] = {}
                     st.session_state['current_review_index'] = 0
                     st.session_state['review_in_progress'] = True
-                    st.success("Results sent to Review tab!")
                     st.rerun()
 
     # Tab 5: Review
     with tab5:
-        st.header("Review Generated Content")
+        st.markdown('<p class="section-header">Review Content</p>', unsafe_allow_html=True)
 
         # File upload for review (separate from generation)
-        with st.expander("📁 Upload Results for Review", expanded=st.session_state.get('review_data') is None):
+        with st.expander("📁 Upload Results File", expanded=st.session_state.get('review_data') is None):
             review_upload = st.file_uploader(
                 "Upload results Excel file",
                 type=['xlsx', 'xls'],
@@ -766,85 +1333,110 @@ def main():
             approved_count = sum(1 for s in statuses.values() if s == 'approved')
             rejected_count = sum(1 for s in statuses.values() if s == 'rejected')
             reviewed_count = approved_count + rejected_count
+            unreviewed_count = total_products - reviewed_count
 
-            # Header with progress
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.subheader(f"Product {current_idx + 1} of {total_products}")
-            with col2:
-                st.markdown(render_progress_ring(reviewed_count, total_products, approved_count, rejected_count), unsafe_allow_html=True)
-
-            st.divider()
+            # Progress header
+            st.markdown(f"""
+            <div class="ui-card" style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Reviewing</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b;">Product {current_idx + 1} of {total_products}</div>
+                    </div>
+                    <div style="display: flex; gap: 2rem; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #22c55e;">{approved_count}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Approved</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">{rejected_count}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Rejected</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #64748b;">{unreviewed_count}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">Remaining</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+                    <div style="display: flex; height: 100%;">
+                        <div style="width: {(approved_count/total_products)*100}%; background: linear-gradient(90deg, #22c55e, #16a34a);"></div>
+                        <div style="width: {(rejected_count/total_products)*100}%; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Get current product
             if current_idx < total_products:
                 product = review_df.iloc[current_idx]
+                current_status = statuses.get(current_idx)
 
-                # Product name
-                st.markdown(f"### {product.get('Product Name', 'Unknown Product')}")
+                # Product card
+                st.markdown('<div class="product-review-card">', unsafe_allow_html=True)
+
+                # Product header with status badge
+                status_html = ""
+                if current_status == 'approved':
+                    status_html = '<span class="status-badge status-success">✓ Approved</span>'
+                elif current_status == 'rejected':
+                    status_html = '<span class="status-badge status-error">✗ Rejected</span>'
+
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
+                        <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product.get('Product Name', 'Unknown Product')}</h3>
+                    </div>
+                    {status_html}
+                </div>
+                """, unsafe_allow_html=True)
 
                 # Images
                 review_images = product.get('Review Images', '')
                 if pd.notna(review_images) and review_images:
                     image_urls = [url.strip() for url in str(review_images).split('\n') if url.strip()]
                     if image_urls:
-                        st.markdown("**Product Images:**")
+                        st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">PRODUCT IMAGES</div>', unsafe_allow_html=True)
                         img_cols = st.columns(min(3, len(image_urls)))
                         for i, url in enumerate(image_urls[:3]):
                             with img_cols[i]:
                                 st.image(url, use_container_width=True)
+                        st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-                # Title
-                st.markdown("**Generated Title:**")
+                # Title section
                 title_text = product.get('Product Title', '')
-                st.info(title_text)
-                st.caption(f"Character count: {len(str(title_text))}")
+                st.markdown(f"""
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED TITLE</div>
+                    <div class="product-title-display">
+                        <div class="product-title-text">{title_text}</div>
+                        <div class="char-count">{len(str(title_text))} characters</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                # Description (scrollable)
-                st.markdown("**Generated Description:**")
+                # Description section
+                st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">GENERATED DESCRIPTION</div>', unsafe_allow_html=True)
                 desc_text = product.get('Product Description', '')
                 st.text_area(
                     "Description",
                     value=desc_text,
-                    height=300,
+                    height=280,
                     disabled=True,
                     label_visibility="collapsed"
                 )
-                st.caption(f"Character count: {len(str(desc_text))}")
+                st.markdown(f'<div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">{len(str(desc_text))} characters</div>', unsafe_allow_html=True)
 
-                # Current status indicator
-                current_status = statuses.get(current_idx)
-                if current_status == 'approved':
-                    st.success("✓ Marked as Approved")
-                elif current_status == 'rejected':
-                    st.error("✗ Marked as Incorrect")
+                st.markdown('</div>', unsafe_allow_html=True)  # Close product card
 
-                st.divider()
+                st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
-                # Action buttons
-                st.markdown("**Review Actions:**")
-
-                # CSS for action buttons - targets only rows where ALL 3 columns have buttons
-                # (Navigation row has text in middle column, not a button)
-                st.markdown('''
-                <style>
-                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(1) button {
-                    background-color: #28a745 !important;
-                    border-color: #28a745 !important;
-                    color: white !important;
-                }
-                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(2) button {
-                    background-color: #dc3545 !important;
-                    border-color: #dc3545 !important;
-                    color: white !important;
-                }
-                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(3) button {
-                    background-color: #6c757d !important;
-                    border-color: #6c757d !important;
-                    color: white !important;
-                }
-                </style>
-                ''', unsafe_allow_html=True)
+                # Action buttons in a card
+                st.markdown("""
+                <div class="ui-card">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 1rem;">REVIEW ACTIONS</div>
+                """, unsafe_allow_html=True)
 
                 col1, col2, col3 = st.columns(3)
 
@@ -865,19 +1457,17 @@ def main():
                         st.rerun()
 
                 with col3:
-                    skip_clicked = st.button("⏭️ Skip", use_container_width=True, key="skip_btn")
+                    skip_clicked = st.button("⏭ Skip", use_container_width=True, key="skip_btn")
                     if skip_clicked:
-                        # Remove any existing status (keep as un-reviewed)
                         if current_idx in st.session_state['review_statuses']:
                             del st.session_state['review_statuses'][current_idx]
                         if current_idx < total_products - 1:
                             st.session_state['current_review_index'] = current_idx + 1
                         st.rerun()
 
-                # Navigation
-                st.markdown("**Navigation:**")
+                st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                st.markdown('<div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">NAVIGATION</div>', unsafe_allow_html=True)
 
-                # Create a container with flexbox alignment
                 nav_col1, nav_col2, nav_col3 = st.columns([1, 1, 1])
 
                 with nav_col1:
@@ -886,19 +1476,18 @@ def main():
                         st.rerun()
 
                 with nav_col2:
-                    # Center the text showing current position
-                    st.markdown(f"<div style='text-align: center; padding: 8px 0; color: #495057; font-weight: 500;'>{current_idx + 1} / {total_products}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align: center; padding: 8px 0; color: #475569; font-weight: 600; font-size: 1.1rem;'>{current_idx + 1} / {total_products}</div>", unsafe_allow_html=True)
 
                 with nav_col3:
                     if st.button("Next →", use_container_width=True, disabled=current_idx >= total_products - 1, key="next_btn"):
                         st.session_state['current_review_index'] = current_idx + 1
                         st.rerun()
 
-                # Jump to specific product (separate row)
+                # Jump to specific product
                 jump_col1, jump_col2, jump_col3 = st.columns([1, 1, 1])
                 with jump_col2:
                     jump_to = st.number_input(
-                        "Jump to product",
+                        "Jump to",
                         min_value=1,
                         max_value=total_products,
                         value=current_idx + 1,
@@ -909,9 +1498,15 @@ def main():
                         st.session_state['current_review_index'] = jump_to - 1
                         st.rerun()
 
+                st.markdown('</div>', unsafe_allow_html=True)  # Close action card
+
             # Download section
-            st.divider()
-            st.markdown("### Download Results")
+            st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+
+            st.markdown("""
+            <div class="ui-card">
+                <div class="ui-card-header">📥 Export Results</div>
+            """, unsafe_allow_html=True)
 
             # Prepare categorized data
             approved_indices = [i for i, s in statuses.items() if s == 'approved']
@@ -922,10 +1517,33 @@ def main():
             incorrect_df_out = review_df.iloc[rejected_indices] if rejected_indices else pd.DataFrame()
             unreviewed_df_out = review_df.iloc[unreviewed_indices] if unreviewed_indices else pd.DataFrame()
 
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Approved", len(approved_indices))
-            col2.metric("Incorrect", len(rejected_indices))
-            col3.metric("Un-Reviewed", len(unreviewed_indices))
+            exp_col1, exp_col2, exp_col3 = st.columns(3)
+
+            with exp_col1:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #166534;">{len(approved_indices)}</div>
+                    <div style="font-size: 0.8rem; color: #166534;">Approved</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with exp_col2:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #991b1b;">{len(rejected_indices)}</div>
+                    <div style="font-size: 0.8rem; color: #991b1b;">Rejected</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with exp_col3:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 1.75rem; font-weight: 700; color: #475569;">{len(unreviewed_indices)}</div>
+                    <div style="font-size: 0.8rem; color: #64748b;">Remaining</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
             # Create downloadable Excel with three sheets
             output = BytesIO()
@@ -957,10 +1575,19 @@ def main():
             )
 
             if len(unreviewed_indices) > 0:
-                st.info(f"💡 You can download at any time. Un-reviewed items ({len(unreviewed_indices)}) will be in a separate sheet.")
+                st.caption(f"💡 Download includes {len(unreviewed_indices)} un-reviewed items in a separate sheet")
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
         else:
-            st.info("No data to review. Either upload a results file above, or generate content in the Generate tab and click 'Send to Review'.")
+            # Empty state for Review tab
+            st.markdown("""
+            <div class="empty-state">
+                <div class="empty-state-icon">👁️</div>
+                <div class="empty-state-title">No content to review</div>
+                <div class="empty-state-text">Upload a results file above, or generate content in the Generate tab and click "Review Content"</div>
+            </div>
+            """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
