@@ -679,41 +679,78 @@ def main():
                             incorrect_df = pd.read_excel(xlsx, sheet_name='Incorrect')
                             unreviewed_df = pd.read_excel(xlsx, sheet_name='Un-Reviewed')
 
-                            # Combine all into one dataframe
-                            all_data = pd.concat([reviewed_df, incorrect_df, unreviewed_df], ignore_index=True)
-                            st.session_state['review_data'] = all_data
+                            # Filter out empty dataframes and combine
+                            dfs_to_concat = [df for df in [reviewed_df, incorrect_df, unreviewed_df] if not df.empty]
+                            if dfs_to_concat:
+                                all_data = pd.concat(dfs_to_concat, ignore_index=True)
+                            else:
+                                all_data = pd.DataFrame()
 
-                            # Reconstruct review statuses
-                            statuses = {}
-                            for i in range(len(reviewed_df)):
-                                statuses[i] = 'approved'
-                            for i in range(len(reviewed_df), len(reviewed_df) + len(incorrect_df)):
-                                statuses[i] = 'rejected'
-                            # Un-reviewed items don't have a status
+                            if all_data.empty:
+                                st.warning("The uploaded file contains no product data.")
+                            else:
+                                st.session_state['review_data'] = all_data
+                                total_loaded = len(all_data)
 
-                            st.session_state['review_statuses'] = statuses
-                            st.session_state['current_review_index'] = len(reviewed_df) + len(incorrect_df)
-                            st.session_state['review_in_progress'] = True
+                                # Reconstruct review statuses based on original positions
+                                statuses = {}
+                                approved_count = len(reviewed_df) if not reviewed_df.empty else 0
+                                rejected_count = len(incorrect_df) if not incorrect_df.empty else 0
+                                unreviewed_count = len(unreviewed_df) if not unreviewed_df.empty else 0
 
-                            st.success(f"Resumed review: {len(reviewed_df)} approved, {len(incorrect_df)} rejected, {len(unreviewed_df)} remaining")
+                                # Map indices: approved items first, then rejected, then un-reviewed
+                                idx = 0
+                                for i in range(approved_count):
+                                    statuses[idx] = 'approved'
+                                    idx += 1
+                                for i in range(rejected_count):
+                                    statuses[idx] = 'rejected'
+                                    idx += 1
+                                # Un-reviewed items don't have a status
+
+                                st.session_state['review_statuses'] = statuses
+
+                                # Start at first un-reviewed item, or at beginning if all reviewed
+                                first_unreviewed = approved_count + rejected_count
+                                if first_unreviewed >= total_loaded:
+                                    # All items reviewed - start at beginning for re-review
+                                    st.session_state['current_review_index'] = 0
+                                else:
+                                    st.session_state['current_review_index'] = first_unreviewed
+
+                                st.session_state['review_in_progress'] = True
+
+                                if unreviewed_count > 0:
+                                    st.success(f"Resumed review: {approved_count} approved, {rejected_count} rejected, {unreviewed_count} remaining")
+                                else:
+                                    st.success(f"Loaded completed review: {approved_count} approved, {rejected_count} rejected. Starting from beginning for re-review.")
+                                st.rerun()
 
                         elif 'Results' in sheet_names or 'Product Content' in sheet_names:
                             # Fresh results file
                             sheet_name = 'Results' if 'Results' in sheet_names else 'Product Content'
                             review_df = pd.read_excel(xlsx, sheet_name=sheet_name)
-                            st.session_state['review_data'] = review_df
-                            st.session_state['review_statuses'] = {}
-                            st.session_state['current_review_index'] = 0
-                            st.session_state['review_in_progress'] = True
-                            st.success(f"Loaded {len(review_df)} products for review")
+                            if review_df.empty:
+                                st.warning("The uploaded file contains no product data.")
+                            else:
+                                st.session_state['review_data'] = review_df
+                                st.session_state['review_statuses'] = {}
+                                st.session_state['current_review_index'] = 0
+                                st.session_state['review_in_progress'] = True
+                                st.success(f"Loaded {len(review_df)} products for review")
+                                st.rerun()
                         else:
                             # Try first sheet
                             review_df = pd.read_excel(xlsx, sheet_name=0)
-                            st.session_state['review_data'] = review_df
-                            st.session_state['review_statuses'] = {}
-                            st.session_state['current_review_index'] = 0
-                            st.session_state['review_in_progress'] = True
-                            st.success(f"Loaded {len(review_df)} products for review")
+                            if review_df.empty:
+                                st.warning("The uploaded file contains no product data.")
+                            else:
+                                st.session_state['review_data'] = review_df
+                                st.session_state['review_statuses'] = {}
+                                st.session_state['current_review_index'] = 0
+                                st.session_state['review_in_progress'] = True
+                                st.success(f"Loaded {len(review_df)} products for review")
+                                st.rerun()
 
                     except Exception as e:
                         st.error(f"Error loading file: {str(e)}")
