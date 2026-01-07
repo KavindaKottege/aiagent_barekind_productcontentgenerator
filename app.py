@@ -787,70 +787,55 @@ def main():
                 # Action buttons
                 st.markdown("**Review Actions:**")
 
-                # Use container to scope CSS
-                action_container = st.container()
-                with action_container:
-                    # Start marker for CSS targeting
-                    st.markdown('<div class="review-actions-wrapper"></div>', unsafe_allow_html=True)
-
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        approve_clicked = st.button("✓ Approve", use_container_width=True, key="approve_btn", type="primary")
-                        if approve_clicked:
-                            st.session_state['review_statuses'][current_idx] = 'approved'
-                            if current_idx < total_products - 1:
-                                st.session_state['current_review_index'] = current_idx + 1
-                            st.rerun()
-
-                    with col2:
-                        reject_clicked = st.button("✗ Reject", use_container_width=True, key="reject_btn", type="primary")
-                        if reject_clicked:
-                            st.session_state['review_statuses'][current_idx] = 'rejected'
-                            if current_idx < total_products - 1:
-                                st.session_state['current_review_index'] = current_idx + 1
-                            st.rerun()
-
-                    with col3:
-                        skip_clicked = st.button("⏭️ Skip", use_container_width=True, key="skip_btn", type="primary")
-                        if skip_clicked:
-                            # Remove any existing status (keep as un-reviewed)
-                            if current_idx in st.session_state['review_statuses']:
-                                del st.session_state['review_statuses'][current_idx]
-                            if current_idx < total_products - 1:
-                                st.session_state['current_review_index'] = current_idx + 1
-                            st.rerun()
-
-                # Apply CSS after the action buttons, scoped to elements right after the marker
+                # CSS for action buttons - targets only rows where ALL 3 columns have buttons
+                # (Navigation row has text in middle column, not a button)
                 st.markdown('''
                 <style>
-                    /* Target the first horizontal block after review-actions-wrapper */
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(1) button {
-                        background-color: #28a745 !important;
-                        border-color: #28a745 !important;
-                    }
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(1) button:hover {
-                        background-color: #218838 !important;
-                        border-color: #1e7e34 !important;
-                    }
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
-                        background-color: #dc3545 !important;
-                        border-color: #dc3545 !important;
-                    }
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
-                        background-color: #c82333 !important;
-                        border-color: #bd2130 !important;
-                    }
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(3) button {
-                        background-color: #6c757d !important;
-                        border-color: #6c757d !important;
-                    }
-                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(3) button:hover {
-                        background-color: #5a6268 !important;
-                        border-color: #545b62 !important;
-                    }
+                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(1) button {
+                    background-color: #28a745 !important;
+                    border-color: #28a745 !important;
+                    color: white !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(2) button {
+                    background-color: #dc3545 !important;
+                    border-color: #dc3545 !important;
+                    color: white !important;
+                }
+                div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stColumn:nth-child(2) button):has(.stColumn:nth-child(3) button) .stColumn:nth-child(3) button {
+                    background-color: #6c757d !important;
+                    border-color: #6c757d !important;
+                    color: white !important;
+                }
                 </style>
                 ''', unsafe_allow_html=True)
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    approve_clicked = st.button("✓ Approve", use_container_width=True, key="approve_btn")
+                    if approve_clicked:
+                        st.session_state['review_statuses'][current_idx] = 'approved'
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                with col2:
+                    reject_clicked = st.button("✗ Reject", use_container_width=True, key="reject_btn")
+                    if reject_clicked:
+                        st.session_state['review_statuses'][current_idx] = 'rejected'
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
+
+                with col3:
+                    skip_clicked = st.button("⏭️ Skip", use_container_width=True, key="skip_btn")
+                    if skip_clicked:
+                        # Remove any existing status (keep as un-reviewed)
+                        if current_idx in st.session_state['review_statuses']:
+                            del st.session_state['review_statuses'][current_idx]
+                        if current_idx < total_products - 1:
+                            st.session_state['current_review_index'] = current_idx + 1
+                        st.rerun()
 
                 # Navigation
                 st.markdown("**Navigation:**")
