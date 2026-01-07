@@ -784,81 +784,73 @@ def main():
 
                 st.divider()
 
-                # Action buttons with custom styled HTML
+                # Action buttons
                 st.markdown("**Review Actions:**")
 
-                # Create custom HTML buttons for consistent styling
-                button_html = f'''
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <div style="flex: 1;" id="approve-container"></div>
-                    <div style="flex: 1;" id="reject-container"></div>
-                    <div style="flex: 1;" id="skip-container"></div>
-                </div>
+                # Use container to scope CSS
+                action_container = st.container()
+                with action_container:
+                    # Start marker for CSS targeting
+                    st.markdown('<div class="review-actions-wrapper"></div>', unsafe_allow_html=True)
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        approve_clicked = st.button("✓ Approve", use_container_width=True, key="approve_btn", type="primary")
+                        if approve_clicked:
+                            st.session_state['review_statuses'][current_idx] = 'approved'
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                    with col2:
+                        reject_clicked = st.button("✗ Reject", use_container_width=True, key="reject_btn", type="primary")
+                        if reject_clicked:
+                            st.session_state['review_statuses'][current_idx] = 'rejected'
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                    with col3:
+                        skip_clicked = st.button("⏭️ Skip", use_container_width=True, key="skip_btn", type="primary")
+                        if skip_clicked:
+                            # Remove any existing status (keep as un-reviewed)
+                            if current_idx in st.session_state['review_statuses']:
+                                del st.session_state['review_statuses'][current_idx]
+                            if current_idx < total_products - 1:
+                                st.session_state['current_review_index'] = current_idx + 1
+                            st.rerun()
+
+                # Apply CSS after the action buttons, scoped to elements right after the marker
+                st.markdown('''
                 <style>
-                    /* Target approve button by key */
-                    button[key="approve_btn"], div[data-testid="stButton"] button:has(p:contains("Approve")) {{
+                    /* Target the first horizontal block after review-actions-wrapper */
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(1) button {
                         background-color: #28a745 !important;
                         border-color: #28a745 !important;
-                        color: white !important;
-                    }}
-                    /* Green approve button - using aria label */
-                    div[data-testid="stHorizontalBlock"] > div:first-child button {{
-                        background-color: #28a745 !important;
-                        border-color: #28a745 !important;
-                        color: white !important;
-                    }}
-                    div[data-testid="stHorizontalBlock"] > div:first-child button:hover {{
+                    }
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(1) button:hover {
                         background-color: #218838 !important;
                         border-color: #1e7e34 !important;
-                    }}
-                    /* Red reject button */
-                    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {{
+                    }
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(2) button {
                         background-color: #dc3545 !important;
                         border-color: #dc3545 !important;
-                        color: white !important;
-                    }}
-                    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {{
+                    }
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(2) button:hover {
                         background-color: #c82333 !important;
                         border-color: #bd2130 !important;
-                    }}
-                    /* Grey skip button */
-                    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button {{
+                    }
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(3) button {
                         background-color: #6c757d !important;
                         border-color: #6c757d !important;
-                        color: white !important;
-                    }}
-                    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button:hover {{
+                    }
+                    .review-actions-wrapper + div[data-testid="stHorizontalBlock"] > div:nth-child(3) button:hover {
                         background-color: #5a6268 !important;
                         border-color: #545b62 !important;
-                    }}
+                    }
                 </style>
-                '''
-                st.markdown(button_html, unsafe_allow_html=True)
-
-                col1, col2, col3 = st.columns(3)
-
-                with col1:
-                    if st.button("✓ Approve", use_container_width=True, key="approve_btn"):
-                        st.session_state['review_statuses'][current_idx] = 'approved'
-                        if current_idx < total_products - 1:
-                            st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
-
-                with col2:
-                    if st.button("✗ Reject", use_container_width=True, key="reject_btn"):
-                        st.session_state['review_statuses'][current_idx] = 'rejected'
-                        if current_idx < total_products - 1:
-                            st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
-
-                with col3:
-                    if st.button("⏭️ Skip", use_container_width=True, key="skip_btn"):
-                        # Remove any existing status (keep as un-reviewed)
-                        if current_idx in st.session_state['review_statuses']:
-                            del st.session_state['review_statuses'][current_idx]
-                        if current_idx < total_products - 1:
-                            st.session_state['current_review_index'] = current_idx + 1
-                        st.rerun()
+                ''', unsafe_allow_html=True)
 
                 # Navigation
                 st.markdown("**Navigation:**")
