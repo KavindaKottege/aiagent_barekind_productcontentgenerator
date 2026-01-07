@@ -336,36 +336,7 @@ def render_progress_ring(reviewed_count, total_count, approved_count, rejected_c
     # Then unreviewed (grey)
     unreviewed_rotation = -90 + ((approved_pct + rejected_pct) * 360)
 
-    svg = f"""
-    <div style="display: flex; flex-direction: column; align-items: center;">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-            <!-- Background circle -->
-            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#e9ecef" stroke-width="10"/>
-
-            <!-- Approved segment (green) -->
-            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#28a745" stroke-width="10"
-                    stroke-dasharray="{approved_arc} {circumference - approved_arc}"
-                    transform="rotate({approved_rotation} 60 60)" stroke-linecap="butt"/>
-
-            <!-- Rejected segment (red) -->
-            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#dc3545" stroke-width="10"
-                    stroke-dasharray="{rejected_arc} {circumference - rejected_arc}"
-                    transform="rotate({rejected_rotation} 60 60)" stroke-linecap="butt"/>
-
-            <!-- Un-reviewed segment (grey) -->
-            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#6c757d" stroke-width="10"
-                    stroke-dasharray="{unreviewed_arc} {circumference - unreviewed_arc}"
-                    transform="rotate({unreviewed_rotation} 60 60)" stroke-linecap="butt"/>
-
-            <text x="60" y="55" text-anchor="middle" font-size="20" font-weight="bold" fill="#495057">{reviewed_count}</text>
-            <text x="60" y="75" text-anchor="middle" font-size="12" fill="#6c757d">of {total_count}</text>
-        </svg>
-        <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 12px;">
-            <span style="color: #28a745;">✓ {approved_count}</span>
-            <span style="color: #dc3545;">✗ {rejected_count}</span>
-        </div>
-    </div>
-    """
+    svg = f'''<div style="display: flex; flex-direction: column; align-items: center;"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="{radius}" fill="none" stroke="#e9ecef" stroke-width="10"/><circle cx="60" cy="60" r="{radius}" fill="none" stroke="#28a745" stroke-width="10" stroke-dasharray="{approved_arc} {circumference - approved_arc}" transform="rotate({approved_rotation} 60 60)"/><circle cx="60" cy="60" r="{radius}" fill="none" stroke="#dc3545" stroke-width="10" stroke-dasharray="{rejected_arc} {circumference - rejected_arc}" transform="rotate({rejected_rotation} 60 60)"/><circle cx="60" cy="60" r="{radius}" fill="none" stroke="#6c757d" stroke-width="10" stroke-dasharray="{unreviewed_arc} {circumference - unreviewed_arc}" transform="rotate({unreviewed_rotation} 60 60)"/><text x="60" y="55" text-anchor="middle" font-size="20" font-weight="bold" fill="#495057">{reviewed_count}</text><text x="60" y="75" text-anchor="middle" font-size="12" fill="#6c757d">of {total_count}</text></svg><div style="display: flex; gap: 15px; margin-top: 5px; font-size: 12px;"><span style="color: #28a745;">✓ {approved_count}</span><span style="color: #dc3545;">✗ {rejected_count}</span></div></div>'''
     return svg
 
 
