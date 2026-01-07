@@ -309,37 +309,55 @@ def process_products(llm, product_data, general_info, prompts, char_limits, prog
 
 
 def render_progress_ring(reviewed_count, total_count, approved_count, rejected_count):
-    """Render a progress ring showing review progress with color based on approval ratio."""
+    """Render a segmented progress ring showing approved (green), rejected (red), and un-reviewed (grey)."""
     if total_count == 0:
-        progress = 0
-        color = "#6c757d"  # Gray when empty
+        approved_pct = 0
+        rejected_pct = 0
+        unreviewed_pct = 1
     else:
-        progress = reviewed_count / total_count
-        if reviewed_count == 0:
-            color = "#6c757d"  # Gray
-        else:
-            approval_ratio = approved_count / reviewed_count if reviewed_count > 0 else 0
-            # Green to red gradient based on approval ratio
-            if approval_ratio >= 0.7:
-                color = "#28a745"  # Green
-            elif approval_ratio >= 0.4:
-                color = "#ffc107"  # Yellow
-            else:
-                color = "#dc3545"  # Red
+        approved_pct = approved_count / total_count
+        rejected_pct = rejected_count / total_count
+        unreviewed_pct = (total_count - approved_count - rejected_count) / total_count
 
-    # SVG progress ring
+    # SVG progress ring with three segments
     radius = 45
     circumference = 2 * 3.14159 * radius
-    stroke_dashoffset = circumference * (1 - progress)
+
+    # Calculate arc lengths for each segment
+    approved_arc = circumference * approved_pct
+    rejected_arc = circumference * rejected_pct
+    unreviewed_arc = circumference * unreviewed_pct
+
+    # Calculate rotation angles (cumulative)
+    # Start with approved (green)
+    approved_rotation = -90
+    # Then rejected (red)
+    rejected_rotation = -90 + (approved_pct * 360)
+    # Then unreviewed (grey)
+    unreviewed_rotation = -90 + ((approved_pct + rejected_pct) * 360)
 
     svg = f"""
     <div style="display: flex; flex-direction: column; align-items: center;">
         <svg width="120" height="120" viewBox="0 0 120 120">
+            <!-- Background circle -->
             <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#e9ecef" stroke-width="10"/>
-            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color}" stroke-width="10"
-                    stroke-dasharray="{circumference}" stroke-dashoffset="{stroke_dashoffset}"
-                    transform="rotate(-90 60 60)" stroke-linecap="round"/>
-            <text x="60" y="55" text-anchor="middle" font-size="20" font-weight="bold" fill="{color}">{reviewed_count}</text>
+
+            <!-- Approved segment (green) -->
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#28a745" stroke-width="10"
+                    stroke-dasharray="{approved_arc} {circumference - approved_arc}"
+                    transform="rotate({approved_rotation} 60 60)" stroke-linecap="butt"/>
+
+            <!-- Rejected segment (red) -->
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#dc3545" stroke-width="10"
+                    stroke-dasharray="{rejected_arc} {circumference - rejected_arc}"
+                    transform="rotate({rejected_rotation} 60 60)" stroke-linecap="butt"/>
+
+            <!-- Un-reviewed segment (grey) -->
+            <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#6c757d" stroke-width="10"
+                    stroke-dasharray="{unreviewed_arc} {circumference - unreviewed_arc}"
+                    transform="rotate({unreviewed_rotation} 60 60)" stroke-linecap="butt"/>
+
+            <text x="60" y="55" text-anchor="middle" font-size="20" font-weight="bold" fill="#495057">{reviewed_count}</text>
             <text x="60" y="75" text-anchor="middle" font-size="12" fill="#6c757d">of {total_count}</text>
         </svg>
         <div style="display: flex; gap: 15px; margin-top: 5px; font-size: 12px;">
@@ -794,6 +812,41 @@ def main():
                     st.error("✗ Marked as Incorrect")
 
                 st.divider()
+
+                # Custom CSS for button colors
+                st.markdown("""
+                <style>
+                    /* Green approve button */
+                    div[data-testid="column"]:nth-of-type(1) button[kind="primary"] {
+                        background-color: #28a745 !important;
+                        border-color: #28a745 !important;
+                    }
+                    div[data-testid="column"]:nth-of-type(1) button[kind="primary"]:hover {
+                        background-color: #218838 !important;
+                        border-color: #1e7e34 !important;
+                    }
+                    /* Red reject button */
+                    div[data-testid="column"]:nth-of-type(2) button[kind="secondary"] {
+                        background-color: #dc3545 !important;
+                        border-color: #dc3545 !important;
+                        color: white !important;
+                    }
+                    div[data-testid="column"]:nth-of-type(2) button[kind="secondary"]:hover {
+                        background-color: #c82333 !important;
+                        border-color: #bd2130 !important;
+                    }
+                    /* Grey skip button */
+                    div[data-testid="column"]:nth-of-type(3) button[kind="secondary"] {
+                        background-color: #6c757d !important;
+                        border-color: #6c757d !important;
+                        color: white !important;
+                    }
+                    div[data-testid="column"]:nth-of-type(3) button[kind="secondary"]:hover {
+                        background-color: #5a6268 !important;
+                        border-color: #545b62 !important;
+                    }
+                </style>
+                """, unsafe_allow_html=True)
 
                 # Action buttons
                 st.markdown("**Review Actions:**")
