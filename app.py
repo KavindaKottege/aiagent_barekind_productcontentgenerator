@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 import openpyxl  # Explicit import to ensure it's available
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -364,6 +365,215 @@ div[data-testid="stHorizontalBlock"]:has(.stColumn:nth-child(1) button):has(.stC
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
 }
+
+/* =============================================================================
+   GENERATION PROGRESS COMPONENTS
+   ============================================================================= */
+
+/* Timeline container */
+.timeline-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+/* Timeline dot base style */
+.timeline-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Timeline dot states */
+.timeline-dot.pending {
+    background: #e2e8f0;
+    color: #94a3b8;
+}
+
+.timeline-dot.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3);
+    animation: pulse 2s infinite;
+}
+
+.timeline-dot.completed {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+}
+
+.timeline-dot.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.timeline-dot.error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.1); }
+}
+
+/* Current product card */
+.current-product-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+/* Step indicator */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.step-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.step-icon.pending {
+    background: #e2e8f0;
+    color: #94a3b8;
+}
+
+.step-icon.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    animation: spin 1.5s linear infinite;
+}
+
+.step-icon.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.step-icon.retry {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.step-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Live stats row */
+.live-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.live-stat-card {
+    flex: 1;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.live-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.live-stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Control buttons */
+.control-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Paused/Stopped state banner */
+.state-banner {
+    padding: 1rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.state-banner.paused {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #fbbf24;
+}
+
+.state-banner.stopped {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 1px solid #f87171;
+}
+
+.state-banner-icon {
+    font-size: 1.5rem;
+}
+
+.state-banner-text {
+    flex: 1;
+}
+
+.state-banner-title {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.state-banner-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -557,13 +767,25 @@ CRITICAL REQUIREMENTS:
     return response.content, input_tokens, output_tokens, cost
 
 
-def process_products(llm, product_data, general_info, prompts, char_limits, progress_bar, status_text):
-    """Process all products and return results."""
-    results = []
+def process_single_product(llm, row, prompts, char_limits, general_info, ui_containers):
+    """Process a single product and return the result with detailed progress updates.
+
+    Args:
+        llm: The language model instance
+        row: DataFrame row with product data
+        prompts: Dict with 'system', 'task1', 'task2' prompts
+        char_limits: Dict with character limits
+        general_info: General brand/language info
+        ui_containers: Dict with 'timeline', 'status', 'steps' containers for UI updates
+
+    Returns:
+        Tuple of (result_dict, tokens_in, tokens_out, cost, image_status, had_retries)
+    """
+    product_name = row['Product Name']
+    total_in_tokens = 0
+    total_out_tokens = 0
     total_cost = 0.0
-    total_input_tokens = 0
-    total_output_tokens = 0
-    image_stats = {'success': 0, 'failed': 0, 'no_images': 0}
+    had_retries = False
 
     system_prompt = prompts['system']
     if prompts.get('brand'):
@@ -572,95 +794,344 @@ def process_products(llm, product_data, general_info, prompts, char_limits, prog
     title_prompt = prompts['task1'] + f"\n\nSTRICT CHARACTER LIMIT: Your response MUST be between {char_limits['title_min']}-{char_limits['title_max']} characters. Aim for approximately {char_limits['title_target']} characters."
     desc_prompt = prompts['task2'] + f"\n\nSTRICT CHARACTER LIMIT: Your response MUST be between {char_limits['desc_min']}-{char_limits['desc_max']} characters. Aim for approximately {char_limits['desc_target']} characters."
 
-    for idx, row in product_data.iterrows():
-        product_name = row['Product Name']
-        progress = (idx + 1) / len(product_data)
-        progress_bar.progress(progress)
-
-        # Generate title (with images)
-        product_title, in_tok, out_tok, cost, title_img_info = invoke_agent(
-            llm, row, title_prompt, system_prompt, general_info
+    # Update UI - generating title
+    if ui_containers and 'steps' in ui_containers:
+        ui_containers['steps'].markdown(
+            render_step_indicator("Generating Title", "active", f"Processing: {product_name[:40]}...") +
+            render_step_indicator("Generating Description", "pending"),
+            unsafe_allow_html=True
         )
-        total_input_tokens += in_tok
-        total_output_tokens += out_tok
+
+    # Generate title
+    product_title, in_tok, out_tok, cost, title_img_info = invoke_agent(
+        llm, row, title_prompt, system_prompt, general_info
+    )
+    total_in_tokens += in_tok
+    total_out_tokens += out_tok
+    total_cost += cost
+
+    product_title = product_title.strip().strip('"').strip("'")
+    title_char_count = len(product_title)
+
+    # Retry title if needed
+    title_retry_count = 0
+    while (title_char_count < char_limits['title_min'] or title_char_count > char_limits['title_max']) and title_retry_count < 3:
+        title_retry_count += 1
+        had_retries = True
+
+        if ui_containers and 'steps' in ui_containers:
+            ui_containers['steps'].markdown(
+                render_step_indicator("Generating Title", "retry", f"Retry {title_retry_count}/3 - adjusting length ({title_char_count} chars)") +
+                render_step_indicator("Generating Description", "pending"),
+                unsafe_allow_html=True
+            )
+
+        product_title, in_tok, out_tok, cost = invoke_retry(
+            llm, product_title, char_limits['title_min'], char_limits['title_max'],
+            char_limits['title_target'], "product title"
+        )
+        total_in_tokens += in_tok
+        total_out_tokens += out_tok
         total_cost += cost
-
-        # Update status with image info
-        img_status_icon = {"success": "✅", "failed": "⚠️", "no_images": "📝"}.get(title_img_info['status'], "❓")
-        img_status_text = f"{img_status_icon} Images: {title_img_info['used']}/{title_img_info['available']}"
-        if title_img_info['status'] == 'failed':
-            img_status_text += " (failed to load, using text only)"
-        status_text.text(f"Processing {idx + 1}/{len(product_data)}: {product_name} | {img_status_text}")
-
-        # Track image stats (only count once per product, using title call)
-        image_stats[title_img_info['status']] = image_stats.get(title_img_info['status'], 0) + 1
-
         product_title = product_title.strip().strip('"').strip("'")
         title_char_count = len(product_title)
 
-        # Retry title if needed
-        retry_count = 0
-        while (title_char_count < char_limits['title_min'] or title_char_count > char_limits['title_max']) and retry_count < 3:
-            retry_count += 1
-            product_title, in_tok, out_tok, cost = invoke_retry(
-                llm, product_title, char_limits['title_min'], char_limits['title_max'],
-                char_limits['title_target'], "product title"
-            )
-            total_input_tokens += in_tok
-            total_output_tokens += out_tok
-            total_cost += cost
-            product_title = product_title.strip().strip('"').strip("'")
-            title_char_count = len(product_title)
-
-        # Generate description (with images)
-        product_description, in_tok, out_tok, cost, desc_img_info = invoke_agent(
-            llm, row, desc_prompt, system_prompt, general_info
+    # Update UI - generating description
+    title_status = "completed" if char_limits['title_min'] <= title_char_count <= char_limits['title_max'] else "warning"
+    if ui_containers and 'steps' in ui_containers:
+        ui_containers['steps'].markdown(
+            render_step_indicator("Generating Title", title_status, f"{title_char_count} characters") +
+            render_step_indicator("Generating Description", "active", "Processing..."),
+            unsafe_allow_html=True
         )
-        total_input_tokens += in_tok
-        total_output_tokens += out_tok
-        total_cost += cost
 
-        char_count = len(product_description)
+    # Generate description
+    product_description, in_tok, out_tok, cost, desc_img_info = invoke_agent(
+        llm, row, desc_prompt, system_prompt, general_info
+    )
+    total_in_tokens += in_tok
+    total_out_tokens += out_tok
+    total_cost += cost
 
-        # Retry description if needed
-        retry_count = 0
-        while (char_count < char_limits['desc_min'] or char_count > char_limits['desc_max']) and retry_count < 3:
-            retry_count += 1
-            product_description, in_tok, out_tok, cost = invoke_retry(
-                llm, product_description, char_limits['desc_min'], char_limits['desc_max'],
-                char_limits['desc_target'], "product description"
+    desc_char_count = len(product_description)
+
+    # Retry description if needed
+    desc_retry_count = 0
+    while (desc_char_count < char_limits['desc_min'] or desc_char_count > char_limits['desc_max']) and desc_retry_count < 3:
+        desc_retry_count += 1
+        had_retries = True
+
+        if ui_containers and 'steps' in ui_containers:
+            ui_containers['steps'].markdown(
+                render_step_indicator("Generating Title", title_status, f"{title_char_count} characters") +
+                render_step_indicator("Generating Description", "retry", f"Retry {desc_retry_count}/3 - adjusting length ({desc_char_count} chars)"),
+                unsafe_allow_html=True
             )
-            total_input_tokens += in_tok
-            total_output_tokens += out_tok
-            total_cost += cost
-            char_count = len(product_description)
 
-        # Extract review images
-        image_urls_str = row.get('Images', '')
-        if pd.isna(image_urls_str) or not image_urls_str:
-            review_images = ""
+        product_description, in_tok, out_tok, cost = invoke_retry(
+            llm, product_description, char_limits['desc_min'], char_limits['desc_max'],
+            char_limits['desc_target'], "product description"
+        )
+        total_in_tokens += in_tok
+        total_out_tokens += out_tok
+        total_cost += cost
+        desc_char_count = len(product_description)
+
+    # Extract review images
+    image_urls_str = row.get('Images', '')
+    if pd.isna(image_urls_str) or not image_urls_str:
+        review_images = ""
+    else:
+        text = str(image_urls_str).replace("\n", " ")
+        urls = [url.strip() for url in text.split() if url.strip().startswith("http")]
+        review_images = "\n".join(urls[:3])
+
+    # Determine image status for this product
+    img_status_str = f"{title_img_info['used']}/{title_img_info['available']}"
+    if title_img_info['status'] == 'failed':
+        img_status_str += " (failed)"
+    elif title_img_info['status'] == 'no_images':
+        img_status_str = "No images"
+
+    result = {
+        "Product Token": row["Product Token"],
+        "Product Name": product_name,
+        "Product Title": product_title,
+        "Product Description": product_description,
+        "Images Status": img_status_str,
+        "Review Images": review_images
+    }
+
+    return result, total_in_tokens, total_out_tokens, total_cost, title_img_info['status'], had_retries
+
+
+def run_generation(llm, product_data, general_info, prompts, char_limits, ui_containers, start_index=0):
+    """Run the generation process with pause/stop support.
+
+    This function updates session_state directly for progress tracking.
+
+    Args:
+        llm: Language model instance
+        product_data: DataFrame with product data
+        general_info: Brand/language info
+        prompts: Prompt configuration
+        char_limits: Character limit configuration
+        ui_containers: Dict with UI containers for updates
+        start_index: Index to start/resume from
+
+    Returns:
+        True if completed, False if stopped/paused
+    """
+    total_products = len(product_data)
+
+    # Initialize or retrieve generation state from session
+    if 'gen_results' not in st.session_state:
+        st.session_state['gen_results'] = []
+    if 'gen_product_statuses' not in st.session_state:
+        st.session_state['gen_product_statuses'] = {}
+    if 'gen_total_cost' not in st.session_state:
+        st.session_state['gen_total_cost'] = 0.0
+    if 'gen_total_input' not in st.session_state:
+        st.session_state['gen_total_input'] = 0
+    if 'gen_total_output' not in st.session_state:
+        st.session_state['gen_total_output'] = 0
+    if 'gen_image_stats' not in st.session_state:
+        st.session_state['gen_image_stats'] = {'success': 0, 'failed': 0, 'no_images': 0}
+    if 'gen_start_time' not in st.session_state:
+        st.session_state['gen_start_time'] = time.time()
+
+    for idx in range(start_index, total_products):
+        # Check for stop/pause
+        if st.session_state.get('gen_stop_requested', False):
+            st.session_state['gen_state'] = 'stopped'
+            st.session_state['gen_current_index'] = idx
+            return False
+
+        if st.session_state.get('gen_pause_requested', False):
+            st.session_state['gen_state'] = 'paused'
+            st.session_state['gen_current_index'] = idx
+            st.session_state['gen_pause_requested'] = False
+            return False
+
+        # Update current index
+        st.session_state['gen_current_index'] = idx
+
+        row = product_data.iloc[idx]
+        product_name = row['Product Name']
+
+        # Update timeline
+        if ui_containers and 'timeline' in ui_containers:
+            ui_containers['timeline'].markdown(
+                render_timeline(total_products, idx, st.session_state['gen_product_statuses']),
+                unsafe_allow_html=True
+            )
+
+        # Update live stats
+        elapsed = time.time() - st.session_state['gen_start_time']
+        if ui_containers and 'stats' in ui_containers:
+            ui_containers['stats'].markdown(
+                render_live_stats(
+                    len(st.session_state['gen_results']),
+                    total_products,
+                    st.session_state['gen_total_cost'],
+                    elapsed
+                ),
+                unsafe_allow_html=True
+            )
+
+        # Update current product info
+        if ui_containers and 'current_product' in ui_containers:
+            # Get first image URL for preview if available
+            image_urls_str = row.get('Images', '')
+            preview_img = ""
+            if pd.notna(image_urls_str) and image_urls_str:
+                urls = [url.strip() for url in str(image_urls_str).replace("\n", " ").split() if url.strip().startswith("http")]
+                if urls:
+                    preview_img = f'<img src="{urls[0]}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 1rem;">'
+
+            ui_containers['current_product'].markdown(f'''
+            <div style="display: flex; align-items: center; padding: 1rem; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; margin-bottom: 1rem;">
+                {preview_img}
+                <div>
+                    <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase;">Now Processing</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #1e293b;">{product_name}</div>
+                    <div style="font-size: 0.85rem; color: #64748b;">Product {idx + 1} of {total_products}</div>
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
+
+        # Process the product
+        try:
+            result, in_tok, out_tok, cost, img_status, had_retries = process_single_product(
+                llm, row, prompts, char_limits, general_info, ui_containers
+            )
+
+            # Update totals
+            st.session_state['gen_results'].append(result)
+            st.session_state['gen_total_input'] += in_tok
+            st.session_state['gen_total_output'] += out_tok
+            st.session_state['gen_total_cost'] += cost
+            st.session_state['gen_image_stats'][img_status] = st.session_state['gen_image_stats'].get(img_status, 0) + 1
+
+            # Update product status
+            if had_retries:
+                st.session_state['gen_product_statuses'][idx] = 'warning'
+            else:
+                st.session_state['gen_product_statuses'][idx] = 'completed'
+
+        except Exception as e:
+            st.session_state['gen_product_statuses'][idx] = 'error'
+            st.error(f"Error processing product {idx + 1}: {str(e)}")
+            # Continue to next product instead of stopping
+            continue
+
+    # Generation complete
+    st.session_state['gen_state'] = 'completed'
+    st.session_state['gen_current_index'] = total_products
+
+    # Final timeline update
+    if ui_containers and 'timeline' in ui_containers:
+        ui_containers['timeline'].markdown(
+            render_timeline(total_products, total_products, st.session_state['gen_product_statuses']),
+            unsafe_allow_html=True
+        )
+
+    return True
+
+
+def render_timeline(total_products, current_index, product_statuses):
+    """Render a horizontal timeline showing product processing status.
+
+    Args:
+        total_products: Total number of products
+        current_index: Index of currently processing product (-1 if not processing)
+        product_statuses: Dict mapping index to status ('completed', 'warning', 'error')
+    """
+    dots = []
+    for i in range(total_products):
+        if i < current_index:
+            status = product_statuses.get(i, 'completed')
+            icon = '✓' if status == 'completed' else ('!' if status == 'warning' else '✗')
+            dots.append(f'<div class="timeline-dot {status}" title="Product {i+1}">{icon}</div>')
+        elif i == current_index:
+            dots.append(f'<div class="timeline-dot active" title="Product {i+1} (Processing)">{i+1}</div>')
         else:
-            text = str(image_urls_str).replace("\n", " ")
-            urls = [url.strip() for url in text.split() if url.strip().startswith("http")]
-            review_images = "\n".join(urls[:3])
+            dots.append(f'<div class="timeline-dot pending" title="Product {i+1}">{i+1}</div>')
 
-        # Determine image status for this product
-        img_status_str = f"{title_img_info['used']}/{title_img_info['available']}"
-        if title_img_info['status'] == 'failed':
-            img_status_str += " (failed)"
-        elif title_img_info['status'] == 'no_images':
-            img_status_str = "No images"
+    return f'<div class="timeline-container">{"".join(dots)}</div>'
 
-        results.append({
-            "Product Token": row["Product Token"],
-            "Product Name": product_name,
-            "Product Title": product_title,
-            "Product Description": product_description,
-            "Images Status": img_status_str,
-            "Review Images": review_images
-        })
 
-    return results, total_input_tokens, total_output_tokens, total_cost, image_stats
+def render_step_indicator(step_name, status, subtitle=""):
+    """Render a step indicator with icon and text.
+
+    Args:
+        step_name: Name of the step (e.g., "Generating Title")
+        status: 'pending', 'active', 'completed', 'retry'
+        subtitle: Optional subtitle text
+    """
+    icons = {
+        'pending': '○',
+        'active': '◐',
+        'completed': '✓',
+        'retry': '↻'
+    }
+    icon = icons.get(status, '○')
+
+    return f'''
+    <div class="step-indicator">
+        <div class="step-icon {status}">{icon}</div>
+        <div class="step-content">
+            <div class="step-title">{step_name}</div>
+            {f'<div class="step-subtitle">{subtitle}</div>' if subtitle else ''}
+        </div>
+    </div>
+    '''
+
+
+def render_live_stats(completed, total, cost, elapsed_seconds):
+    """Render live statistics cards."""
+    # Calculate ETA
+    if completed > 0 and elapsed_seconds > 0:
+        avg_time = elapsed_seconds / completed
+        remaining = total - completed
+        eta_seconds = int(avg_time * remaining)
+        if eta_seconds < 60:
+            eta_str = f"{eta_seconds}s"
+        elif eta_seconds < 3600:
+            eta_str = f"{eta_seconds // 60}m {eta_seconds % 60}s"
+        else:
+            eta_str = f"{eta_seconds // 3600}h {(eta_seconds % 3600) // 60}m"
+    else:
+        eta_str = "--"
+
+    # Format elapsed time
+    if elapsed_seconds < 60:
+        elapsed_str = f"{int(elapsed_seconds)}s"
+    elif elapsed_seconds < 3600:
+        elapsed_str = f"{int(elapsed_seconds) // 60}m {int(elapsed_seconds) % 60}s"
+    else:
+        elapsed_str = f"{int(elapsed_seconds) // 3600}h {(int(elapsed_seconds) % 3600) // 60}m"
+
+    return f'''
+    <div class="live-stats">
+        <div class="live-stat-card">
+            <div class="live-stat-value">{completed}/{total}</div>
+            <div class="live-stat-label">Products</div>
+        </div>
+        <div class="live-stat-card">
+            <div class="live-stat-value">${cost:.4f}</div>
+            <div class="live-stat-label">Cost</div>
+        </div>
+        <div class="live-stat-card">
+            <div class="live-stat-value">{elapsed_str}</div>
+            <div class="live-stat-label">Elapsed</div>
+        </div>
+        <div class="live-stat-card">
+            <div class="live-stat-value">{eta_str}</div>
+            <div class="live-stat-label">ETA</div>
+        </div>
+    </div>
+    '''
 
 
 def render_progress_ring(reviewed_count, total_count, approved_count, rejected_count):
@@ -751,7 +1222,7 @@ def main():
                 st.markdown("**📋 Template Preview**")
 
                 # Create template tabs
-                template_tab1, template_tab2 = st.tabs(["Products Sheet", "General Details"])
+                template_tab1, template_tab2 = st.tabs(["Products", "General Details"])
 
                 with template_tab1:
                     # Sample Products template
@@ -1028,78 +1499,212 @@ def main():
                 """, unsafe_allow_html=True)
 
         if ready:
-            # Cost estimate card
             num_products = len(st.session_state['product_data'])
             est_cost = num_products * 0.05
 
-            st.markdown(f"""
-            <div class="ui-card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; color: #1e40af; font-size: 1.1rem;">Ready to Generate</div>
-                        <div style="color: #1e40af; font-size: 0.9rem; margin-top: 0.25rem;">Estimated cost: ~${est_cost:.2f} (varies based on content)</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 2rem; font-weight: 700; color: #1e40af;">{num_products}</div>
-                        <div style="font-size: 0.8rem; color: #1e40af;">products</div>
+            # Initialize generation state if not exists
+            if 'gen_state' not in st.session_state:
+                st.session_state['gen_state'] = 'idle'  # idle, running, paused, stopped, completed
+
+            gen_state = st.session_state.get('gen_state', 'idle')
+
+            # Show different UI based on generation state
+            if gen_state == 'idle':
+                # Ready to start - show cost estimate and start button
+                st.markdown(f"""
+                <div class="ui-card" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-color: #3b82f6;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e40af; font-size: 1.1rem;">Ready to Generate</div>
+                            <div style="color: #1e40af; font-size: 0.9rem; margin-top: 0.25rem;">Estimated cost: ~${est_cost:.2f} (varies based on content)</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 2rem; font-weight: 700; color: #1e40af;">{num_products}</div>
+                            <div style="font-size: 0.8rem; color: #1e40af;">products</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
-            if st.button("🚀 Start Generation", type="primary", use_container_width=True):
-                try:
-                    # Initialize LLM
-                    llm = ChatOpenAI(
-                        model="gpt-4o",
-                        temperature=0.7,
-                        max_tokens=4096,
-                        api_key=api_key
-                    )
+                if st.button("🚀 Start Generation", type="primary", use_container_width=True):
+                    # Reset generation state
+                    st.session_state['gen_state'] = 'running'
+                    st.session_state['gen_results'] = []
+                    st.session_state['gen_product_statuses'] = {}
+                    st.session_state['gen_total_cost'] = 0.0
+                    st.session_state['gen_total_input'] = 0
+                    st.session_state['gen_total_output'] = 0
+                    st.session_state['gen_image_stats'] = {'success': 0, 'failed': 0, 'no_images': 0}
+                    st.session_state['gen_current_index'] = 0
+                    st.session_state['gen_start_time'] = time.time()
+                    st.session_state['gen_pause_requested'] = False
+                    st.session_state['gen_stop_requested'] = False
+                    st.rerun()
 
-                    # Prepare prompts and limits
-                    prompts = {
-                        'system': st.session_state['system_prompt'],
-                        'brand': st.session_state.get('brand_prompt', ''),
-                        'task1': st.session_state['task1_prompt'],
-                        'task2': st.session_state['task2_prompt']
-                    }
+            elif gen_state in ['running', 'paused', 'stopped']:
+                # Show progress UI
+                current_idx = st.session_state.get('gen_current_index', 0)
+                completed_count = len(st.session_state.get('gen_results', []))
 
-                    char_limits = {
-                        'title_min': title_min,
-                        'title_target': title_target,
-                        'title_max': title_max,
-                        'desc_min': desc_min,
-                        'desc_target': desc_target,
-                        'desc_max': desc_max
-                    }
+                # State banner for paused/stopped
+                if gen_state == 'paused':
+                    st.markdown(f'''
+                    <div class="state-banner paused">
+                        <div class="state-banner-icon">⏸️</div>
+                        <div class="state-banner-text">
+                            <div class="state-banner-title">Generation Paused</div>
+                            <div class="state-banner-subtitle">{completed_count} of {num_products} products completed</div>
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
 
-                    # Progress indicators
-                    progress_bar = st.progress(0)
-                    status_text = st.empty()
+                elif gen_state == 'stopped':
+                    st.markdown(f'''
+                    <div class="state-banner stopped">
+                        <div class="state-banner-icon">⏹️</div>
+                        <div class="state-banner-text">
+                            <div class="state-banner-title">Generation Stopped</div>
+                            <div class="state-banner-subtitle">{completed_count} of {num_products} products completed - partial results available</div>
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
 
-                    # Process products
-                    results, total_input, total_output, total_cost, image_stats = process_products(
-                        llm,
-                        st.session_state['product_data'],
-                        st.session_state['general_info'],
-                        prompts,
-                        char_limits,
-                        progress_bar,
-                        status_text
-                    )
+                # Timeline
+                timeline_container = st.empty()
+                timeline_container.markdown(
+                    render_timeline(num_products, current_idx, st.session_state.get('gen_product_statuses', {})),
+                    unsafe_allow_html=True
+                )
 
-                    status_text.text("Processing complete!")
+                # Live stats
+                stats_container = st.empty()
+                elapsed = time.time() - st.session_state.get('gen_start_time', time.time())
+                stats_container.markdown(
+                    render_live_stats(completed_count, num_products, st.session_state.get('gen_total_cost', 0), elapsed),
+                    unsafe_allow_html=True
+                )
 
-                    # Store results
-                    st.session_state['results'] = results
-                    st.session_state['total_cost'] = total_cost
-                    st.session_state['total_input'] = total_input
-                    st.session_state['total_output'] = total_output
-                    st.session_state['image_stats'] = image_stats
+                # Current product info
+                current_product_container = st.empty()
 
-                except Exception as e:
-                    st.error(f"Error during processing: {str(e)}")
+                # Step indicators
+                steps_container = st.empty()
+
+                # Control buttons
+                btn_col1, btn_col2, btn_col3 = st.columns(3)
+
+                if gen_state == 'running':
+                    with btn_col1:
+                        if st.button("⏸️ Pause", use_container_width=True, key="pause_btn"):
+                            st.session_state['gen_pause_requested'] = True
+
+                    with btn_col2:
+                        if st.button("⏹️ Stop", use_container_width=True, key="stop_btn"):
+                            st.session_state['gen_stop_requested'] = True
+
+                    with btn_col3:
+                        st.button("Running...", use_container_width=True, disabled=True, key="running_placeholder")
+
+                elif gen_state == 'paused':
+                    with btn_col1:
+                        if st.button("▶️ Resume", type="primary", use_container_width=True, key="resume_btn"):
+                            st.session_state['gen_state'] = 'running'
+                            st.rerun()
+
+                    with btn_col2:
+                        if st.button("⏹️ Stop", use_container_width=True, key="stop_paused_btn"):
+                            st.session_state['gen_state'] = 'stopped'
+                            st.rerun()
+
+                    with btn_col3:
+                        st.button("Paused", use_container_width=True, disabled=True, key="paused_placeholder")
+
+                elif gen_state == 'stopped':
+                    with btn_col1:
+                        if st.button("🔄 Start Over", use_container_width=True, key="restart_btn"):
+                            st.session_state['gen_state'] = 'idle'
+                            st.session_state['gen_results'] = []
+                            st.rerun()
+
+                    with btn_col2:
+                        if completed_count > 0:
+                            if st.button("📥 Download Partial", type="primary", use_container_width=True, key="download_partial_btn"):
+                                # Transfer partial results to main results
+                                st.session_state['results'] = st.session_state['gen_results']
+                                st.session_state['total_cost'] = st.session_state['gen_total_cost']
+                                st.session_state['total_input'] = st.session_state['gen_total_input']
+                                st.session_state['total_output'] = st.session_state['gen_total_output']
+                                st.session_state['image_stats'] = st.session_state['gen_image_stats']
+                                st.session_state['gen_state'] = 'idle'
+                                st.rerun()
+
+                    with btn_col3:
+                        st.button("Stopped", use_container_width=True, disabled=True, key="stopped_placeholder")
+
+                # Run generation if state is 'running'
+                if gen_state == 'running':
+                    try:
+                        # Initialize LLM
+                        llm = ChatOpenAI(
+                            model="gpt-4o",
+                            temperature=0.7,
+                            max_tokens=4096,
+                            api_key=api_key
+                        )
+
+                        # Prepare prompts and limits
+                        prompts = {
+                            'system': st.session_state['system_prompt'],
+                            'brand': st.session_state.get('brand_prompt', ''),
+                            'task1': st.session_state['task1_prompt'],
+                            'task2': st.session_state['task2_prompt']
+                        }
+
+                        char_limits = {
+                            'title_min': st.session_state.get('title_min', 30),
+                            'title_target': st.session_state.get('title_target', 50),
+                            'title_max': st.session_state.get('title_max', 60),
+                            'desc_min': st.session_state.get('desc_min', 2000),
+                            'desc_target': st.session_state.get('desc_target', 2500),
+                            'desc_max': st.session_state.get('desc_max', 3000)
+                        }
+
+                        # UI containers
+                        ui_containers = {
+                            'timeline': timeline_container,
+                            'stats': stats_container,
+                            'current_product': current_product_container,
+                            'steps': steps_container
+                        }
+
+                        # Run generation from current index
+                        start_idx = st.session_state.get('gen_current_index', 0)
+                        completed = run_generation(
+                            llm,
+                            st.session_state['product_data'],
+                            st.session_state['general_info'],
+                            prompts,
+                            char_limits,
+                            ui_containers,
+                            start_index=start_idx
+                        )
+
+                        if completed:
+                            # Transfer results to main session state
+                            st.session_state['results'] = st.session_state['gen_results']
+                            st.session_state['total_cost'] = st.session_state['gen_total_cost']
+                            st.session_state['total_input'] = st.session_state['gen_total_input']
+                            st.session_state['total_output'] = st.session_state['gen_total_output']
+                            st.session_state['image_stats'] = st.session_state['gen_image_stats']
+                            st.session_state['gen_state'] = 'idle'
+                            st.rerun()
+                        else:
+                            # Paused or stopped - rerun to update UI
+                            st.rerun()
+
+                    except Exception as e:
+                        st.error(f"Error during processing: {str(e)}")
+                        st.session_state['gen_state'] = 'stopped'
 
         # Show results if available
         if 'results' in st.session_state:
