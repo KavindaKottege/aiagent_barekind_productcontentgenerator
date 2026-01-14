@@ -1929,11 +1929,40 @@ def main():
                 )
             with col2:
                 if st.button("👁️ Review Content", use_container_width=True, type="secondary"):
-                    st.session_state['review_data'] = results_df.copy()
-                    st.session_state['review_statuses'] = {}
-                    st.session_state['current_review_index'] = 0
-                    st.session_state['review_in_progress'] = True
+                    st.session_state['confirm_review_data'] = results_df.copy()
+                    st.session_state['show_review_confirm'] = True
                     st.rerun()
+
+        # Confirmation dialog for sending to review
+        if st.session_state.get('show_review_confirm', False) and st.session_state.get('confirm_review_data') is not None:
+            @st.dialog("Send to Review")
+            def confirm_review_dialog():
+                num_items = len(st.session_state['confirm_review_data'])
+                st.markdown(f"""
+                You are about to send **{num_items} product(s)** to the Review tab.
+
+                This will:
+                - Clear any existing review progress
+                - Load the generated content for review
+                """)
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Cancel", use_container_width=True):
+                        st.session_state['show_review_confirm'] = False
+                        st.session_state['confirm_review_data'] = None
+                        st.rerun()
+                with col2:
+                    if st.button("Confirm", use_container_width=True, type="primary"):
+                        st.session_state['review_data'] = st.session_state['confirm_review_data'].copy()
+                        st.session_state['review_statuses'] = {}
+                        st.session_state['current_review_index'] = 0
+                        st.session_state['review_in_progress'] = True
+                        st.session_state['show_review_confirm'] = False
+                        st.session_state['confirm_review_data'] = None
+                        st.rerun()
+
+            confirm_review_dialog()
 
     # Tab 5: Review
     with tab5:
