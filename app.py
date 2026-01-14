@@ -768,6 +768,121 @@ CRITICAL REQUIREMENTS:
     return response.content, input_tokens, output_tokens, cost
 
 
+def auto_review_product(product_row, api_key):
+    """Use GPT-5.2 to automatically review if title and description match the product images.
+
+    Args:
+        product_row: DataFrame row containing product data
+        api_key: OpenAI API key
+
+    Returns:
+        Tuple of (alignment_score, reasoning, cost) where alignment_score is 0-100
+    """
+    import json
+
+    # Get product data
+    title = product_row.get('Product Title', '')
+    description = product_row.get('Product Description', '')
+    review_images = product_row.get('Review Images', '')
+
+    # Parse image URLs
+    image_urls = []
+    if pd.notna(review_images) and review_images:
+        image_urls = [url.strip() for url in str(review_images).split('\n') if url.strip().startswith('http')]
+
+    if not image_urls:
+        return 0, "No images available for review", 0.0
+
+    # Create the review LLM with GPT-5.2
+    review_llm = ChatOpenAI(
+        model="gpt-5.2",
+        api_key=api_key,
+        temperature=0.1,  # Low temperature for consistent evaluation
+        max_tokens=500
+    )
+
+    # Build the message content with images
+    content = []
+
+    # Add images (up to 3)
+    for url in image_urls[:3]:
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": url, "detail": "high"}
+        })
+
+    # Add the evaluation prompt
+    content.append({
+        "type": "text",
+        "text": f"""You are a product content reviewer. Analyze the product images above and evaluate how well the following title and description match what is shown in the images.
+
+PRODUCT TITLE:
+{title}
+
+PRODUCT DESCRIPTION:
+{description}
+
+EVALUATION CRITERIA:
+1. Does the title accurately describe the product shown in the images?
+2. Does the description match the visual appearance, features, and characteristics visible in the images?
+3. Are there any claims in the title/description that contradict what's shown?
+4. Are important visual features captured in the text?
+
+Respond with a JSON object in this exact format:
+{{
+    "alignment_score": <number from 0 to 100>,
+    "title_accuracy": <number from 0 to 100>,
+    "description_accuracy": <number from 0 to 100>,
+    "reasoning": "<brief explanation of your evaluation>"
+}}
+
+Where:
+- alignment_score: Overall alignment between images and text (0=completely wrong, 100=perfect match)
+- title_accuracy: How well the title matches the images
+- description_accuracy: How well the description matches the images
+- reasoning: 1-2 sentences explaining your evaluation
+
+RESPOND ONLY WITH THE JSON OBJECT, NO OTHER TEXT."""
+    })
+
+    try:
+        messages = [HumanMessage(content=content)]
+        response = review_llm.invoke(messages)
+
+        # Parse the response
+        response_text = response.content.strip()
+        # Clean up response if wrapped in markdown code blocks
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+        response_text = response_text.strip()
+
+        result = json.loads(response_text)
+
+        alignment_score = result.get("alignment_score", 0)
+        reasoning = result.get("reasoning", "No reasoning provided")
+        title_acc = result.get("title_accuracy", 0)
+        desc_acc = result.get("description_accuracy", 0)
+
+        # Calculate cost (GPT-5.2 pricing - estimate, adjust as needed)
+        # Using approximate pricing similar to GPT-4o
+        usage = response.usage_metadata
+        input_tokens = usage.get("input_tokens", 0)
+        output_tokens = usage.get("output_tokens", 0)
+        # GPT-5.2 pricing (estimate - adjust based on actual pricing)
+        cost = (input_tokens * 0.0025 / 1000) + (output_tokens * 0.01 / 1000)
+
+        full_reasoning = f"Title: {title_acc}% | Description: {desc_acc}% | {reasoning}"
+
+        return alignment_score, full_reasoning, cost
+
+    except json.JSONDecodeError:
+        return 0, f"Failed to parse AI response: {response.content[:200]}", 0.0
+    except Exception as e:
+        return 0, f"Error during review: {str(e)}", 0.0
+
+
 def update_live_stats_ui(ui_containers, total_products):
     """Helper to update the live stats UI with current session state values."""
     if ui_containers and 'stats' in ui_containers:
@@ -2127,6 +2242,146 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
+            # Auto Review Section
+            with st.expander("🤖 Auto Review (AI-Powered)", expanded=st.session_state.get('auto_review_running', False)):
+                st.markdown("""
+                Use GPT-5.2 to automatically review all un-reviewed products. The AI will analyze product images
+                and compare them against the generated title and description.
+
+                **Threshold:** Products scoring ≥80% are auto-approved, <80% are auto-rejected.
+                """)
+
+                if unreviewed_count == 0:
+                    st.info("✅ All products have been reviewed. No items to auto-review.")
+                elif not st.session_state.get('api_key'):
+                    st.warning("⚠️ Please enter your OpenAI API key in the sidebar to use Auto Review.")
+                else:
+                    # Check if auto-review is in progress
+                    if st.session_state.get('auto_review_running', False):
+                        # Show progress
+                        ar_progress = st.session_state.get('auto_review_progress', {})
+                        ar_current = ar_progress.get('current', 0)
+                        ar_total = ar_progress.get('total', 1)
+                        ar_results = ar_progress.get('results', [])
+
+                        st.markdown(f"**Reviewing product {ar_current} of {ar_total}...**")
+
+                        # Progress bar
+                        progress_pct = ar_current / ar_total if ar_total > 0 else 0
+                        st.progress(progress_pct)
+
+                        # Status container for live updates
+                        status_container = st.empty()
+                        if ar_progress.get('current_product'):
+                            status_container.markdown(f"📝 Analyzing: *{ar_progress.get('current_product', '')}*")
+
+                        # Show results so far
+                        if ar_results:
+                            st.markdown("**Results so far:**")
+                            for r in ar_results[-5:]:  # Show last 5
+                                score = r['score']
+                                status_icon = "✅" if score >= 80 else "❌"
+                                score_color = "#22c55e" if score >= 80 else "#ef4444"
+                                st.markdown(f"{status_icon} **{r['name'][:30]}...** - <span style='color:{score_color};font-weight:bold;'>{score}%</span>", unsafe_allow_html=True)
+
+                        # Stop button
+                        if st.button("⏹ Stop Auto Review", use_container_width=True, type="secondary"):
+                            st.session_state['auto_review_stop'] = True
+                            st.rerun()
+
+                    else:
+                        # Show start button and options
+                        col1, col2 = st.columns([2, 1])
+                        with col1:
+                            st.markdown(f"**{unreviewed_count}** products ready for auto-review")
+                        with col2:
+                            estimated_cost = unreviewed_count * 0.02  # Rough estimate
+                            st.markdown(f"Est. cost: **~${estimated_cost:.2f}**")
+
+                        if st.button("🚀 Start Auto Review", use_container_width=True, type="primary"):
+                            # Initialize auto-review state
+                            st.session_state['auto_review_running'] = True
+                            st.session_state['auto_review_stop'] = False
+                            st.session_state['auto_review_progress'] = {
+                                'current': 0,
+                                'total': unreviewed_count,
+                                'results': [],
+                                'current_product': '',
+                                'total_cost': 0.0
+                            }
+                            st.rerun()
+
+                # Process auto-review if running
+                if st.session_state.get('auto_review_running', False) and not st.session_state.get('auto_review_stop', False):
+                    ar_progress = st.session_state.get('auto_review_progress', {})
+                    unreviewed_indices = [i for i in range(total_products) if i not in statuses]
+
+                    if ar_progress.get('current', 0) < len(unreviewed_indices):
+                        # Process next product
+                        idx_to_review = unreviewed_indices[ar_progress['current']]
+                        product_to_review = review_df.iloc[idx_to_review]
+                        product_name = product_to_review.get('Product Name', f'Product {idx_to_review + 1}')
+
+                        # Update progress
+                        st.session_state['auto_review_progress']['current_product'] = product_name
+
+                        # Perform the review
+                        score, reasoning, cost = auto_review_product(product_to_review, st.session_state['api_key'])
+
+                        # Store result
+                        result = {
+                            'index': idx_to_review,
+                            'name': product_name,
+                            'score': score,
+                            'reasoning': reasoning,
+                            'cost': cost
+                        }
+                        st.session_state['auto_review_progress']['results'].append(result)
+                        st.session_state['auto_review_progress']['total_cost'] += cost
+
+                        # Auto-mark based on threshold (80%)
+                        if score >= 80:
+                            st.session_state['review_statuses'][idx_to_review] = 'approved'
+                        else:
+                            st.session_state['review_statuses'][idx_to_review] = 'rejected'
+
+                        # Store the score in session for display
+                        if 'auto_review_scores' not in st.session_state:
+                            st.session_state['auto_review_scores'] = {}
+                        st.session_state['auto_review_scores'][idx_to_review] = {
+                            'score': score,
+                            'reasoning': reasoning
+                        }
+
+                        # Move to next
+                        st.session_state['auto_review_progress']['current'] += 1
+                        st.rerun()
+                    else:
+                        # Auto-review complete
+                        st.session_state['auto_review_running'] = False
+                        ar_results = ar_progress.get('results', [])
+                        total_cost = ar_progress.get('total_cost', 0)
+                        passed = sum(1 for r in ar_results if r['score'] >= 80)
+                        failed = len(ar_results) - passed
+
+                        st.success(f"""
+                        ✅ **Auto Review Complete!**
+
+                        - **{passed}** products approved (≥80%)
+                        - **{failed}** products rejected (<80%)
+                        - **Total cost:** ${total_cost:.4f}
+                        """)
+                        st.session_state['auto_review_progress'] = {}
+
+                # Handle stop request
+                if st.session_state.get('auto_review_stop', False):
+                    st.session_state['auto_review_running'] = False
+                    st.session_state['auto_review_stop'] = False
+                    ar_results = st.session_state.get('auto_review_progress', {}).get('results', [])
+                    if ar_results:
+                        st.warning(f"Auto review stopped. {len(ar_results)} products were reviewed before stopping.")
+                    st.session_state['auto_review_progress'] = {}
+
             # Get current product
             if current_idx < total_products:
                 product = review_df.iloc[current_idx]
@@ -2141,15 +2396,38 @@ def main():
                     elif current_status == 'rejected':
                         status_html = '<span class="status-badge status-error">✗ Rejected</span>'
 
+                    # Check for AI review score
+                    ai_score_html = ""
+                    ai_score_info = st.session_state.get('auto_review_scores', {}).get(current_idx)
+                    if ai_score_info:
+                        score = ai_score_info['score']
+                        score_color = "#22c55e" if score >= 80 else "#ef4444"
+                        ai_score_html = f'''
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                            <span style="font-size: 0.75rem; color: #64748b;">AI Score:</span>
+                            <span style="font-size: 1rem; font-weight: 700; color: {score_color};">{score}%</span>
+                        </div>
+                        '''
+
                     st.markdown(f"""
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
                             <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
                             <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product.get('Product Name', 'Unknown Product')}</h3>
+                            {ai_score_html}
                         </div>
                         {status_html}
                     </div>
                     """, unsafe_allow_html=True)
+
+                    # Show AI reasoning if available
+                    if ai_score_info:
+                        st.markdown(f"""
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; border-left: 3px solid {'#22c55e' if ai_score_info['score'] >= 80 else '#ef4444'};">
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">🤖 AI REVIEW ANALYSIS</div>
+                            <div style="font-size: 0.85rem; color: #475569;">{ai_score_info['reasoning']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
                     # Images
                     review_images = product.get('Review Images', '')
