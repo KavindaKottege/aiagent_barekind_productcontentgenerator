@@ -767,7 +767,19 @@ CRITICAL REQUIREMENTS:
     return response.content, input_tokens, output_tokens, cost
 
 
-def process_single_product(llm, row, prompts, char_limits, general_info, ui_containers):
+def update_live_stats_ui(ui_containers, total_products):
+    """Helper to update the live stats UI with current session state values."""
+    if ui_containers and 'stats' in ui_containers:
+        elapsed = time.time() - st.session_state.get('gen_start_time', time.time())
+        completed = len(st.session_state.get('gen_results', []))
+        cost = st.session_state.get('gen_total_cost', 0)
+        ui_containers['stats'].markdown(
+            render_live_stats(completed, total_products, cost, elapsed),
+            unsafe_allow_html=True
+        )
+
+
+def process_single_product(llm, row, prompts, char_limits, general_info, ui_containers, total_products):
     """Process a single product and return the result with detailed progress updates.
 
     Args:
@@ -777,6 +789,7 @@ def process_single_product(llm, row, prompts, char_limits, general_info, ui_cont
         char_limits: Dict with character limits
         general_info: General brand/language info
         ui_containers: Dict with 'timeline', 'status', 'steps' containers for UI updates
+        total_products: Total number of products (for stats display)
 
     Returns:
         Tuple of (result_dict, tokens_in, tokens_out, cost, image_status, had_retries)
@@ -810,6 +823,10 @@ def process_single_product(llm, row, prompts, char_limits, general_info, ui_cont
     total_out_tokens += out_tok
     total_cost += cost
 
+    # Update running totals in session state for real-time stats
+    st.session_state['gen_total_cost'] = st.session_state.get('gen_total_cost', 0) + cost
+    update_live_stats_ui(ui_containers, total_products)
+
     product_title = product_title.strip().strip('"').strip("'")
     title_char_count = len(product_title)
 
@@ -833,6 +850,11 @@ def process_single_product(llm, row, prompts, char_limits, general_info, ui_cont
         total_in_tokens += in_tok
         total_out_tokens += out_tok
         total_cost += cost
+
+        # Update running totals for real-time stats
+        st.session_state['gen_total_cost'] = st.session_state.get('gen_total_cost', 0) + cost
+        update_live_stats_ui(ui_containers, total_products)
+
         product_title = product_title.strip().strip('"').strip("'")
         title_char_count = len(product_title)
 
@@ -852,6 +874,10 @@ def process_single_product(llm, row, prompts, char_limits, general_info, ui_cont
     total_in_tokens += in_tok
     total_out_tokens += out_tok
     total_cost += cost
+
+    # Update running totals for real-time stats
+    st.session_state['gen_total_cost'] = st.session_state.get('gen_total_cost', 0) + cost
+    update_live_stats_ui(ui_containers, total_products)
 
     desc_char_count = len(product_description)
 
@@ -875,6 +901,11 @@ def process_single_product(llm, row, prompts, char_limits, general_info, ui_cont
         total_in_tokens += in_tok
         total_out_tokens += out_tok
         total_cost += cost
+
+        # Update running totals for real-time stats
+        st.session_state['gen_total_cost'] = st.session_state.get('gen_total_cost', 0) + cost
+        update_live_stats_ui(ui_containers, total_products)
+
         desc_char_count = len(product_description)
 
     # Extract review images
@@ -1002,15 +1033,14 @@ def run_generation(llm, product_data, general_info, prompts, char_limits, ui_con
 
         # Process the product
         try:
-            result, in_tok, out_tok, cost, img_status, had_retries = process_single_product(
-                llm, row, prompts, char_limits, general_info, ui_containers
+            result, in_tok, out_tok, _, img_status, had_retries = process_single_product(
+                llm, row, prompts, char_limits, general_info, ui_containers, total_products
             )
 
-            # Update totals
+            # Update totals (cost is already updated in real-time inside process_single_product)
             st.session_state['gen_results'].append(result)
             st.session_state['gen_total_input'] += in_tok
             st.session_state['gen_total_output'] += out_tok
-            st.session_state['gen_total_cost'] += cost
             st.session_state['gen_image_stats'][img_status] = st.session_state['gen_image_stats'].get(img_status, 0) + 1
 
             # Update product status
