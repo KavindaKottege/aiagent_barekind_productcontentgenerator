@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import time
 import openpyxl  # Explicit import to ensure it's available
@@ -773,10 +774,11 @@ def update_live_stats_ui(ui_containers, total_products):
         start_time = st.session_state.get('gen_start_time', time.time())
         completed = len(st.session_state.get('gen_results', []))
         cost = st.session_state.get('gen_total_cost', 0)
-        ui_containers['stats'].markdown(
-            render_live_stats(completed, total_products, cost, start_time),
-            unsafe_allow_html=True
-        )
+        with ui_containers['stats'].container():
+            components.html(
+                render_live_stats_html(completed, total_products, cost, start_time),
+                height=70
+            )
 
 
 def process_single_product(llm, row, prompts, char_limits, general_info, ui_containers, total_products):
@@ -999,15 +1001,16 @@ def run_generation(llm, product_data, general_info, prompts, char_limits, ui_con
 
         # Update live stats (pass start_time for JS-based real-time timer)
         if ui_containers and 'stats' in ui_containers:
-            ui_containers['stats'].markdown(
-                render_live_stats(
-                    len(st.session_state['gen_results']),
-                    total_products,
-                    st.session_state['gen_total_cost'],
-                    st.session_state['gen_start_time']
-                ),
-                unsafe_allow_html=True
-            )
+            with ui_containers['stats'].container():
+                components.html(
+                    render_live_stats_html(
+                        len(st.session_state['gen_results']),
+                        total_products,
+                        st.session_state['gen_total_cost'],
+                        st.session_state['gen_start_time']
+                    ),
+                    height=70
+                )
 
         # Update current product info
         if ui_containers and 'current_product' in ui_containers:
@@ -1117,8 +1120,10 @@ def render_step_indicator(step_name, status, subtitle=""):
     '''
 
 
-def render_live_stats(completed, total, cost, start_timestamp):
+def render_live_stats_html(completed, total, cost, start_timestamp):
     """Render live statistics cards with JavaScript-powered real-time timer.
+
+    This returns HTML that should be rendered using st.components.v1.html() to enable JS execution.
 
     Args:
         completed: Number of completed products
@@ -1134,30 +1139,67 @@ def render_live_stats(completed, total, cost, start_timestamp):
         avg_time_per_product = 0
 
     return f'''
-    <div class="live-stats">
-        <div class="live-stat-card">
-            <div class="live-stat-value" id="stat-products">{completed}/{total}</div>
-            <div class="live-stat-label">Products</div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: transparent;
+            }}
+            .live-stats {{
+                display: flex;
+                gap: 12px;
+                padding: 4px 0;
+            }}
+            .live-stat-card {{
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 8px;
+                padding: 12px 16px;
+                min-width: 90px;
+                text-align: center;
+                border: 1px solid #dee2e6;
+            }}
+            .live-stat-value {{
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #1a1a2e;
+                font-variant-numeric: tabular-nums;
+            }}
+            .live-stat-label {{
+                font-size: 0.7rem;
+                color: #6c757d;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 2px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="live-stats">
+            <div class="live-stat-card">
+                <div class="live-stat-value" id="stat-products">{completed}/{total}</div>
+                <div class="live-stat-label">Products</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-value" id="stat-cost">${cost:.4f}</div>
+                <div class="live-stat-label">Cost</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-value" id="stat-elapsed">0s</div>
+                <div class="live-stat-label">Elapsed</div>
+            </div>
+            <div class="live-stat-card">
+                <div class="live-stat-value" id="stat-eta">--</div>
+                <div class="live-stat-label">ETA</div>
+            </div>
         </div>
-        <div class="live-stat-card">
-            <div class="live-stat-value" id="stat-cost">${cost:.4f}</div>
-            <div class="live-stat-label">Cost</div>
-        </div>
-        <div class="live-stat-card">
-            <div class="live-stat-value" id="stat-elapsed">0s</div>
-            <div class="live-stat-label">Elapsed</div>
-        </div>
-        <div class="live-stat-card">
-            <div class="live-stat-value" id="stat-eta">--</div>
-            <div class="live-stat-label">ETA</div>
-        </div>
-    </div>
-    <script>
-        (function() {{
-            const startTime = {start_timestamp * 1000};  // Convert to milliseconds
+        <script>
+            const startTime = {start_timestamp * 1000};
             const completed = {completed};
             const total = {total};
-            const avgTimePerProduct = {avg_time_per_product * 1000};  // Convert to milliseconds
+            const avgTimePerProduct = {avg_time_per_product * 1000};
 
             function formatTime(ms) {{
                 const seconds = Math.floor(ms / 1000);
@@ -1170,39 +1212,24 @@ def render_live_stats(completed, total, cost, start_timestamp):
                 const now = Date.now();
                 const elapsed = now - startTime;
 
-                // Update elapsed time
-                const elapsedEl = document.getElementById('stat-elapsed');
-                if (elapsedEl) elapsedEl.textContent = formatTime(elapsed);
+                document.getElementById('stat-elapsed').textContent = formatTime(elapsed);
 
-                // Update ETA based on average time per product
                 const etaEl = document.getElementById('stat-eta');
-                if (etaEl) {{
-                    if (completed > 0 && avgTimePerProduct > 0) {{
-                        const remaining = total - completed;
-                        const etaMs = remaining * avgTimePerProduct;
-                        // Subtract time elapsed since last completion
-                        const adjustedEta = Math.max(0, etaMs - (elapsed - (completed * avgTimePerProduct)));
-                        etaEl.textContent = formatTime(adjustedEta);
-                    }} else {{
-                        etaEl.textContent = '--';
-                    }}
+                if (completed > 0 && avgTimePerProduct > 0) {{
+                    const remaining = total - completed;
+                    const etaMs = remaining * avgTimePerProduct;
+                    const adjustedEta = Math.max(0, etaMs - (elapsed - (completed * avgTimePerProduct)));
+                    etaEl.textContent = formatTime(adjustedEta);
+                }} else {{
+                    etaEl.textContent = '--';
                 }}
             }}
 
-            // Update immediately and then every second
             updateTimer();
-            const intervalId = setInterval(updateTimer, 1000);
-
-            // Clean up when element is removed (Streamlit re-renders)
-            const observer = new MutationObserver(function(mutations) {{
-                if (!document.getElementById('stat-elapsed')) {{
-                    clearInterval(intervalId);
-                    observer.disconnect();
-                }}
-            }});
-            observer.observe(document.body, {{ childList: true, subtree: true }});
-        }})();
-    </script>
+            setInterval(updateTimer, 1000);
+        </script>
+    </body>
+    </html>
     '''
 
 
@@ -1673,10 +1700,11 @@ def main():
                 # Live stats (pass start_time for JS-based real-time timer)
                 stats_container = st.empty()
                 start_time = st.session_state.get('gen_start_time', time.time())
-                stats_container.markdown(
-                    render_live_stats(completed_count, num_products, st.session_state.get('gen_total_cost', 0), start_time),
-                    unsafe_allow_html=True
-                )
+                with stats_container.container():
+                    components.html(
+                        render_live_stats_html(completed_count, num_products, st.session_state.get('gen_total_cost', 0), start_time),
+                        height=70
+                    )
 
                 # Current product info
                 current_product_container = st.empty()
