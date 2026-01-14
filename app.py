@@ -1245,6 +1245,28 @@ def main():
                     })
                     st.dataframe(general_template, use_container_width=True, hide_index=True, height=143)
 
+        # Demo button to load test data
+        st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+        if st.button("🧪 Use Test Data", help="Load sample data for demo purposes", type="secondary"):
+            try:
+                import os
+                test_file_path = os.path.join(os.path.dirname(__file__), 'test_data.xlsx')
+                product_data = pd.read_excel(test_file_path, sheet_name="Products", engine='openpyxl')
+                general_data = pd.read_excel(test_file_path, sheet_name="General Details", header=None, engine='openpyxl')
+
+                st.session_state['product_data'] = product_data
+                st.session_state['general_data'] = general_data
+
+                general_dict = dict(zip(general_data[0], general_data[1]))
+                st.session_state['general_info'] = {
+                    'language': general_dict.get("Language", "English"),
+                    'brand_name': general_dict.get("Brand", ""),
+                    'brand_story': general_dict.get("Story", "")
+                }
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error loading test data: {str(e)}")
+
         if uploaded_file:
             try:
                 product_data = pd.read_excel(uploaded_file, sheet_name="Products", engine='openpyxl')
