@@ -2248,7 +2248,7 @@ def main():
                 Use GPT-5.2 to automatically review all un-reviewed products. The AI will analyze product images
                 and compare them against the generated title and description.
 
-                **Threshold:** Products scoring ≥80% are auto-approved, <80% are auto-rejected.
+                **Threshold:** Products scoring ≥75% are auto-approved, <75% are auto-rejected.
                 """)
 
                 if unreviewed_count == 0:
@@ -2280,8 +2280,8 @@ def main():
                             st.markdown("**Results so far:**")
                             for r in ar_results[-5:]:  # Show last 5
                                 score = r['score']
-                                status_icon = "✅" if score >= 80 else "❌"
-                                score_color = "#22c55e" if score >= 80 else "#ef4444"
+                                status_icon = "✅" if score >= 75 else "❌"
+                                score_color = "#22c55e" if score >= 75 else "#ef4444"
                                 st.markdown(f"{status_icon} **{r['name'][:30]}...** - <span style='color:{score_color};font-weight:bold;'>{score}%</span>", unsafe_allow_html=True)
 
                         # Stop button
@@ -2299,12 +2299,15 @@ def main():
                             st.markdown(f"Est. cost: **~${estimated_cost:.2f}**")
 
                         if st.button("🚀 Start Auto Review", use_container_width=True, type="primary"):
+                            # Capture the indices to review BEFORE starting
+                            indices_to_review = [i for i in range(total_products) if i not in statuses]
                             # Initialize auto-review state
                             st.session_state['auto_review_running'] = True
                             st.session_state['auto_review_stop'] = False
                             st.session_state['auto_review_progress'] = {
                                 'current': 0,
                                 'total': unreviewed_count,
+                                'indices_to_review': indices_to_review,  # Store the fixed list
                                 'results': [],
                                 'current_product': '',
                                 'total_cost': 0.0
@@ -2314,11 +2317,12 @@ def main():
                 # Process auto-review if running
                 if st.session_state.get('auto_review_running', False) and not st.session_state.get('auto_review_stop', False):
                     ar_progress = st.session_state.get('auto_review_progress', {})
-                    unreviewed_indices = [i for i in range(total_products) if i not in statuses]
+                    # Use the stored indices list instead of recalculating
+                    indices_to_review = ar_progress.get('indices_to_review', [])
 
-                    if ar_progress.get('current', 0) < len(unreviewed_indices):
+                    if ar_progress.get('current', 0) < len(indices_to_review):
                         # Process next product
-                        idx_to_review = unreviewed_indices[ar_progress['current']]
+                        idx_to_review = indices_to_review[ar_progress['current']]
                         product_to_review = review_df.iloc[idx_to_review]
                         product_name = product_to_review.get('Product Name', f'Product {idx_to_review + 1}')
 
@@ -2339,8 +2343,8 @@ def main():
                         st.session_state['auto_review_progress']['results'].append(result)
                         st.session_state['auto_review_progress']['total_cost'] += cost
 
-                        # Auto-mark based on threshold (80%)
-                        if score >= 80:
+                        # Auto-mark based on threshold (75%)
+                        if score >= 75:
                             st.session_state['review_statuses'][idx_to_review] = 'approved'
                         else:
                             st.session_state['review_statuses'][idx_to_review] = 'rejected'
@@ -2361,14 +2365,14 @@ def main():
                         st.session_state['auto_review_running'] = False
                         ar_results = ar_progress.get('results', [])
                         total_cost = ar_progress.get('total_cost', 0)
-                        passed = sum(1 for r in ar_results if r['score'] >= 80)
+                        passed = sum(1 for r in ar_results if r['score'] >= 75)
                         failed = len(ar_results) - passed
 
                         st.success(f"""
                         ✅ **Auto Review Complete!**
 
-                        - **{passed}** products approved (≥80%)
-                        - **{failed}** products rejected (<80%)
+                        - **{passed}** products approved (≥75%)
+                        - **{failed}** products rejected (<75%)
                         - **Total cost:** ${total_cost:.4f}
                         """)
                         st.session_state['auto_review_progress'] = {}
@@ -2397,33 +2401,41 @@ def main():
                         status_html = '<span class="status-badge status-error">✗ Rejected</span>'
 
                     # Check for AI review score
-                    ai_score_html = ""
                     ai_score_info = st.session_state.get('auto_review_scores', {}).get(current_idx)
-                    if ai_score_info:
-                        score = ai_score_info['score']
-                        score_color = "#22c55e" if score >= 80 else "#ef4444"
-                        ai_score_html = f'''
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
-                            <span style="font-size: 0.75rem; color: #64748b;">AI Score:</span>
-                            <span style="font-size: 1rem; font-weight: 700; color: {score_color};">{score}%</span>
-                        </div>
-                        '''
 
-                    st.markdown(f"""
+                    # Build the product header HTML
+                    product_name = product.get('Product Name', 'Unknown Product')
+                    header_html = f'''
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
                             <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
-                            <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product.get('Product Name', 'Unknown Product')}</h3>
-                            {ai_score_html}
+                            <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product_name}</h3>
+                    '''
+
+                    # Add AI score if available
+                    if ai_score_info:
+                        score = ai_score_info['score']
+                        score_color = "#22c55e" if score >= 75 else "#ef4444"
+                        header_html += f'''
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                <span style="font-size: 0.75rem; color: #64748b;">AI Score:</span>
+                                <span style="font-size: 1rem; font-weight: 700; color: {score_color};">{score}%</span>
+                            </div>
+                        '''
+
+                    header_html += f'''
                         </div>
                         {status_html}
                     </div>
-                    """, unsafe_allow_html=True)
+                    '''
+
+                    st.markdown(header_html, unsafe_allow_html=True)
 
                     # Show AI reasoning if available
                     if ai_score_info:
+                        reasoning_color = "#22c55e" if ai_score_info['score'] >= 75 else "#ef4444"
                         st.markdown(f"""
-                        <div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; border-left: 3px solid {'#22c55e' if ai_score_info['score'] >= 80 else '#ef4444'};">
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; border-left: 3px solid {reasoning_color};">
                             <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">🤖 AI REVIEW ANALYSIS</div>
                             <div style="font-size: 0.85rem; color: #475569;">{ai_score_info['reasoning']}</div>
                         </div>
