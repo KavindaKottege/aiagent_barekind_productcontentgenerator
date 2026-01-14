@@ -770,11 +770,11 @@ CRITICAL REQUIREMENTS:
 def update_live_stats_ui(ui_containers, total_products):
     """Helper to update the live stats UI with current session state values."""
     if ui_containers and 'stats' in ui_containers:
-        elapsed = time.time() - st.session_state.get('gen_start_time', time.time())
+        start_time = st.session_state.get('gen_start_time', time.time())
         completed = len(st.session_state.get('gen_results', []))
         cost = st.session_state.get('gen_total_cost', 0)
         ui_containers['stats'].markdown(
-            render_live_stats(completed, total_products, cost, elapsed),
+            render_live_stats(completed, total_products, cost, start_time),
             unsafe_allow_html=True
         )
 
@@ -997,15 +997,14 @@ def run_generation(llm, product_data, general_info, prompts, char_limits, ui_con
                 unsafe_allow_html=True
             )
 
-        # Update live stats
-        elapsed = time.time() - st.session_state['gen_start_time']
+        # Update live stats (pass start_time for JS-based real-time timer)
         if ui_containers and 'stats' in ui_containers:
             ui_containers['stats'].markdown(
                 render_live_stats(
                     len(st.session_state['gen_results']),
                     total_products,
                     st.session_state['gen_total_cost'],
-                    elapsed
+                    st.session_state['gen_start_time']
                 ),
                 unsafe_allow_html=True
             )
@@ -1118,49 +1117,92 @@ def render_step_indicator(step_name, status, subtitle=""):
     '''
 
 
-def render_live_stats(completed, total, cost, elapsed_seconds):
-    """Render live statistics cards."""
-    # Calculate ETA
-    if completed > 0 and elapsed_seconds > 0:
-        avg_time = elapsed_seconds / completed
-        remaining = total - completed
-        eta_seconds = int(avg_time * remaining)
-        if eta_seconds < 60:
-            eta_str = f"{eta_seconds}s"
-        elif eta_seconds < 3600:
-            eta_str = f"{eta_seconds // 60}m {eta_seconds % 60}s"
-        else:
-            eta_str = f"{eta_seconds // 3600}h {(eta_seconds % 3600) // 60}m"
-    else:
-        eta_str = "--"
+def render_live_stats(completed, total, cost, start_timestamp):
+    """Render live statistics cards with JavaScript-powered real-time timer.
 
-    # Format elapsed time
-    if elapsed_seconds < 60:
-        elapsed_str = f"{int(elapsed_seconds)}s"
-    elif elapsed_seconds < 3600:
-        elapsed_str = f"{int(elapsed_seconds) // 60}m {int(elapsed_seconds) % 60}s"
+    Args:
+        completed: Number of completed products
+        total: Total number of products
+        cost: Total cost so far
+        start_timestamp: Unix timestamp when generation started (time.time())
+    """
+    # Calculate average time per product for ETA calculation
+    elapsed_so_far = time.time() - start_timestamp
+    if completed > 0 and elapsed_so_far > 0:
+        avg_time_per_product = elapsed_so_far / completed
     else:
-        elapsed_str = f"{int(elapsed_seconds) // 3600}h {(int(elapsed_seconds) % 3600) // 60}m"
+        avg_time_per_product = 0
 
     return f'''
     <div class="live-stats">
         <div class="live-stat-card">
-            <div class="live-stat-value">{completed}/{total}</div>
+            <div class="live-stat-value" id="stat-products">{completed}/{total}</div>
             <div class="live-stat-label">Products</div>
         </div>
         <div class="live-stat-card">
-            <div class="live-stat-value">${cost:.4f}</div>
+            <div class="live-stat-value" id="stat-cost">${cost:.4f}</div>
             <div class="live-stat-label">Cost</div>
         </div>
         <div class="live-stat-card">
-            <div class="live-stat-value">{elapsed_str}</div>
+            <div class="live-stat-value" id="stat-elapsed">0s</div>
             <div class="live-stat-label">Elapsed</div>
         </div>
         <div class="live-stat-card">
-            <div class="live-stat-value">{eta_str}</div>
+            <div class="live-stat-value" id="stat-eta">--</div>
             <div class="live-stat-label">ETA</div>
         </div>
     </div>
+    <script>
+        (function() {{
+            const startTime = {start_timestamp * 1000};  // Convert to milliseconds
+            const completed = {completed};
+            const total = {total};
+            const avgTimePerProduct = {avg_time_per_product * 1000};  // Convert to milliseconds
+
+            function formatTime(ms) {{
+                const seconds = Math.floor(ms / 1000);
+                if (seconds < 60) return seconds + 's';
+                if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's';
+                return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+            }}
+
+            function updateTimer() {{
+                const now = Date.now();
+                const elapsed = now - startTime;
+
+                // Update elapsed time
+                const elapsedEl = document.getElementById('stat-elapsed');
+                if (elapsedEl) elapsedEl.textContent = formatTime(elapsed);
+
+                // Update ETA based on average time per product
+                const etaEl = document.getElementById('stat-eta');
+                if (etaEl) {{
+                    if (completed > 0 && avgTimePerProduct > 0) {{
+                        const remaining = total - completed;
+                        const etaMs = remaining * avgTimePerProduct;
+                        // Subtract time elapsed since last completion
+                        const adjustedEta = Math.max(0, etaMs - (elapsed - (completed * avgTimePerProduct)));
+                        etaEl.textContent = formatTime(adjustedEta);
+                    }} else {{
+                        etaEl.textContent = '--';
+                    }}
+                }}
+            }}
+
+            // Update immediately and then every second
+            updateTimer();
+            const intervalId = setInterval(updateTimer, 1000);
+
+            // Clean up when element is removed (Streamlit re-renders)
+            const observer = new MutationObserver(function(mutations) {{
+                if (!document.getElementById('stat-elapsed')) {{
+                    clearInterval(intervalId);
+                    observer.disconnect();
+                }}
+            }});
+            observer.observe(document.body, {{ childList: true, subtree: true }});
+        }})();
+    </script>
     '''
 
 
@@ -1628,11 +1670,11 @@ def main():
                     unsafe_allow_html=True
                 )
 
-                # Live stats
+                # Live stats (pass start_time for JS-based real-time timer)
                 stats_container = st.empty()
-                elapsed = time.time() - st.session_state.get('gen_start_time', time.time())
+                start_time = st.session_state.get('gen_start_time', time.time())
                 stats_container.markdown(
-                    render_live_stats(completed_count, num_products, st.session_state.get('gen_total_cost', 0), elapsed),
+                    render_live_stats(completed_count, num_products, st.session_state.get('gen_total_cost', 0), start_time),
                     unsafe_allow_html=True
                 )
 
