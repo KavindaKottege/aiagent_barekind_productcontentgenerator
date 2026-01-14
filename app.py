@@ -2402,44 +2402,25 @@ def main():
 
                     # Check for AI review score
                     ai_score_info = st.session_state.get('auto_review_scores', {}).get(current_idx)
-
-                    # Build the product header HTML
                     product_name = product.get('Product Name', 'Unknown Product')
-                    header_html = f'''
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div>
-                            <h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product_name}</h3>
-                    '''
 
-                    # Add AI score if available
+                    # Build AI score HTML if available
+                    ai_score_html = ""
                     if ai_score_info:
                         score = ai_score_info['score']
                         score_color = "#22c55e" if score >= 75 else "#ef4444"
-                        header_html += f'''
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
-                                <span style="font-size: 0.75rem; color: #64748b;">AI Score:</span>
-                                <span style="font-size: 1rem; font-weight: 700; color: {score_color};">{score}%</span>
-                            </div>
-                        '''
+                        ai_score_html = f'<div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;"><span style="font-size: 0.75rem; color: #64748b;">AI Score:</span><span style="font-size: 1rem; font-weight: 700; color: {score_color};">{score}%</span></div>'
 
-                    header_html += f'''
-                        </div>
-                        {status_html}
-                    </div>
-                    '''
+                    # Single line HTML to avoid whitespace issues
+                    header_html = f'<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;"><div><div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Product Name</div><h3 style="margin: 0; font-size: 1.35rem; font-weight: 600; color: #1e293b;">{product_name}</h3>{ai_score_html}</div>{status_html}</div>'
 
                     st.markdown(header_html, unsafe_allow_html=True)
 
                     # Show AI reasoning if available
                     if ai_score_info:
                         reasoning_color = "#22c55e" if ai_score_info['score'] >= 75 else "#ef4444"
-                        st.markdown(f"""
-                        <div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; border-left: 3px solid {reasoning_color};">
-                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">🤖 AI REVIEW ANALYSIS</div>
-                            <div style="font-size: 0.85rem; color: #475569;">{ai_score_info['reasoning']}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        reasoning_html = f'<div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; border-left: 3px solid {reasoning_color};"><div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">🤖 AI REVIEW ANALYSIS</div><div style="font-size: 0.85rem; color: #475569;">{ai_score_info["reasoning"]}</div></div>'
+                        st.markdown(reasoning_html, unsafe_allow_html=True)
 
                     # Images
                     review_images = product.get('Review Images', '')
