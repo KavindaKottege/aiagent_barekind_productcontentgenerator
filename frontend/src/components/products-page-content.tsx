@@ -6,16 +6,20 @@ import { useSelectedClient } from '@/lib/client-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ProductList } from './product-list'
+import { FieldSelectionPanel } from './field-selection-panel'
 import { ProductGroup } from '@/app/actions/products'
+import { Client } from '@/app/actions/clients'
 
 interface ProductsPageContentProps {
   initialGroups: ProductGroup[]
   clientId: string | null
+  client: Client | null
 }
 
 export function ProductsPageContent({
   initialGroups,
   clientId,
+  client,
 }: ProductsPageContentProps) {
   const { selectedClientId } = useSelectedClient()
   const router = useRouter()
@@ -47,10 +51,19 @@ export function ProductsPageContent({
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      {/* Field Selection Panel - only show when products exist */}
+      {clientId && client && groups.length > 0 && (
+        <FieldSelectionPanel
+          clientId={clientId}
+          currentSelection={client.ai_input_fields}
+          onSelectionChange={() => router.refresh()}
+        />
+      )}
+
       {/* Stats Header */}
       {groups.length > 0 && (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-600">
               {groups.length} product groups uploaded
@@ -66,7 +79,9 @@ export function ProductsPageContent({
           </div>
         </div>
       )}
+
+      {/* Product List */}
       <ProductList groups={groups} />
-    </>
+    </div>
   )
 }
