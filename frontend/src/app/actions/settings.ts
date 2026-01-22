@@ -1,6 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAccessToken } from "@/lib/session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -17,31 +18,36 @@ export interface FormState {
   success?: boolean;
 }
 
+export interface PromptSettings {
+  default_system_prompt: string | null;
+  default_task1_prompt: string | null;
+  default_task2_prompt: string | null;
+}
+
+export interface PromptSettingsActionState {
+  errors?: {
+    _form?: string[];
+  };
+  success?: boolean;
+}
+
 export async function getSettings(): Promise<Settings | null> {
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("session")?.value;
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
 
-    if (!sessionCookie) {
-      throw new Error("Not authenticated");
-    }
+  const response = await fetch(`${API_URL}/settings/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
 
-    const response = await fetch(`${API_URL}/settings/`, {
-      headers: {
-        Authorization: `Bearer ${sessionCookie}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error("Failed to fetch settings:", error);
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
     return null;
   }
+
+  return response.json();
 }
 
 export async function updateSettings(
@@ -67,44 +73,91 @@ export async function updateSettings(
     };
   }
 
-  try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("session")?.value;
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
 
-    if (!sessionCookie) {
-      return {
-        errors: {
-          _form: ["Not authenticated"],
-        },
-      };
-    }
+  const response = await fetch(`${API_URL}/settings/`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ openai_api_key }),
+  });
 
-    const response = await fetch(`${API_URL}/settings/`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${sessionCookie}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ openai_api_key }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      return {
-        errors: {
-          _form: [error.detail || "Failed to update settings"],
-        },
-      };
-    }
-
-    return {
-      success: true,
-    };
-  } catch (error) {
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
+    const error = await response.json();
     return {
       errors: {
-        _form: ["An unexpected error occurred. Please try again."],
+        _form: [error.detail || "Failed to update settings"],
       },
     };
   }
+
+  return {
+    success: true,
+  };
+}
+
+export async function getPromptSettings(): Promise<PromptSettings | null> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  const response = await fetch(`${API_URL}/settings/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
+    if (response.status === 403) redirect("/dashboard?error=admin_required");
+    return null;
+  }
+
+  const data = await response.json();
+  return {
+    default_system_prompt: data.default_system_prompt,
+    default_task1_prompt: data.default_task1_prompt,
+    default_task2_prompt: data.default_task2_prompt,
+  };
+}
+
+export async function updatePromptSettings(
+  prevState: PromptSettingsActionState,
+  formData: FormData
+): Promise<PromptSettingsActionState> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  const payload = {
+    default_system_prompt: formData.get("default_system_prompt") as string || null,
+    default_task1_prompt: formData.get("default_task1_prompt") as string || null,
+    default_task2_prompt: formData.get("default_task2_prompt") as string || null,
+  };
+
+  const response = await fetch(`${API_URL}/settings/`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
+    if (response.status === 403)
+      return { errors: { _form: ["Admin access required"] } };
+    const error = await response.json();
+    return { errors: { _form: [error.detail || "Failed to save prompts"] } };
+  }
+
+  return { success: true };
 }
