@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. OpenAI API key is configured and stored securely per application instance
   6. Database enforces row-level security to prevent cross-tenant data access
 **Plans**: 5 plans in 3 waves (includes 1 gap closure plan)
-**Status**: Complete ✓
+**Status**: Complete
 **Completed**: 2026-01-22
 
 Plans:
@@ -56,10 +56,14 @@ Plans:
   5. User can switch between client profiles in the UI
   6. Selected client profile persists across sessions
   7. User can view list of all client profiles in their account
-**Plans**: TBD
+**Plans**: 5 plans in 2 waves
 
 Plans:
-- [ ] TBD after planning
+- [ ] 02-01-PLAN.md — Backend: Client model, migration, CRUD API endpoints
+- [ ] 02-02-PLAN.md — Backend: Add default prompts to AppSettings
+- [ ] 02-03-PLAN.md — Frontend: Client list, create/edit pages, Server Actions
+- [ ] 02-04-PLAN.md — Frontend: Client selector dropdown with localStorage persistence
+- [ ] 02-05-PLAN.md — Frontend: Admin Prompt Settings page
 
 ### Phase 3: Excel Processing
 **Goal**: Users can upload raw Faire Excel files and configure product field mapping for AI generation
@@ -158,8 +162,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 5/5 | ✓ Complete | 2026-01-22 |
-| 2. Client Management | 0/TBD | Not started | - |
+| 1. Foundation & Authentication | 5/5 | Complete | 2026-01-22 |
+| 2. Client Management | 0/5 | Planned | - |
 | 3. Excel Processing | 0/TBD | Not started | - |
 | 4. AI Generation Core | 0/TBD | Not started | - |
 | 5. Review System | 0/TBD | Not started | - |
