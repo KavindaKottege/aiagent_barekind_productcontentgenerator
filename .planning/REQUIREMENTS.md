@@ -7,11 +7,11 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign up with email and password
-- [ ] **AUTH-02**: User can log in and stay logged in across sessions
-- [ ] **AUTH-03**: User can log out from any page
-- [ ] **AUTH-04**: User session persists across browser refresh
-- [ ] **AUTH-05**: OpenAI API key configuration stored per application (single agency)
+- [x] **AUTH-01**: User can sign up with email and password
+- [x] **AUTH-02**: User can log in and stay logged in across sessions
+- [x] **AUTH-03**: User can log out from any page
+- [x] **AUTH-04**: User session persists across browser refresh
+- [x] **AUTH-05**: OpenAI API key configuration stored per application (single agency)
 
 ### Client Profile Management
 
@@ -125,11 +125,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
 | CLNT-01 | Phase 2 | Pending |
 | CLNT-02 | Phase 2 | Pending |
 | CLNT-03 | Phase 2 | Pending |
