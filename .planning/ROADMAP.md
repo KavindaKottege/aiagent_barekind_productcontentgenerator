@@ -2,7 +2,7 @@
 
 ## Overview
 
-Transform a working Streamlit prototype into a commercial-grade SaaS platform for marketing agencies. The journey establishes modern Next.js + FastAPI architecture with multi-tenant isolation, then builds the core workflow (client management → Excel upload → AI generation → review → export) with cost controls and quality safeguards throughout. Each phase delivers a verifiable capability that moves agencies from manual product content creation to AI-powered bulk generation at scale.
+Transform a working Streamlit prototype into a commercial-grade SaaS platform for marketing agencies. The journey establishes modern Next.js + FastAPI architecture with multi-tenant isolation, then builds the core workflow (client management -> Excel upload -> AI generation -> review -> export) with cost controls and quality safeguards throughout. Each phase delivers a verifiable capability that moves agencies from manual product content creation to AI-powered bulk generation at scale.
 
 ## Phases
 
@@ -33,13 +33,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Authentication persists across browser refresh without re-login
   5. OpenAI API key is configured and stored securely per application instance
   6. Database enforces row-level security to prevent cross-tenant data access
-**Plans**: 4 plans in 3 waves
+**Plans**: 5 plans in 3 waves (includes 1 gap closure plan)
 
 Plans:
-- [ ] 01-01-PLAN.md — Docker + Next.js + FastAPI scaffolding
-- [ ] 01-02-PLAN.md — Backend: User model, migrations, auth API
-- [ ] 01-03-PLAN.md — Frontend: Auth pages, Server Actions, session management
-- [ ] 01-04-PLAN.md — Admin settings page + dev environment seeding
+- [x] 01-01-PLAN.md — Docker + Next.js + FastAPI scaffolding
+- [x] 01-02-PLAN.md — Backend: User model, migrations, auth API
+- [x] 01-03-PLAN.md — Frontend: Auth pages, Server Actions, session management
+- [x] 01-04-PLAN.md — Admin settings page + dev environment seeding
+- [ ] 01-05-PLAN.md — Gap closure: Fix frontend-backend JWT integration
 
 ### Phase 2: Client Management
 **Goal**: Users can create and manage client profiles with brand-specific prompts and guidelines
@@ -151,11 +152,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/4 | Planned | - |
+| 1. Foundation & Authentication | 4/5 | Gap closure needed | - |
 | 2. Client Management | 0/TBD | Not started | - |
 | 3. Excel Processing | 0/TBD | Not started | - |
 | 4. AI Generation Core | 0/TBD | Not started | - |
