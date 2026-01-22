@@ -15,13 +15,13 @@
 
 ### Client Profile Management
 
-- [ ] **CLNT-01**: User can create new client profile with name
-- [ ] **CLNT-02**: User can edit client profile (brand name, story, tone, language, guidelines)
-- [ ] **CLNT-03**: User can store AI prompts per client (system prompt, task1, task2)
-- [ ] **CLNT-04**: User can delete client profile
-- [ ] **CLNT-05**: User can switch between client profiles in UI
-- [ ] **CLNT-06**: Selected client profile persists across sessions
-- [ ] **CLNT-07**: User can view list of all client profiles
+- [x] **CLNT-01**: User can create new client profile with name
+- [x] **CLNT-02**: User can edit client profile (brand name, story, tone, language, guidelines)
+- [x] **CLNT-03**: User can store AI prompts per client (system prompt, task1, task2)
+- [x] **CLNT-04**: User can delete client profile
+- [x] **CLNT-05**: User can switch between client profiles in UI
+- [x] **CLNT-06**: Selected client profile persists across sessions
+- [x] **CLNT-07**: User can view list of all client profiles
 
 ### Excel Upload & Processing
 
@@ -130,13 +130,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
-| CLNT-01 | Phase 2 | Pending |
-| CLNT-02 | Phase 2 | Pending |
-| CLNT-03 | Phase 2 | Pending |
-| CLNT-04 | Phase 2 | Pending |
-| CLNT-05 | Phase 2 | Pending |
-| CLNT-06 | Phase 2 | Pending |
-| CLNT-07 | Phase 2 | Pending |
+| CLNT-01 | Phase 2 | Complete |
+| CLNT-02 | Phase 2 | Complete |
+| CLNT-03 | Phase 2 | Complete |
+| CLNT-04 | Phase 2 | Complete |
+| CLNT-05 | Phase 2 | Complete |
+| CLNT-06 | Phase 2 | Complete |
+| CLNT-07 | Phase 2 | Complete |
 | EXCL-01 | Phase 3 | Pending |
 | EXCL-02 | Phase 3 | Pending |
 | EXCL-03 | Phase 3 | Pending |
