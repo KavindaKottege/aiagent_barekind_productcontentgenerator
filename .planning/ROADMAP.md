@@ -80,10 +80,14 @@ Plans:
   6. App processes large Excel files (5,000+ products) without memory errors
   7. App detects product option variants (identical Name, Token, SKU) and groups them for single generation
   8. Grouped products display as single item in UI (not duplicated per option)
-**Plans**: TBD
+**Plans**: 5 plans in 4 waves
 
 Plans:
-- [ ] TBD after planning
+- [ ] 03-01-PLAN.md — Backend: Product and ProductGroup models, migration
+- [ ] 03-02-PLAN.md — Backend: Excel parser, column mapper, variant grouper, upload endpoint
+- [ ] 03-03-PLAN.md — Frontend: Upload modal with progress and Server Action
+- [ ] 03-04-PLAN.md — Frontend: Products list with variant grouping display
+- [ ] 03-05-PLAN.md — Field selection panel persisted per client
 
 ### Phase 4: AI Generation Core
 **Goal**: Users can generate optimized product titles and descriptions at scale with real-time cost and progress tracking
@@ -166,7 +170,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 5/5 | Complete | 2026-01-22 |
 | 2. Client Management | 5/5 | Complete | 2026-01-22 |
-| 3. Excel Processing | 0/TBD | Not started | - |
+| 3. Excel Processing | 0/5 | Planned | - |
 | 4. AI Generation Core | 0/TBD | Not started | - |
 | 5. Review System | 0/TBD | Not started | - |
 | 6. Smart Regeneration | 0/TBD | Not started | - |
