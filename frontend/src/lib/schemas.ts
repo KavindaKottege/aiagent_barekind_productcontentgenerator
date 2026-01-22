@@ -21,6 +21,19 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Client schema
+export const clientSchema = z.object({
+  brand_name: z.string().min(1, "Brand name is required").max(255),
+  story: z.string().optional().nullable(),
+  tone: z.string().max(255).optional().nullable(),
+  language: z.string().max(100).optional().nullable(),
+  guidelines: z.string().optional().nullable(),
+  system_prompt: z.string().optional().nullable(),
+  task1_prompt: z.string().optional().nullable(),
+  task2_prompt: z.string().optional().nullable(),
+});
+
 // Type exports
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ClientFormData = z.infer<typeof clientSchema>;
