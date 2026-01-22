@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** Phase 2 - Client Management
+**Current focus:** Phase 3 - Excel Processing
 
 ## Current Position
 
-Phase: 2 of 7 (Client Management)
-Plan: 5 of 5 (complete)
-Status: Phase verified and complete ✓
-Last activity: 2026-01-22 — Phase 2 verification passed (7/7 success criteria)
+Phase: 3 of 7 (Excel Processing)
+Plan: 1 of 5 (in progress)
+Status: In progress
+Last activity: 2026-01-22 — Completed 03-01-PLAN.md (Database Models)
 
-Progress: [████░░░░░░] 40% (Phase 2 complete)
+Progress: [████░░░░░░] 42% (11 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 4 minutes
-- Total execution time: 0.7 hours
+- Total execution time: 0.75 hours
 
 **By Phase:**
 
@@ -29,13 +29,14 @@ Progress: [████░░░░░░] 40% (Phase 2 complete)
 |-------|-------|-------|----------|
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
+| 03 | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- 01-05 completed in 2 minutes
 - 02-01 completed in 4 minutes
 - 02-03 completed in 4 minutes
 - 02-04 completed in 4 minutes
 - 02-05 completed in 6 minutes
+- 03-01 completed in 3 minutes
 - Trend: Strong velocity (avg 4 min/plan)
 
 *Updated after each plan completion*
@@ -113,6 +114,14 @@ Recent decisions affecting current work:
 - Monospace font for prompt textareas (better for code-like text)
 - Empty strings converted to null for clearing prompts
 
+**From 03-01 execution:**
+- JSONB unmapped_data column pattern preserves unmapped Excel columns for export
+- ProductGroup model for variant grouping with generated content fields
+- Images stored as JSONB array (PostgreSQL ARRAY type)
+- Unique constraint on (client_id, product_name, product_token, sku) prevents duplicate groups
+- Row_index field preserves original Excel ordering for export
+- Composite index pattern (client_id, row_index) for export ordering
+
 ### Pending Todos
 
 None yet.
@@ -149,18 +158,19 @@ None yet.
 - Client selector with persistent localStorage state
 - Admin prompt configuration with collapsible examples
 
-**Phase 3 (Excel Processing) ready to plan:**
-- Client management foundation solid
-- Multi-tenant isolation working
-- UI patterns established (forms, lists, context)
-- Ready for product data upload and processing
+**Phase 3 (Excel Processing) IN PROGRESS:**
+- ✅ 03-01: Database models created (Product, ProductGroup)
+- Product and ProductGroup models with variant grouping
+- JSONB unmapped_data preserves unmapped Excel columns
+- Migration 005 creates tables with proper indexes
+- Ready for upload endpoint (03-02)
 
 ## Session Continuity
 
 Last session: 2026-01-22 (current)
-Stopped at: Completed 02-05-PLAN.md (Prompt Settings Admin UI)
+Stopped at: Completed 03-01-PLAN.md (Database Models for Product Storage)
 Resume file: None
-Next: Begin Phase 3 - Product Management (research, planning, execution)
+Next: Continue Phase 3 - Excel Processing (plans 03-02 through 03-05)
 
 ---
 *State initialized: 2026-01-22*
