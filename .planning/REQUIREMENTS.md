@@ -25,18 +25,18 @@
 
 ### Excel Upload & Processing
 
-- [ ] **EXCL-01**: User can upload Faire Excel template without pre-formatting
-- [ ] **EXCL-02**: App automatically detects and maps Faire columns
-- [ ] **EXCL-03**: User can select which product fields to use as AI inputs
-- [ ] **EXCL-04**: User can filter products by status (which statuses to generate for)
-- [ ] **EXCL-05**: App handles missing fields gracefully (prompts adapt)
-- [ ] **EXCL-06**: App warns user during review if selected fields were missing
-- [ ] **EXCL-07**: App uses streaming processing for large Excel files
-- [ ] **EXCL-08**: App detects when multiple rows have identical Product Name, Product Token, and SKU (indicating option variants)
-- [ ] **EXCL-09**: App groups option variant rows into single product for generation
-- [ ] **EXCL-10**: System provides all option values to AI when generating content for grouped products
-- [ ] **EXCL-11**: During review, grouped products appear as single item (not duplicated per option)
-- [ ] **EXCL-12**: On export, generated title and description are copied to all original rows that belong to the product group
+- [x] **EXCL-01**: User can upload Faire Excel template without pre-formatting
+- [x] **EXCL-02**: App automatically detects and maps Faire columns
+- [x] **EXCL-03**: User can select which product fields to use as AI inputs
+- [x] **EXCL-04**: User can filter products by status (which statuses to generate for)
+- [x] **EXCL-05**: App handles missing fields gracefully (prompts adapt)
+- [ ] **EXCL-06**: App warns user during review if selected fields were missing (Phase 5)
+- [x] **EXCL-07**: App uses streaming processing for large Excel files
+- [x] **EXCL-08**: App detects when multiple rows have identical Product Name, Product Token, and SKU (indicating option variants)
+- [x] **EXCL-09**: App groups option variant rows into single product for generation
+- [ ] **EXCL-10**: System provides all option values to AI when generating content for grouped products (Phase 4)
+- [x] **EXCL-11**: During review, grouped products appear as single item (not duplicated per option)
+- [ ] **EXCL-12**: On export, generated title and description are copied to all original rows that belong to the product group (Phase 7)
 
 ### AI Content Generation
 
