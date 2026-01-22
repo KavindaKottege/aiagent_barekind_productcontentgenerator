@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 4 of 7 (AI Generation Core)
-Plan: 1 of 5
+Plan: 3 of 6
 Status: In progress
-Last activity: 2026-01-23 — Completed 04-01-PLAN.md (Dependencies and Models)
+Last activity: 2026-01-23 — Completed 04-03-PLAN.md (ARQ Worker Infrastructure)
 
-Progress: [███████░░░] 58% (15 of 26 plans complete)
+Progress: [████████░░] 61% (16 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: 3.6 minutes
-- Total execution time: 0.9 hours
+- Total plans completed: 16
+- Average duration: 3.7 minutes
+- Total execution time: 1.0 hours
 
 **By Phase:**
 
@@ -30,14 +30,14 @@ Progress: [███████░░░] 58% (15 of 26 plans complete)
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
 | 03 | 5 | 17 min | 3.4 min |
-| 04 | 1 | 3 min | 3 min |
+| 04 | 2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- 03-03 completed in 3.2 minutes
 - 03-04 completed in 3.4 minutes
 - 03-05 completed in 4 minutes
 - 04-01 completed in 3 minutes
-- Trend: Excellent velocity (avg 3 min/plan for Phase 4 start)
+- 04-03 completed in 4.1 minutes
+- Trend: Excellent velocity (avg 3.5 min/plan for Phase 4)
 
 *Updated after each plan completion*
 
@@ -167,6 +167,16 @@ Recent decisions affecting current work:
 - Phase 4 dependencies installed: LangChain, OpenAI, ARQ, tiktoken, tenacity, sse-starlette
 - Migration 007 creates generation tables with proper indexes
 
+**From 04-03 execution:**
+- Redis 7-alpine service added to Docker Compose for ARQ job queue
+- ARQ WorkerSettings with startup/shutdown hooks for database connection pooling
+- generation_worker checks job status before each product for responsive pause/cancel
+- Resume-as-new-job pattern preserves full audit trail for each pause/resume cycle
+- Soft cap detection pauses job automatically, requires user acknowledgment to continue
+- JobManager service handles job creation, enqueueing, and lifecycle operations
+- Worker has separate database connection pool (pool_size=5, independent of FastAPI app)
+- Progress calculation includes elapsed time, estimated remaining, projected cost
+
 ### Pending Todos
 
 None yet.
@@ -227,14 +237,20 @@ None yet.
 - ✅ GenerationJob and GenerationAudit models created
 - ✅ Database migration 007 applied successfully
 - ✅ Pydantic schemas ready for generation API
-- Next: 04-02 - AI Generation Service Layer (LangChain integration, prompt building)
+- ✅ Plan 04-03 complete: ARQ worker infrastructure and job management
+- ✅ Redis service running on port 6379 for ARQ job queue
+- ✅ ARQ worker with generation_worker function for background processing
+- ✅ Worker supports pause/cancel/resume with check-before-each-product pattern
+- ✅ Soft cap detection pauses job automatically at $500 threshold
+- ✅ JobManager service handles job creation, enqueueing, lifecycle operations
+- Next: 04-04 - Generation API Endpoints (POST /generate, job control, status queries)
 
 ## Session Continuity
 
 Last session: 2026-01-23 (current)
-Stopped at: Completed 04-01-PLAN.md
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
-Next: Continue Phase 4 - AI Generation Core (plan 04-02 or later)
+Next: Continue Phase 4 - AI Generation Core (plan 04-04 or later)
 
 ---
 *State initialized: 2026-01-22*
