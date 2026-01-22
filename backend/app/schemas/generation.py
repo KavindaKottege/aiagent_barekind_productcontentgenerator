@@ -116,3 +116,13 @@ class AuditListResponse(BaseModel):
     """Response for list of audit records."""
     audits: list[GenerationAuditResponse]
     total: int
+
+
+class GenerationJobCreate(BaseModel):
+    """Request to create and start a new generation job."""
+    client_id: UUID = Field(..., description="Client ID to generate content for")
+
+
+class CostCapDialogResponse(BaseModel):
+    """User response to soft cap dialog."""
+    continue_generation: bool = Field(..., description="True to continue despite cost, False to stop")
