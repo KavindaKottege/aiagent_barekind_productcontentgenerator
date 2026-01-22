@@ -15,6 +15,7 @@ export interface Client {
   tone: string | null
   language: string | null
   guidelines: string | null
+  ai_input_fields: string[] | null
   system_prompt: string | null
   task1_prompt: string | null
   task2_prompt: string | null
@@ -185,4 +186,38 @@ export async function deleteClient(clientId: string): Promise<{ success: boolean
 
   revalidatePath('/clients')
   return { success: true }
+}
+
+export async function updateClientFieldSelection(
+  clientId: string,
+  fields: string[]
+): Promise<{ success: boolean; error?: string }> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(
+      `${API_URL}/clients/${clientId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ai_input_fields: fields }),
+      }
+    )
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Update failed' }))
+      return { success: false, error: error.detail }
+    }
+
+    revalidatePath('/products')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
 }
