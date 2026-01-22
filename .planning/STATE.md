@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 3 of 7 (Excel Processing)
-Plan: 2 of 5
+Plan: 4 of 5
 Status: In progress
-Last activity: 2026-01-22 — Completed 03-02-PLAN.md (Excel Processing Pipeline)
+Last activity: 2026-01-22 — Completed 03-04-PLAN.md (Products List Page)
 
-Progress: [████░░░░░░] 46% (12 of 26 plans complete)
+Progress: [█████░░░░░] 50% (13 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 3.8 minutes
-- Total execution time: 0.76 hours
+- Total plans completed: 13
+- Average duration: 3.7 minutes
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
@@ -29,15 +29,15 @@ Progress: [████░░░░░░] 46% (12 of 26 plans complete)
 |-------|-------|-------|----------|
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
-| 03 | 2 | 6 min | 3 min |
+| 03 | 3 | 9 min | 3 min |
 
 **Recent Trend:**
-- 02-03 completed in 4 minutes
 - 02-04 completed in 4 minutes
 - 02-05 completed in 6 minutes
 - 03-01 completed in 3 minutes
 - 03-02 completed in 3 minutes
-- Trend: Strong velocity (avg 3.8 min/plan)
+- 03-04 completed in 3 minutes
+- Trend: Strong velocity (avg 3.7 min/plan)
 
 *Updated after each plan completion*
 
@@ -131,6 +131,14 @@ Recent decisions affecting current work:
 - Service class pattern: separate concerns into ExcelParser, FuzzyColumnMapper, VariantGrouper
 - Bulk insert pattern with two-phase insert: groups first (for FK), then products
 
+**From 03-04 execution:**
+- API route layer for client component data fetching (bypasses Server Action limitations)
+- Status filter with 5 options: all, pending, generated, approved, rejected
+- Lazy-loading variants only on expand to reduce initial page load
+- URL sync pattern keeps selected client in URL params for shareability
+- ProductGroupCard collapsible UI pattern with lazy-loaded variant details
+- Status filter UI with count badges for each status
+
 ### Pending Todos
 
 None yet.
@@ -170,19 +178,22 @@ None yet.
 **Phase 3 (Excel Processing) IN PROGRESS:**
 - ✅ 03-01: Database models created (Product, ProductGroup)
 - ✅ 03-02: Excel processing pipeline with streaming parser, fuzzy mapper, variant grouper
+- ✅ 03-04: Products list page with grouped variant display and status filtering
 - Streaming Excel parser handles large files (500-row batches, memory efficient)
 - Fuzzy column mapper auto-detects Faire columns (75% threshold, returns confidence)
 - Variant grouper clusters products by Name/Token/SKU using pandas
 - Upload endpoint orchestrates parse → map → group → bulk insert
-- Four product endpoints: upload, list groups, get group details, delete
-- Ready for field selection UI (03-03)
+- Products list displays grouped variants with expand/collapse
+- Status filter allows filtering by pending/generated/approved/rejected
+- Client-aware URL routing synced with localStorage client selection
+- Ready for field selection UI (03-05)
 
 ## Session Continuity
 
 Last session: 2026-01-22 (current)
-Stopped at: Completed 03-02-PLAN.md (Excel Processing Pipeline)
+Stopped at: Completed 03-04-PLAN.md (Products List Page)
 Resume file: None
-Next: Continue Phase 3 - Excel Processing (plans 03-03 through 03-05)
+Next: Continue Phase 3 - Excel Processing (plan 03-05 - Field Selection UI)
 
 ---
 *State initialized: 2026-01-22*
