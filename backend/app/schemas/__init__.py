@@ -1,5 +1,6 @@
 # Pydantic schemas module
 
+from app.schemas.client import ClientCreate, ClientPublic, ClientUpdate
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 
@@ -11,4 +12,7 @@ __all__ = [
     "SettingsUpdate",
     "SettingsResponse",
     "HasApiKeyResponse",
+    "ClientCreate",
+    "ClientUpdate",
+    "ClientPublic",
 ]
