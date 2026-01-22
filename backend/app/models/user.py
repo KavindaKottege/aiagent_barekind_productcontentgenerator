@@ -3,7 +3,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -33,6 +33,13 @@ class User(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    # Relationships
+    clients: Mapped[list["Client"]] = relationship(
+        back_populates="user",
+        lazy="raise",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
