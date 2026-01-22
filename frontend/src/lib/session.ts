@@ -58,4 +58,24 @@ export async function setSession(token: string): Promise<void> {
 export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("session");
+  cookieStore.delete("access_token");
+}
+
+// Set backend access token cookie
+export async function setAccessToken(token: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set("access_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: "/",
+  });
+}
+
+// Get backend access token from cookie
+export async function getAccessToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get("access_token")?.value;
+  return cookie || null;
 }
