@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://devuser:devpassword@localhost:5433/saas_dev"
 
+    # Redis (for ARQ job queue)
+    REDIS_URL: str = "redis://localhost:6379"
+
     # Security
     SECRET_KEY: str = "dev-secret-key-change-in-production-32chars"
     ALGORITHM: str = "HS256"
@@ -17,6 +20,11 @@ class Settings(BaseSettings):
 
     # Environment
     ENVIRONMENT: str = "development"
+
+    # AI Generation
+    AI_MODEL: str = "gpt-4o"
+    AI_TEMPERATURE: float = 0.7
+    GENERATION_SOFT_CAP: float = 500.0  # $500 default soft cap
 
     model_config = SettingsConfigDict(
         env_file=".env",
