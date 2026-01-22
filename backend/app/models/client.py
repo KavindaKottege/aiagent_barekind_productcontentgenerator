@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -32,6 +32,14 @@ class Client(Base):
     tone: Mapped[str | None] = mapped_column(String(255), nullable=True)
     language: Mapped[str | None] = mapped_column(String(100), nullable=True)
     guidelines: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # AI input field selection (persists per client)
+    ai_input_fields: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        default=None,
+        doc="List of product field names to include in AI prompts"
+    )
 
     # Custom prompts (optional overrides of app defaults)
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)

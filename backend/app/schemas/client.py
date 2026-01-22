@@ -27,6 +27,7 @@ class ClientUpdate(BaseModel):
     tone: str | None = Field(None, max_length=255)
     language: str | None = Field(None, max_length=100)
     guidelines: str | None = None
+    ai_input_fields: list[str] | None = None
     system_prompt: str | None = None
     task1_prompt: str | None = None
     task2_prompt: str | None = None
@@ -42,6 +43,7 @@ class ClientPublic(BaseModel):
     tone: str | None
     language: str | None
     guidelines: str | None
+    ai_input_fields: list[str] | None
     system_prompt: str | None
     task1_prompt: str | None
     task2_prompt: str | None
@@ -69,6 +71,7 @@ class ClientPublic(BaseModel):
             tone=client.tone,
             language=client.language,
             guidelines=client.guidelines,
+            ai_input_fields=client.ai_input_fields,
             system_prompt=client.system_prompt,
             task1_prompt=client.task1_prompt,
             task2_prompt=client.task2_prompt,
