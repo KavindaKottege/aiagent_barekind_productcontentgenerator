@@ -1,6 +1,18 @@
 # Pydantic schemas module
 
 from app.schemas.client import ClientCreate, ClientPublic, ClientUpdate
+from app.schemas.generation import (
+    AuditListResponse,
+    CancelJobRequest,
+    GenerateRequest,
+    GenerationAuditResponse,
+    GenerationJobResponse,
+    GenerationJobSummary,
+    GenerationProgressResponse,
+    JobListResponse,
+    PauseJobRequest,
+    ResumeJobRequest,
+)
 from app.schemas.product import (
     ProductCreate,
     ProductGroupCreate,
@@ -29,4 +41,14 @@ __all__ = [
     "ProductGroupPublic",
     "ProductGroupWithVariants",
     "UploadResponse",
+    "GenerateRequest",
+    "PauseJobRequest",
+    "ResumeJobRequest",
+    "CancelJobRequest",
+    "GenerationProgressResponse",
+    "GenerationJobSummary",
+    "GenerationJobResponse",
+    "GenerationAuditResponse",
+    "JobListResponse",
+    "AuditListResponse",
 ]
