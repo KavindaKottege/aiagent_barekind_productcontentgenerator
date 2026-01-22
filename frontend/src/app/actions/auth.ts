@@ -2,8 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { decodeJwt } from "jose";
 import { signupSchema, loginSchema } from "@/lib/schemas";
-import { setSession, clearSession, encrypt } from "@/lib/session";
+import { setSession, clearSession, encrypt, setAccessToken } from "@/lib/session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -56,10 +57,16 @@ export async function signup(
 
     const data = await response.json();
 
-    // Set session cookie with JWT from backend
+    // Store backend access token
+    await setAccessToken(data.access_token);
+
+    // Decode JWT to extract user_id
+    const decoded = decodeJwt(data.access_token);
+
+    // Create frontend session with extracted userId
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     const sessionToken = await encrypt({
-      userId: data.user.id,
+      userId: decoded.user_id as string,
       expiresAt,
     });
 
@@ -120,10 +127,16 @@ export async function login(
 
     const data = await response.json();
 
-    // Set session cookie with JWT from backend
+    // Store backend access token
+    await setAccessToken(data.access_token);
+
+    // Decode JWT to extract user_id
+    const decoded = decodeJwt(data.access_token);
+
+    // Create frontend session with extracted userId
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     const sessionToken = await encrypt({
-      userId: data.user.id,
+      userId: decoded.user_id as string,
       expiresAt,
     });
 
