@@ -51,3 +51,14 @@ export const getUser = cache(async (): Promise<User> => {
 
   return response.json();
 });
+
+// Get current admin user (redirects if not admin)
+export const getAdmin = cache(async (): Promise<User> => {
+  const user = await getUser();
+
+  if (!user.is_admin) {
+    redirect("/dashboard?error=admin_required");
+  }
+
+  return user;
+});
