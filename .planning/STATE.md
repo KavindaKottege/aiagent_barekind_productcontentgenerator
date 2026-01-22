@@ -10,32 +10,32 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 2 of 7 (Client Management)
-Plan: 1 of 5 (complete)
+Plan: 4 of 5 (complete)
 Status: In progress
-Last activity: 2026-01-22 — Completed 02-01-PLAN.md (Client Model & CRUD API)
+Last activity: 2026-01-22 — Completed 02-04-PLAN.md (Client Selector & Context)
 
-Progress: [██░░░░░░░░] 20% (Phase 2: 1/5 plans)
+Progress: [██░░░░░░░░] 20% (Phase 2: 4/5 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 4 minutes
-- Total execution time: 0.4 hours
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 5 | 20 min | 4 min |
-| 02 | 1 | 4 min | 4 min |
+| 02 | 2 | 8 min | 4 min |
 
 **Recent Trend:**
-- 01-03 completed in 3 minutes
 - 01-04 completed in 4 minutes
 - 01-05 completed in 2 minutes
 - 02-01 completed in 4 minutes
-- Trend: Strong velocity (avg 4 min/plan)
+- 02-04 completed in 4 minutes
+- Trend: Consistent velocity (avg 4 min/plan)
 
 *Updated after each plan completion*
 
@@ -93,6 +93,13 @@ Recent decisions affecting current work:
 - Users can create/read/update clients but only admins can delete
 - User-scoped queries pattern for data isolation in multi-tenant setup
 
+**From 02-04 execution:**
+- useState + useEffect for localStorage instead of useSyncExternalStore (simpler)
+- isLoading state prevents hydration mismatch in React context
+- Auto-selection pattern: first client selected when none chosen
+- Validation pattern: stored selection checked against current data
+- Providers wrapper pattern for client contexts in Server Components
+
 ### Pending Todos
 
 None yet.
@@ -116,19 +123,22 @@ None yet.
 - Dev environment fully automated with seed script
 - Dual-cookie architecture working correctly
 
-**Phase 2 (Client Management) in progress (1/5 plans complete):**
+**Phase 2 (Client Management) in progress (4/5 plans complete):**
 - ✅ 02-01: Client Model & CRUD API complete
+- ✅ 02-04: Client Selector & Context complete
 - Client model with brand profile fields and custom prompt overrides
 - Full CRUD API with user-scoped authorization
+- Client context with localStorage persistence across sessions
+- Client selector dropdown in dashboard header with auto-selection
 - Admin-only deletion pattern established
-- Ready for next client management features
+- Ready for client management UI pages (list, form)
 
 ## Session Continuity
 
 Last session: 2026-01-22 (current)
-Stopped at: Completed 02-01-PLAN.md (Client Model & CRUD API)
+Stopped at: Completed 02-04-PLAN.md (Client Selector & Context)
 Resume file: None
-Next: Plan and execute next Client Management features
+Next: Complete remaining Client Management plans (02-02, 02-03, 02-05)
 
 ---
 *State initialized: 2026-01-22*
