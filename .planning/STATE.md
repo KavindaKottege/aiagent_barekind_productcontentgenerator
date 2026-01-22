@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** Phase 3 - Excel Processing
+**Current focus:** Phase 4 - AI Generation Core
 
 ## Current Position
 
-Phase: 3 of 7 (Excel Processing)
-Plan: 5 of 5 (complete)
-Status: Phase verified and complete ✓
-Last activity: 2026-01-22 — Phase 3 verification passed (8/8 success criteria)
+Phase: 4 of 7 (AI Generation Core)
+Plan: 1 of 5
+Status: In progress
+Last activity: 2026-01-23 — Completed 04-01-PLAN.md (Dependencies and Models)
 
-Progress: [██████░░░░] 54% (Phase 3 complete)
+Progress: [███████░░░] 58% (15 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
-- Average duration: 3.7 minutes
+- Total plans completed: 15
+- Average duration: 3.6 minutes
 - Total execution time: 0.9 hours
 
 **By Phase:**
@@ -30,14 +30,14 @@ Progress: [██████░░░░] 54% (Phase 3 complete)
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
 | 03 | 5 | 17 min | 3.4 min |
+| 04 | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- 03-01 completed in 3 minutes
-- 03-02 completed in 3 minutes
 - 03-03 completed in 3.2 minutes
 - 03-04 completed in 3.4 minutes
 - 03-05 completed in 4 minutes
-- Trend: Strong velocity (avg 3.3 min/plan Phase 3)
+- 04-01 completed in 3 minutes
+- Trend: Excellent velocity (avg 3 min/plan for Phase 4 start)
 
 *Updated after each plan completion*
 
@@ -157,6 +157,16 @@ Recent decisions affecting current work:
 - Parallel data fetching: products and client data fetched together
 - Prepares for Phase 5 (Review System) to detect missing selected fields in uploaded data
 
+**From 04-01 execution:**
+- Use ARQ for background job processing (native asyncio, 7x faster than Celery for short jobs)
+- Decimal precision for cost tracking (Numeric 10,4 for job totals, 10,6 for per-product audit)
+- Full audit trail pattern: track every generation attempt including retries
+- Job status state machine: pending → running → paused/completed/failed/cancelled
+- GenerationJob model tracks job status, progress counts, cost tracking
+- GenerationAudit model stores per-product generation attempts with full audit trail
+- Phase 4 dependencies installed: LangChain, OpenAI, ARQ, tiktoken, tenacity, sse-starlette
+- Migration 007 creates generation tables with proper indexes
+
 ### Pending Todos
 
 None yet.
@@ -211,20 +221,21 @@ None yet.
 - AI input field selection persists per client (8 configurable fields)
 - 9 of 12 EXCL requirements complete (3 deferred to later phases)
 
-**Phase 4 (AI Generation Core) ready to plan:**
-- Excel processing foundation complete and verified
-- Product and field selection data available for prompt building
-- Client-specific prompts and guidelines stored
-- Variant grouping ready for bulk generation
-- Ready for LangChain integration, cost tracking, and batch generation
+**Phase 4 (AI Generation Core) IN PROGRESS:**
+- ✅ Plan 04-01 complete: Dependencies and models foundation
+- ✅ LangChain, OpenAI, ARQ, tiktoken, tenacity, sse-starlette installed
+- ✅ GenerationJob and GenerationAudit models created
+- ✅ Database migration 007 applied successfully
+- ✅ Pydantic schemas ready for generation API
+- Next: 04-02 - AI Generation Service Layer (LangChain integration, prompt building)
 
 ## Session Continuity
 
-Last session: 2026-01-22 (current)
-Stopped at: Completed Phase 3 verification
+Last session: 2026-01-23 (current)
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
-Next: Begin Phase 4 - AI Generation Core (research, planning, execution)
+Next: Continue Phase 4 - AI Generation Core (plan 04-02 or later)
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-22*
+*Last updated: 2026-01-23*
