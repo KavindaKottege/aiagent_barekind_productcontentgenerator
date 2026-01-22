@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 4 of 7 (AI Generation Core)
-Plan: 4 of 5
-Status: In progress
-Last activity: 2026-01-23 — Completed 04-04-PLAN.md (Generation API Endpoints)
+Plan: 6 of 6
+Status: Phase complete
+Last activity: 2026-01-23 — Completed 04-06-PLAN.md (Generation Settings UI)
 
-Progress: [█████████░] 65% (17 of 26 plans complete)
+Progress: [█████████░] 69% (18 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: 3.6 minutes
-- Total execution time: 1.0 hours
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
@@ -30,15 +30,16 @@ Progress: [█████████░] 65% (17 of 26 plans complete)
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
 | 03 | 5 | 17 min | 3.4 min |
-| 04 | 4 | 14 min | 3.5 min |
+| 04 | 6 | 18 min | 3.0 min |
 
 **Recent Trend:**
-- 03-05 completed in 4 minutes
 - 04-01 completed in 3 minutes
 - 04-02 completed in 4.6 minutes
 - 04-03 completed in 4.1 minutes
 - 04-04 completed in 2.4 minutes
-- Trend: Excellent velocity (avg 3.5 min/plan for Phase 4, improving)
+- 04-05 completed in 4.4 minutes
+- 04-06 completed in 3.5 minutes
+- Trend: Excellent velocity (avg 3.0 min/plan for Phase 4, best phase so far)
 
 *Updated after each plan completion*
 
@@ -197,6 +198,24 @@ Recent decisions affecting current work:
 - SSE pattern: separate session per event generator for long-lived connections
 - EventSourceResponse with asyncio.sleep(0.5) polling pattern
 
+**From 04-05 execution:**
+- SSE authentication via query param token (EventSource doesn't support headers)
+- Check for active job on mount and client changes for persistence
+- Hide field selection panel during active generation to prevent conflicts
+- Show generated badge in stats header for visibility
+- EventSource pattern for SSE with progress/soft_cap/complete events
+- Optimistic job state management with server sync on mount
+- Completion callback pattern refreshes server data
+
+**From 04-06 execution:**
+- ai_temperature stored as Numeric(3,2) for 0.00-1.00 with 0.01 precision
+- generation_soft_cap stored as Numeric(10,2) for dollar amounts with cent precision
+- Generation settings GET endpoint requires authentication (any user), PATCH requires admin
+- Temperature UI uses dual input: slider for quick adjustment, number input for precise control
+- Default soft cap $500.00 prevents runaway costs while allowing large batches
+- Settings domain separation: /api/settings/generation for generation-specific settings
+- Cost estimation guidance provided inline for administrator context
+
 ### Pending Todos
 
 None yet.
@@ -251,7 +270,7 @@ None yet.
 - AI input field selection persists per client (8 configurable fields)
 - 9 of 12 EXCL requirements complete (3 deferred to later phases)
 
-**Phase 4 (AI Generation Core) IN PROGRESS:**
+**Phase 4 (AI Generation Core) COMPLETE:**
 - ✅ Plan 04-01 complete: Dependencies and models foundation
 - ✅ LangChain, OpenAI, ARQ, tiktoken, tenacity, sse-starlette installed
 - ✅ GenerationJob and GenerationAudit models created
@@ -272,14 +291,28 @@ None yet.
 - ✅ Server-Sent Events (SSE) streaming for real-time progress (500ms polling)
 - ✅ Active job blocking prevents concurrent generation per client
 - ✅ Global /api prefix standardized across all routers
-- Next: 04-05 - Final plan in Phase 4 AI Generation Core
+- ✅ Plan 04-05 complete: Generation UI Frontend
+- ✅ Generate button triggers generation for pending products
+- ✅ Real-time progress UI with SSE (products, cost, ETA, success/failed)
+- ✅ Pause/Cancel/Resume controls for user control
+- ✅ Soft cap dialog prompts at $500 limit with continue/stop decision
+- ✅ Active job persistence across page navigation
+- ✅ Plan 04-06 complete: Generation Settings UI
+- ✅ Admin settings page for AI model, temperature, cost soft cap configuration
+- ✅ Migration 008 adds generation settings to app_settings table
+- ✅ GET/PATCH /api/settings/generation endpoints for settings management
+- ✅ GenerationSettingsForm with model dropdown, temperature slider, soft cap input
+- ✅ Cost estimation guidance for administrators
+- Phase 4 complete: Full AI generation system with UI, background processing, and admin controls
+- ✅ Dual input pattern (slider + number) for temperature control
+- Phase complete - ready for Phase 5 (Review System)
 
 ## Session Continuity
 
 Last session: 2026-01-23 (current)
-Stopped at: Completed 04-04-PLAN.md
+Stopped at: Completed 04-06-PLAN.md (Phase 4 complete)
 Resume file: None
-Next: Continue Phase 4 - AI Generation Core (plan 04-05)
+Next: Begin Phase 5 - Review & Feedback System
 
 ---
 *State initialized: 2026-01-22*
