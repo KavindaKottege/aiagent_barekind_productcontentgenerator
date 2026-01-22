@@ -33,10 +33,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Authentication persists across browser refresh without re-login
   5. OpenAI API key is configured and stored securely per application instance
   6. Database enforces row-level security to prevent cross-tenant data access
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] TBD after planning
+- [ ] 01-01-PLAN.md — Docker + Next.js + FastAPI scaffolding
+- [ ] 01-02-PLAN.md — Backend: User model, migrations, auth API
+- [ ] 01-03-PLAN.md — Frontend: Auth pages, Server Actions, session management
+- [ ] 01-04-PLAN.md — Admin settings page + dev environment seeding
 
 ### Phase 2: Client Management
 **Goal**: Users can create and manage client profiles with brand-specific prompts and guidelines
@@ -152,7 +155,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/TBD | Not started | - |
+| 1. Foundation & Authentication | 0/4 | Planned | - |
 | 2. Client Management | 0/TBD | Not started | - |
 | 3. Excel Processing | 0/TBD | Not started | - |
 | 4. AI Generation Core | 0/TBD | Not started | - |
