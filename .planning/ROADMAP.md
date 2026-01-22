@@ -108,10 +108,16 @@ Plans:
   10. User can pause generation in progress
   11. User can resume paused or interrupted generation from where it stopped
   12. System enforces $500 soft cap per batch and prompts user to explicitly continue or stop
-**Plans**: TBD
+**Plans**: 6 plans in 4 waves
+**Status**: Planned
 
 Plans:
-- [ ] TBD after planning
+- [ ] 04-01-PLAN.md — Backend: Dependencies, GenerationJob/Audit models, migration
+- [ ] 04-02-PLAN.md — Backend: LangChain AI service, cost tracker, structured output
+- [ ] 04-03-PLAN.md — Backend: ARQ worker setup, job manager, Redis integration
+- [ ] 04-04-PLAN.md — Backend: Generation API endpoints with SSE progress streaming
+- [ ] 04-05-PLAN.md — Frontend: Generate button, progress UI, soft cap dialog
+- [ ] 04-06-PLAN.md — Admin: Generation settings (model, temperature, soft cap)
 
 ### Phase 5: Review System
 **Goal**: Users can efficiently review generated content with keyboard-driven workflow
@@ -173,11 +179,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Foundation & Authentication | 5/5 | Complete | 2026-01-22 |
 | 2. Client Management | 5/5 | Complete | 2026-01-22 |
 | 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
-| 4. AI Generation Core | 0/TBD | Not started | - |
+| 4. AI Generation Core | 0/6 | Planned | - |
 | 5. Review System | 0/TBD | Not started | - |
 | 6. Smart Regeneration | 0/TBD | Not started | - |
 | 7. Export & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-22 (Phase 3 complete)*
+*Last updated: 2026-01-23 (Phase 4 planned)*
