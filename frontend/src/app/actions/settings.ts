@@ -8,6 +8,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export interface Settings {
   openai_api_key: string | null;
   has_api_key: boolean;
+  ai_model: string;
+  ai_temperature: string;
+  generation_soft_cap: string;
 }
 
 export interface FormState {
@@ -29,6 +32,12 @@ export interface PromptSettingsActionState {
     _form?: string[];
   };
   success?: boolean;
+}
+
+export interface GenerationSettings {
+  ai_model: string;
+  ai_temperature: string;
+  generation_soft_cap: string;
 }
 
 export async function getSettings(): Promise<Settings | null> {
@@ -160,4 +169,60 @@ export async function updatePromptSettings(
   }
 
   return { success: true };
+}
+
+export async function getGenerationSettings(): Promise<GenerationSettings | null> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  const response = await fetch(`${API_URL}/settings/generation`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
+    if (response.status === 403) redirect("/dashboard?error=admin_required");
+    return null;
+  }
+
+  return response.json();
+}
+
+export async function updateGenerationSettings(
+  settings: Partial<GenerationSettings>
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/settings/generation`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) redirect("/login");
+      if (response.status === 403) {
+        return { success: false, error: "Admin access required" };
+      }
+      const error = await response.json();
+      return { success: false, error: error.detail || "Failed to update generation settings" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Network error" };
+  }
 }

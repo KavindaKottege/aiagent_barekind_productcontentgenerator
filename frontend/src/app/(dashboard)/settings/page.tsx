@@ -31,19 +31,35 @@ export default async function SettingsPage() {
         </Card>
 
         {user.is_admin && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Prompt Settings</CardTitle>
-              <CardDescription>
-                Configure default AI prompts for content generation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/settings/prompts">
-                <Button variant="outline">Manage Prompts</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Prompt Settings</CardTitle>
+                <CardDescription>
+                  Configure default AI prompts for content generation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/settings/prompts">
+                  <Button variant="outline">Manage Prompts</Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Generation Settings</CardTitle>
+                <CardDescription>
+                  Configure AI model behavior and cost controls
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/settings/generation">
+                  <Button variant="outline">Manage Generation Settings</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </div>
