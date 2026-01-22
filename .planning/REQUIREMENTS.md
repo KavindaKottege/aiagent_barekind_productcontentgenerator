@@ -40,21 +40,20 @@
 
 ### AI Content Generation
 
-- [ ] **GEN-01**: User can generate content for 5-10,000 products per upload
-- [ ] **GEN-02**: System builds prompts dynamically based on available product fields
-- [ ] **GEN-03**: System validates character limits (30-60 for titles, 2000-3000 for descriptions)
-- [ ] **GEN-04**: System retries generations that violate character limits
-- [ ] **GEN-05**: User sees real-time progress during generation (shows X of Y products completed, current cost)
-- [ ] **GEN-06**: System tracks OpenAI API costs per generation batch with running total
-- [ ] **GEN-07**: System handles OpenAI rate limits with exponential backoff and queuing
-- [ ] **GEN-08**: System retries failed generations automatically
-- [ ] **GEN-09**: System uses background job queue for long-running generation
-- [ ] **GEN-10**: User can pause generation in progress
-- [ ] **GEN-11**: User can resume paused or interrupted generation from where it stopped
-- [ ] **GEN-12**: System uses GPT-5.2 for content generation
-- [ ] **GEN-13**: User can choose between standard API or Batch API for generation
-- [ ] **GEN-14**: System enforces soft cap at $500 per batch - prompts user with progress and costs when reached
-- [ ] **GEN-15**: User must explicitly choose to continue or stop when $500 soft cap is hit
+- [x] **GEN-01**: User can generate content for 5-10,000 products per upload
+- [x] **GEN-02**: System builds prompts dynamically based on available product fields
+- [x] **GEN-03**: System validates character limits (30-60 for titles, 2000-3000 for descriptions)
+- [x] **GEN-04**: System retries generations that violate character limits
+- [x] **GEN-05**: User sees real-time progress during generation (shows X of Y products completed, current cost)
+- [x] **GEN-06**: System tracks OpenAI API costs per generation batch with running total
+- [x] **GEN-07**: System handles OpenAI rate limits with exponential backoff and queuing
+- [x] **GEN-08**: System retries failed generations automatically
+- [x] **GEN-09**: System uses background job queue for long-running generation
+- [x] **GEN-10**: User can pause generation in progress
+- [x] **GEN-11**: User can resume paused or interrupted generation from where it stopped
+- [x] **GEN-12**: System uses GPT-5.2 for content generation
+- [x] **GEN-14**: System enforces soft cap at $500 per batch - prompts user with progress and costs when reached
+- [x] **GEN-15**: User must explicitly choose to continue or stop when $500 soft cap is hit
 
 ### Review & Approval
 
@@ -149,21 +148,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXCL-10 | Phase 3 | Pending |
 | EXCL-11 | Phase 3 | Pending |
 | EXCL-12 | Phase 3 | Pending |
-| GEN-01 | Phase 4 | Pending |
-| GEN-02 | Phase 4 | Pending |
-| GEN-03 | Phase 4 | Pending |
-| GEN-04 | Phase 4 | Pending |
-| GEN-05 | Phase 4 | Pending |
-| GEN-06 | Phase 4 | Pending |
-| GEN-07 | Phase 4 | Pending |
-| GEN-08 | Phase 4 | Pending |
-| GEN-09 | Phase 4 | Pending |
-| GEN-10 | Phase 4 | Pending |
-| GEN-11 | Phase 4 | Pending |
-| GEN-12 | Phase 4 | Pending |
-| GEN-13 | Phase 4 | Pending |
-| GEN-14 | Phase 4 | Pending |
-| GEN-15 | Phase 4 | Pending |
+| GEN-01 | Phase 4 | Complete |
+| GEN-02 | Phase 4 | Complete |
+| GEN-03 | Phase 4 | Complete |
+| GEN-04 | Phase 4 | Complete |
+| GEN-05 | Phase 4 | Complete |
+| GEN-06 | Phase 4 | Complete |
+| GEN-07 | Phase 4 | Complete |
+| GEN-08 | Phase 4 | Complete |
+| GEN-09 | Phase 4 | Complete |
+| GEN-10 | Phase 4 | Complete |
+| GEN-11 | Phase 4 | Complete |
+| GEN-12 | Phase 4 | Complete |
+| GEN-14 | Phase 4 | Complete |
+| GEN-15 | Phase 4 | Complete |
 | REV-01 | Phase 5 | Pending |
 | REV-02 | Phase 5 | Pending |
 | REV-03 | Phase 5 | Pending |
@@ -182,8 +180,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXP-03 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 52 total
-- Mapped to phases: 52
+- v1 requirements: 51 total (GEN-13 removed - Batch API has 24hr latency, incompatible with real-time UX)
+- Mapped to phases: 51
 - Unmapped: 0
 
 ---

@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Authentication** - Modern architecture with secure multi-tenant auth
 - [x] **Phase 2: Client Management** - Client profiles with brand voice and prompt configuration
 - [x] **Phase 3: Excel Processing** - Upload and map Faire Excel with variant grouping
-- [ ] **Phase 4: AI Generation Core** - LangChain + OpenAI with cost controls and progress tracking
+- [x] **Phase 4: AI Generation Core** - LangChain + OpenAI with cost controls and progress tracking
 - [ ] **Phase 5: Review System** - Manual review workflow with keyboard shortcuts
 - [ ] **Phase 6: Smart Regeneration** - Learning from rejections with enhanced prompts
 - [ ] **Phase 7: Export & Polish** - Download approved content and final UX refinements
@@ -94,7 +94,7 @@ Plans:
 ### Phase 4: AI Generation Core
 **Goal**: Users can generate optimized product titles and descriptions at scale with real-time cost and progress tracking
 **Depends on**: Phase 3
-**Requirements**: GEN-01, GEN-02, GEN-03, GEN-04, GEN-05, GEN-06, GEN-07, GEN-08, GEN-09, GEN-10, GEN-11, GEN-12, GEN-13, GEN-14, GEN-15
+**Requirements**: GEN-01, GEN-02, GEN-03, GEN-04, GEN-05, GEN-06, GEN-07, GEN-08, GEN-09, GEN-10, GEN-11, GEN-12, GEN-14, GEN-15
 **Success Criteria** (what must be TRUE):
   1. User can generate content for 5-10,000 products per upload
   2. System builds prompts dynamically based on available product fields
@@ -109,15 +109,16 @@ Plans:
   11. User can resume paused or interrupted generation from where it stopped
   12. System enforces $500 soft cap per batch and prompts user to explicitly continue or stop
 **Plans**: 6 plans in 4 waves
-**Status**: Planned
+**Status**: Complete
+**Completed**: 2026-01-23
 
 Plans:
-- [ ] 04-01-PLAN.md — Backend: Dependencies, GenerationJob/Audit models, migration
-- [ ] 04-02-PLAN.md — Backend: LangChain AI service, cost tracker, structured output
-- [ ] 04-03-PLAN.md — Backend: ARQ worker setup, job manager, Redis integration
-- [ ] 04-04-PLAN.md — Backend: Generation API endpoints with SSE progress streaming
-- [ ] 04-05-PLAN.md — Frontend: Generate button, progress UI, soft cap dialog
-- [ ] 04-06-PLAN.md — Admin: Generation settings (model, temperature, soft cap)
+- [x] 04-01-PLAN.md — Backend: Dependencies, GenerationJob/Audit models, migration
+- [x] 04-02-PLAN.md — Backend: LangChain AI service, cost tracker, structured output
+- [x] 04-03-PLAN.md — Backend: ARQ worker setup, job manager, Redis integration
+- [x] 04-04-PLAN.md — Backend: Generation API endpoints with SSE progress streaming
+- [x] 04-05-PLAN.md — Frontend: Generate button, progress UI, soft cap dialog
+- [x] 04-06-PLAN.md — Admin: Generation settings (model, temperature, soft cap)
 
 ### Phase 5: Review System
 **Goal**: Users can efficiently review generated content with keyboard-driven workflow
@@ -179,11 +180,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Foundation & Authentication | 5/5 | Complete | 2026-01-22 |
 | 2. Client Management | 5/5 | Complete | 2026-01-22 |
 | 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
-| 4. AI Generation Core | 0/6 | Planned | - |
+| 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
 | 5. Review System | 0/TBD | Not started | - |
 | 6. Smart Regeneration | 0/TBD | Not started | - |
 | 7. Export & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-23 (Phase 4 planned)*
+*Last updated: 2026-01-23 (Phase 4 complete)*
