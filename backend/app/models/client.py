@@ -51,8 +51,18 @@ class Client(Base):
         onupdate=func.now(),
     )
 
-    # Relationship - use lazy="raise" to prevent async lazy loading issues
+    # Relationships - use lazy="raise" to prevent async lazy loading issues
     user: Mapped["User"] = relationship(back_populates="clients", lazy="raise")
+    products: Mapped[list["Product"]] = relationship(
+        back_populates="client",
+        lazy="raise",
+        cascade="all, delete-orphan",
+    )
+    product_groups: Mapped[list["ProductGroup"]] = relationship(
+        back_populates="client",
+        lazy="raise",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Client(id={self.id}, brand_name={self.brand_name}, user_id={self.user_id})>"
