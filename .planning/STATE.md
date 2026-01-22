@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 4 of 7 (AI Generation Core)
-Plan: 3 of 6
+Plan: 2 of 5
 Status: In progress
-Last activity: 2026-01-23 — Completed 04-03-PLAN.md (ARQ Worker Infrastructure)
+Last activity: 2026-01-23 — Completed 04-02-PLAN.md (AI Generation Service Layer)
 
-Progress: [████████░░] 61% (16 of 26 plans complete)
+Progress: [████████░░] 62% (16 of 26 plans complete)
 
 ## Performance Metrics
 
@@ -30,14 +30,15 @@ Progress: [████████░░] 61% (16 of 26 plans complete)
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
 | 03 | 5 | 17 min | 3.4 min |
-| 04 | 2 | 7 min | 3.5 min |
+| 04 | 3 | 12 min | 4.0 min |
 
 **Recent Trend:**
 - 03-04 completed in 3.4 minutes
 - 03-05 completed in 4 minutes
 - 04-01 completed in 3 minutes
+- 04-02 completed in 4.6 minutes
 - 04-03 completed in 4.1 minutes
-- Trend: Excellent velocity (avg 3.5 min/plan for Phase 4)
+- Trend: Excellent velocity (avg 4.0 min/plan for Phase 4)
 
 *Updated after each plan completion*
 
@@ -167,6 +168,16 @@ Recent decisions affecting current work:
 - Phase 4 dependencies installed: LangChain, OpenAI, ARQ, tiktoken, tenacity, sse-starlette
 - Migration 007 creates generation tables with proper indexes
 
+**From 04-02 execution:**
+- LangChain with_structured_output(strict=True) guarantees JSON format via OpenAI function calling
+- Tiktoken with o200k_base fallback for GPT-5.2 token counting (handles model evolution)
+- ProductContent Pydantic schema validates character limits (30-60 title, 2000-3000 description)
+- CostTracker uses tiktoken for accurate token counting and cost calculation
+- 3 retries max (4 total attempts) for character limit violations
+- Retry prompts inject previous error message for explicit correction
+- Dynamic prompt building: client.ai_input_fields → brand context → prompts (client > app settings > defaults)
+- AIGenerationService creates full audit trail for every generation attempt (success or failure)
+
 **From 04-03 execution:**
 - Redis 7-alpine service added to Docker Compose for ARQ job queue
 - ARQ WorkerSettings with startup/shutdown hooks for database connection pooling
@@ -237,6 +248,10 @@ None yet.
 - ✅ GenerationJob and GenerationAudit models created
 - ✅ Database migration 007 applied successfully
 - ✅ Pydantic schemas ready for generation API
+- ✅ Plan 04-02 complete: AI Generation Service Layer
+- ✅ ProductContent schema with character limit validation (30-60 title, 2000-3000 description)
+- ✅ CostTracker service with tiktoken integration for accurate token counting
+- ✅ AIGenerationService with LangChain, dynamic prompt building, retry logic
 - ✅ Plan 04-03 complete: ARQ worker infrastructure and job management
 - ✅ Redis service running on port 6379 for ARQ job queue
 - ✅ ARQ worker with generation_worker function for background processing
@@ -248,7 +263,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-23 (current)
-Stopped at: Completed 04-03-PLAN.md
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
 Next: Continue Phase 4 - AI Generation Core (plan 04-04 or later)
 
