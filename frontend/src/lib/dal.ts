@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { decrypt } from "./session";
+import { decrypt, getAccessToken } from "./session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -33,14 +33,16 @@ export const verifySession = cache(async () => {
 
 // Get current user from backend
 export const getUser = cache(async (): Promise<User> => {
-  const session = await verifySession();
+  await verifySession(); // Optimistic check
 
-  const cookieStore = await cookies();
-  const cookie = cookieStore.get("session")?.value;
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
 
   const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
-      Authorization: `Bearer ${cookie}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     cache: "no-store",
   });
