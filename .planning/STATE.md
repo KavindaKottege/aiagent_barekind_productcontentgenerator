@@ -131,6 +131,15 @@ Recent decisions affecting current work:
 - Service class pattern: separate concerns into ExcelParser, FuzzyColumnMapper, VariantGrouper
 - Bulk insert pattern with two-phase insert: groups first (for FK), then products
 
+**From 03-03 execution:**
+- Modal dialog pattern for non-disruptive upload workflow (stay on dashboard)
+- 10MB Server Action body size limit for large Excel files
+- Client validation blocks upload when no client selected
+- Drag-and-drop file upload with useTransition for progress indication
+- 1.5 second success delay shows stats before auto-redirect
+- FormData forwarding pattern: Next.js Server Action → FastAPI backend
+- Upload success displays total rows, product groups, variant groups, mapping confidence
+
 **From 03-04 execution:**
 - API route layer for client component data fetching (bypasses Server Action limitations)
 - Status filter with 5 options: all, pending, generated, approved, rejected
@@ -178,11 +187,13 @@ None yet.
 **Phase 3 (Excel Processing) IN PROGRESS:**
 - ✅ 03-01: Database models created (Product, ProductGroup)
 - ✅ 03-02: Excel processing pipeline with streaming parser, fuzzy mapper, variant grouper
+- ✅ 03-03: Upload modal UI with drag-drop file selection and progress feedback
 - ✅ 03-04: Products list page with grouped variant display and status filtering
 - Streaming Excel parser handles large files (500-row batches, memory efficient)
 - Fuzzy column mapper auto-detects Faire columns (75% threshold, returns confidence)
 - Variant grouper clusters products by Name/Token/SKU using pandas
 - Upload endpoint orchestrates parse → map → group → bulk insert
+- Upload modal in dashboard header with client validation and success stats
 - Products list displays grouped variants with expand/collapse
 - Status filter allows filtering by pending/generated/approved/rejected
 - Client-aware URL routing synced with localStorage client selection
