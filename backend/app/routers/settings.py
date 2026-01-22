@@ -44,6 +44,9 @@ async def get_settings(
     return SettingsResponse(
         openai_api_key=settings.openai_api_key,
         has_api_key=settings.openai_api_key is not None and settings.openai_api_key != "",
+        default_system_prompt=settings.default_system_prompt,
+        default_task1_prompt=settings.default_task1_prompt,
+        default_task2_prompt=settings.default_task2_prompt,
     )
 
 
@@ -77,12 +80,23 @@ async def update_settings(
     if settings_update.openai_api_key is not None:
         settings.openai_api_key = settings_update.openai_api_key
 
+    # Update prompt fields if provided (allow clearing with empty string -> None)
+    if settings_update.default_system_prompt is not None:
+        settings.default_system_prompt = settings_update.default_system_prompt if settings_update.default_system_prompt != "" else None
+    if settings_update.default_task1_prompt is not None:
+        settings.default_task1_prompt = settings_update.default_task1_prompt if settings_update.default_task1_prompt != "" else None
+    if settings_update.default_task2_prompt is not None:
+        settings.default_task2_prompt = settings_update.default_task2_prompt if settings_update.default_task2_prompt != "" else None
+
     await db.commit()
     await db.refresh(settings)
 
     return SettingsResponse(
         openai_api_key=settings.openai_api_key,
         has_api_key=settings.openai_api_key is not None and settings.openai_api_key != "",
+        default_system_prompt=settings.default_system_prompt,
+        default_task1_prompt=settings.default_task1_prompt,
+        default_task2_prompt=settings.default_task2_prompt,
     )
 
 

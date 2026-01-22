@@ -7,6 +7,9 @@ class SettingsUpdate(BaseModel):
     """Schema for updating settings."""
 
     openai_api_key: str | None = None
+    default_system_prompt: str | None = None
+    default_task1_prompt: str | None = None
+    default_task2_prompt: str | None = None
 
 
 class SettingsResponse(BaseModel):
@@ -14,6 +17,9 @@ class SettingsResponse(BaseModel):
 
     openai_api_key: str | None
     has_api_key: bool
+    default_system_prompt: str | None
+    default_task1_prompt: str | None
+    default_task2_prompt: str | None
 
     model_config = ConfigDict(from_attributes=True)
 
