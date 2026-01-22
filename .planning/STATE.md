@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 3 of 7 (Excel Processing)
-Plan: 1 of 5 (in progress)
+Plan: 2 of 5
 Status: In progress
-Last activity: 2026-01-22 — Completed 03-01-PLAN.md (Database Models)
+Last activity: 2026-01-22 — Completed 03-02-PLAN.md (Excel Processing Pipeline)
 
-Progress: [████░░░░░░] 42% (11 of 26 plans complete)
+Progress: [████░░░░░░] 46% (12 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 4 minutes
-- Total execution time: 0.75 hours
+- Total plans completed: 12
+- Average duration: 3.8 minutes
+- Total execution time: 0.76 hours
 
 **By Phase:**
 
@@ -29,15 +29,15 @@ Progress: [████░░░░░░] 42% (11 of 26 plans complete)
 |-------|-------|-------|----------|
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
-| 03 | 1 | 3 min | 3 min |
+| 03 | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- 02-01 completed in 4 minutes
 - 02-03 completed in 4 minutes
 - 02-04 completed in 4 minutes
 - 02-05 completed in 6 minutes
 - 03-01 completed in 3 minutes
-- Trend: Strong velocity (avg 4 min/plan)
+- 03-02 completed in 3 minutes
+- Trend: Strong velocity (avg 3.8 min/plan)
 
 *Updated after each plan completion*
 
@@ -122,6 +122,15 @@ Recent decisions affecting current work:
 - Row_index field preserves original Excel ordering for export
 - Composite index pattern (client_id, row_index) for export ordering
 
+**From 03-02 execution:**
+- Streaming Excel parser with 500-row batches for memory efficiency on large files
+- 75% fuzzy match threshold for column mapping (balance flexibility and accuracy)
+- Idempotent upload pattern: replace existing products for client on re-upload
+- Formula injection sanitization by prefixing =, +, -, @ with apostrophe (OWASP CSV Injection prevention)
+- Mapping confidence score (HIGH/MEDIUM/LOW) returned to frontend for user awareness
+- Service class pattern: separate concerns into ExcelParser, FuzzyColumnMapper, VariantGrouper
+- Bulk insert pattern with two-phase insert: groups first (for FK), then products
+
 ### Pending Todos
 
 None yet.
@@ -160,17 +169,20 @@ None yet.
 
 **Phase 3 (Excel Processing) IN PROGRESS:**
 - ✅ 03-01: Database models created (Product, ProductGroup)
-- Product and ProductGroup models with variant grouping
-- JSONB unmapped_data preserves unmapped Excel columns
-- Migration 005 creates tables with proper indexes
-- Ready for upload endpoint (03-02)
+- ✅ 03-02: Excel processing pipeline with streaming parser, fuzzy mapper, variant grouper
+- Streaming Excel parser handles large files (500-row batches, memory efficient)
+- Fuzzy column mapper auto-detects Faire columns (75% threshold, returns confidence)
+- Variant grouper clusters products by Name/Token/SKU using pandas
+- Upload endpoint orchestrates parse → map → group → bulk insert
+- Four product endpoints: upload, list groups, get group details, delete
+- Ready for field selection UI (03-03)
 
 ## Session Continuity
 
 Last session: 2026-01-22 (current)
-Stopped at: Completed 03-01-PLAN.md (Database Models for Product Storage)
+Stopped at: Completed 03-02-PLAN.md (Excel Processing Pipeline)
 Resume file: None
-Next: Continue Phase 3 - Excel Processing (plans 03-02 through 03-05)
+Next: Continue Phase 3 - Excel Processing (plans 03-03 through 03-05)
 
 ---
 *State initialized: 2026-01-22*
