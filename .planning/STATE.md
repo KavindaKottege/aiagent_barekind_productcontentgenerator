@@ -10,31 +10,32 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 1 of 7 (Foundation & Authentication)
-Plan: 4 of 4 (complete)
+Plan: 5 of 5 (complete)
 Status: Phase complete
-Last activity: 2026-01-22 — Completed 01-04-PLAN.md (API Foundation)
+Last activity: 2026-01-22 — Completed 01-05-PLAN.md (JWT Integration Fix)
 
-Progress: [████░░░░░░] 40%
+Progress: [████░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 5 minutes
+- Total plans completed: 5
+- Average duration: 4 minutes
 - Total execution time: 0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 4 | 18 min | 4.5 min |
+| 01 | 5 | 20 min | 4 min |
 
 **Recent Trend:**
 - 01-01 completed in 5 minutes
 - 01-02 completed in 6 minutes
 - 01-03 completed in 3 minutes
 - 01-04 completed in 4 minutes
-- Trend: Stable velocity (avg 4.5 min/plan)
+- 01-05 completed in 2 minutes
+- Trend: Strong velocity (avg 4 min/plan)
 
 *Updated after each plan completion*
 
@@ -80,6 +81,12 @@ Recent decisions affecting current work:
 - Idempotent seed script that skips existing data
 - getAdmin() DAL function redirects non-admins to dashboard with error
 
+**From 01-05 execution:**
+- Dual-cookie architecture: session cookie for frontend userId lookup, access_token cookie for backend API authorization
+- Decode JWT without verification in auth actions (safe since just received from trusted backend)
+- Both cookies use identical security settings (httpOnly, secure in prod, sameSite lax, 7 days)
+- DAL uses getAccessToken() to send backend JWT in Authorization header
+
 ### Pending Todos
 
 None yet.
@@ -98,18 +105,21 @@ None yet.
 - ✅ AUTH-03: Frontend authentication UI
 - ✅ AUTH-04: Session management
 - ✅ AUTH-05: OpenAI API key configuration
+- ✅ AUTH-06: JWT integration fix (gap closure)
 - Dev environment fully automated with seed script
+- End-to-end authentication flow verified and working
 
 **Phase 2 (Product Import) ready to execute:**
 - Backend API infrastructure complete
-- Admin authentication and authorization working
+- Admin authentication and authorization working end-to-end
 - Settings storage available for API keys
 - Dev environment provides instant testing capability
+- All authentication flows fully functional
 
 ## Session Continuity
 
-Last session: 2026-01-22 08:26 UTC
-Stopped at: Completed 01-04-PLAN.md execution
+Last session: 2026-01-22 08:50 UTC
+Stopped at: Completed 01-05-PLAN.md execution (Phase 1 complete)
 Resume file: None
 
 ---
