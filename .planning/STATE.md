@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 4 of 7 (AI Generation Core)
-Plan: 2 of 5
+Plan: 4 of 5
 Status: In progress
-Last activity: 2026-01-23 — Completed 04-02-PLAN.md (AI Generation Service Layer)
+Last activity: 2026-01-23 — Completed 04-04-PLAN.md (Generation API Endpoints)
 
-Progress: [████████░░] 62% (16 of 26 plans complete)
+Progress: [█████████░] 65% (17 of 26 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: 3.7 minutes
+- Total plans completed: 17
+- Average duration: 3.6 minutes
 - Total execution time: 1.0 hours
 
 **By Phase:**
@@ -30,15 +30,15 @@ Progress: [████████░░] 62% (16 of 26 plans complete)
 | 01 | 5 | 20 min | 4 min |
 | 02 | 5 | 22 min | 4.4 min |
 | 03 | 5 | 17 min | 3.4 min |
-| 04 | 3 | 12 min | 4.0 min |
+| 04 | 4 | 14 min | 3.5 min |
 
 **Recent Trend:**
-- 03-04 completed in 3.4 minutes
 - 03-05 completed in 4 minutes
 - 04-01 completed in 3 minutes
 - 04-02 completed in 4.6 minutes
 - 04-03 completed in 4.1 minutes
-- Trend: Excellent velocity (avg 4.0 min/plan for Phase 4)
+- 04-04 completed in 2.4 minutes
+- Trend: Excellent velocity (avg 3.5 min/plan for Phase 4, improving)
 
 *Updated after each plan completion*
 
@@ -188,6 +188,15 @@ Recent decisions affecting current work:
 - Worker has separate database connection pool (pool_size=5, independent of FastAPI app)
 - Progress calculation includes elapsed time, estimated remaining, projected cost
 
+**From 04-04 execution:**
+- POST /start blocks if active job exists for client (prevents concurrent generation)
+- SSE progress endpoint polls every 500ms for responsive UI updates
+- Resume creates new job (preserves audit trail, worker skips 'generated' products)
+- Global /api prefix standardized for all routers
+- Lifespan context manager for proper database connection cleanup
+- SSE pattern: separate session per event generator for long-lived connections
+- EventSourceResponse with asyncio.sleep(0.5) polling pattern
+
 ### Pending Todos
 
 None yet.
@@ -258,14 +267,19 @@ None yet.
 - ✅ Worker supports pause/cancel/resume with check-before-each-product pattern
 - ✅ Soft cap detection pauses job automatically at $500 threshold
 - ✅ JobManager service handles job creation, enqueueing, lifecycle operations
-- Next: 04-04 - Generation API Endpoints (POST /generate, job control, status queries)
+- ✅ Plan 04-04 complete: Generation API Endpoints
+- ✅ 8 REST endpoints for job lifecycle (start, status, pause, cancel, resume, soft-cap, active-check)
+- ✅ Server-Sent Events (SSE) streaming for real-time progress (500ms polling)
+- ✅ Active job blocking prevents concurrent generation per client
+- ✅ Global /api prefix standardized across all routers
+- Next: 04-05 - Final plan in Phase 4 AI Generation Core
 
 ## Session Continuity
 
 Last session: 2026-01-23 (current)
-Stopped at: Completed 04-02-PLAN.md
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
-Next: Continue Phase 4 - AI Generation Core (plan 04-04 or later)
+Next: Continue Phase 4 - AI Generation Core (plan 04-05)
 
 ---
 *State initialized: 2026-01-22*
