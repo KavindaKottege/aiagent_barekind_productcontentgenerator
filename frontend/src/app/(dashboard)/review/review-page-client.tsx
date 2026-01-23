@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +15,11 @@ import {
   ProductGroupReview,
   ReviewStats,
 } from '@/app/actions/review'
+import {
+  getActiveJobForClient,
+  GenerationJob,
+  GenerationProgress,
+} from '@/app/actions/generation'
 
 interface ReviewPageClientProps {
   clientId: string
@@ -28,8 +33,8 @@ interface ReviewPageClientProps {
 export function ReviewPageClient({
   clientId,
   accessToken,
-  stats,
-  products,
+  stats: initialStats,
+  products: initialProducts,
   firstUnreviewed,
   statusFilter,
 }: ReviewPageClientProps) {
@@ -40,7 +45,31 @@ export function ReviewPageClient({
   const [hasActiveJob, setHasActiveJob] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Check for active job on mount
+  // Real-time generation monitoring state
+  const [products, setProducts] = useState(initialProducts)
+  const [stats, setStats] = useState(initialStats)
+  const [activeGenerationJob, setActiveGenerationJob] = useState<GenerationJob | null>(null)
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null)
+  const lastRefreshRef = useRef<number>(0)
+  const REFRESH_DEBOUNCE_MS = 2000
+
+  // Refresh products list from server
+  const refreshProducts = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/review/products?clientId=${clientId}`, {
+        cache: 'no-store',
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data.products || [])
+        setStats(data.stats || initialStats)
+      }
+    } catch (error) {
+      console.error('Failed to refresh products:', error)
+    }
+  }, [clientId, initialStats])
+
+  // Check for active AI review job on mount
   useEffect(() => {
     const checkActiveJob = async () => {
       const status = await getBatchAIReviewStatus(clientId)
@@ -50,6 +79,55 @@ export function ReviewPageClient({
     }
     checkActiveJob()
   }, [clientId])
+
+  // Check for active generation job on mount
+  useEffect(() => {
+    const checkActiveGeneration = async () => {
+      const result = await getActiveJobForClient(clientId)
+      if (result.success && result.job) {
+        setActiveGenerationJob(result.job)
+      }
+    }
+    checkActiveGeneration()
+  }, [clientId])
+
+  // SSE connection for real-time generation progress
+  useEffect(() => {
+    if (!activeGenerationJob || !accessToken) return
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const eventSource = new EventSource(
+      `${apiUrl}/api/generation/jobs/${activeGenerationJob.id}/progress?token=${accessToken}`
+    )
+
+    eventSource.addEventListener('progress', (event) => {
+      const data = JSON.parse(event.data) as GenerationProgress
+      setGenerationProgress(data)
+
+      // Debounced refresh: only refresh if enough time has passed
+      const now = Date.now()
+      if (now - lastRefreshRef.current > REFRESH_DEBOUNCE_MS) {
+        lastRefreshRef.current = now
+        refreshProducts()
+      }
+    })
+
+    eventSource.addEventListener('complete', () => {
+      // Always refresh on complete for final product list
+      refreshProducts()
+      setActiveGenerationJob(null)
+      setGenerationProgress(null)
+      eventSource.close()
+    })
+
+    eventSource.addEventListener('error', (event) => {
+      console.error('Generation SSE error:', event)
+    })
+
+    return () => {
+      eventSource.close()
+    }
+  }, [activeGenerationJob, accessToken, refreshProducts])
 
   const handleShowModeToggle = () => {
     setShowModeToggle(true)
@@ -76,6 +154,9 @@ export function ReviewPageClient({
     router.refresh()
   }
 
+  // Update firstUnreviewed based on current products state
+  const currentFirstUnreviewed = products.find(p => !p.review_status)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -85,13 +166,45 @@ export function ReviewPageClient({
         </div>
 
         {/* Review All with AI button */}
-        {products.length > 0 && !hasActiveJob && (
+        {products.length > 0 && !hasActiveJob && !activeGenerationJob && (
           <Button onClick={handleShowModeToggle} className="gap-2">
             <Sparkles className="w-4 h-4" />
             Review All with AI
           </Button>
         )}
       </div>
+
+      {/* Generation in progress banner */}
+      {activeGenerationJob && generationProgress && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-blue-900">
+                  Generation in progress
+                </p>
+                <p className="text-sm text-blue-700 mt-1">
+                  {generationProgress.completed} of {generationProgress.total} products complete
+                  {' · '}
+                  {stats.pending_review} ready for review
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Badge className="bg-blue-600">
+                  {Math.round((generationProgress.completed / generationProgress.total) * 100)}% complete
+                </Badge>
+                {currentFirstUnreviewed && (
+                  <Link href={`/review/${currentFirstUnreviewed.id}?client=${clientId}`}>
+                    <Button size="sm">
+                      Start Reviewing
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Mode Toggle Dialog */}
       {showModeToggle && !hasActiveJob && (
@@ -203,9 +316,9 @@ export function ReviewPageClient({
       )}
 
       {/* Start Review Button */}
-      {products.length > 0 && firstUnreviewed && !hasActiveJob && (
+      {products.length > 0 && currentFirstUnreviewed && !hasActiveJob && !activeGenerationJob && (
         <div className="flex justify-center">
-          <Link href={`/review/${firstUnreviewed.id}?client=${clientId}`}>
+          <Link href={`/review/${currentFirstUnreviewed.id}?client=${clientId}`}>
             <Button size="lg" className="px-8">
               Start Review
             </Button>
