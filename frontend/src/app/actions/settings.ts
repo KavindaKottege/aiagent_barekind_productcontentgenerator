@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getAccessToken } from "@/lib/session";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -106,6 +107,9 @@ export async function updateSettings(
     };
   }
 
+  // Revalidate the settings page to show updated value
+  revalidatePath("/settings");
+
   return {
     success: true,
   };
@@ -167,6 +171,9 @@ export async function updatePromptSettings(
     const error = await response.json();
     return { errors: { _form: [error.detail || "Failed to save prompts"] } };
   }
+
+  // Revalidate the prompts page to show updated values
+  revalidatePath("/settings/prompts");
 
   return { success: true };
 }
