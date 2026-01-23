@@ -18,6 +18,7 @@ import {
 import { useReviewHistory } from '@/lib/review-context'
 import { ImageDisplay } from './image-display'
 import { InlineEditor } from './inline-editor'
+import { AIReviewPanel } from './ai-review-panel'
 import { MissingFieldsWarning } from './missing-fields-warning'
 
 interface ReviewInterfaceProps {
@@ -218,13 +219,22 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
             variant={
               optimisticStatus === 'approved' ? 'default' :
               optimisticStatus === 'rejected' ? 'destructive' :
+              optimisticStatus === 'ai_approved' ? 'default' :
+              optimisticStatus === 'ai_rejected' ? 'destructive' :
               'secondary'
             }
+            className={
+              optimisticStatus === 'ai_approved' ? 'bg-purple-600' :
+              optimisticStatus === 'ai_rejected' ? 'bg-purple-600' :
+              ''
+            }
           >
-            {optimisticStatus.charAt(0).toUpperCase() + optimisticStatus.slice(1)}
+            {optimisticStatus === 'ai_approved' ? 'Auto-approved by AI' :
+             optimisticStatus === 'ai_rejected' ? 'Auto-rejected by AI' :
+             optimisticStatus.charAt(0).toUpperCase() + optimisticStatus.slice(1)}
           </Badge>
         )}
-        {currentProduct.ai_review_status && (
+        {currentProduct.ai_review_status && !optimisticStatus?.startsWith('ai_') && (
           <Badge variant="outline">
             AI: {currentProduct.ai_review_status.replace('_', ' ')}
           </Badge>
@@ -328,13 +338,19 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
           </Collapsible>
         </div>
 
-        {/* Right: Images (40%) */}
-        <div className="lg:col-span-2">
+        {/* Right: Images and AI Review (40%) */}
+        <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardContent className="p-4">
               <ImageDisplay images={currentProduct.images} />
             </CardContent>
           </Card>
+
+          {/* AI Review Panel */}
+          <AIReviewPanel
+            product={currentProduct}
+            onAIReviewComplete={() => router.refresh()}
+          />
         </div>
       </div>
 

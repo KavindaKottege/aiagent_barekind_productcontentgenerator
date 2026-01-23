@@ -1,11 +1,13 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ReviewStatsComponent } from '@/components/review/review-stats'
 import { getReviewProducts, getReviewStats } from '@/app/actions/review'
+import { ReviewPageClient } from './review-page-client'
 
 export const metadata: Metadata = {
   title: 'Review Products - Product Content Generator',
@@ -38,6 +40,10 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
     )
   }
 
+  // Get access token for SSE
+  const cookieStore = await cookies()
+  const accessToken = cookieStore.get('access_token')?.value || ''
+
   // Fetch stats and products in parallel
   const [stats, products] = await Promise.all([
     getReviewStats(clientId),
@@ -48,12 +54,33 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   const firstUnreviewed = products.find(p => !p.review_status)
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Review Products</h2>
-        <p className="text-gray-600 mt-1">Review and approve AI-generated content</p>
-      </div>
+    <ReviewPageClient
+      clientId={clientId}
+      accessToken={accessToken}
+      stats={stats}
+      products={products}
+      firstUnreviewed={firstUnreviewed}
+      statusFilter={statusFilter}
+    />
+  )
+}
 
+// Extracted server component content
+function ReviewPageServerContent({
+  stats,
+  products,
+  firstUnreviewed,
+  clientId,
+  statusFilter,
+}: {
+  stats: any
+  products: any[]
+  firstUnreviewed: any
+  clientId: string
+  statusFilter: string
+}) {
+  return (
+    <>
       {/* Review Stats Bar */}
       <ReviewStatsComponent
         stats={stats}
@@ -160,6 +187,6 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
           })}
         </div>
       )}
-    </div>
+    </>
   )
 }
