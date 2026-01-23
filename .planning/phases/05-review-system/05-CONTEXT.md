@@ -30,6 +30,10 @@ Manual review workflow for AI-generated product content. Users can approve, reje
 ### AI-Assisted Modes
 - Dual AI review options: on-demand (user clicks 'Get AI feedback' per product) AND batch pre-analysis (trigger AI review for all upfront)
 - AI evaluates accuracy only - check if generated content matches original input data and images (no hallucinations)
+- **CRITICAL safety checks** - AI must flag content that could mislead retailers:
+  - Quantity confusion (is it 1 item or set of 9? Is price per-item or per-set?)
+  - Misleading expectations about what they're receiving
+  - Misrepresentation of original product naming (does it fairly represent what client called it?)
 - Character limit validation handled by code, not AI review
 - Status filter system with 6 categories: all, manually approved, manually rejected, manually reviewed, AI approved, AI rejected
 - Category indicators show count badges for each status
