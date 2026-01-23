@@ -12,6 +12,7 @@ import {
   ProductGroupReview,
   approveProduct,
   rejectProduct,
+  saveEdit,
   getNextUnreviewed,
 } from '@/app/actions/review'
 import { useReviewHistory } from '@/lib/review-context'
@@ -131,6 +132,37 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
     }
   }, [undo, router, clientId])
 
+  // Computed display values
+  const displayTitle = currentProduct.edited_title || currentProduct.generated_title || ''
+  const displayDescription = currentProduct.edited_description || currentProduct.generated_description || ''
+
+  // Save edit handlers
+  const handleSaveTitle = useCallback(async (newTitle: string) => {
+    const currentDescription = currentProduct.edited_description || currentProduct.generated_description || ''
+    const result = await saveEdit(currentProduct.id, newTitle, currentDescription)
+
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to save title')
+    }
+
+    // Refresh to get updated data
+    router.refresh()
+    setIsEditing(false)
+  }, [currentProduct, router])
+
+  const handleSaveDescription = useCallback(async (newDescription: string) => {
+    const currentTitle = currentProduct.edited_title || currentProduct.generated_title || ''
+    const result = await saveEdit(currentProduct.id, currentTitle, newDescription)
+
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to save description')
+    }
+
+    // Refresh to get updated data
+    router.refresh()
+    setIsEditing(false)
+  }, [currentProduct, router])
+
   // Keyboard shortcuts - disabled when editing
   useHotkeys('a', () => !isEditing && handleApprove(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('r', () => !isEditing && handleReject(), { enabled: !isEditing, preventDefault: true })
@@ -139,9 +171,6 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
   useHotkeys('right, j', () => !isEditing && goToNext(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('escape', () => setIsEditing(false), { enabled: isEditing, preventDefault: true })
   useHotkeys('ctrl+z, meta+z', () => !isEditing && handleUndo(), { enabled: canUndo && !isEditing, preventDefault: true })
-
-  const displayTitle = currentProduct.edited_title || currentProduct.generated_title || ''
-  const displayDescription = currentProduct.edited_description || currentProduct.generated_description || ''
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -234,7 +263,7 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
                 </label>
                 <InlineEditor
                   value={displayTitle}
-                  onSave={async () => {}} // Will implement in Task 3
+                  onSave={handleSaveTitle}
                   minChars={30}
                   maxChars={60}
                   placeholder="Title will appear here..."
@@ -248,7 +277,7 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
                 </label>
                 <InlineEditor
                   value={displayDescription}
-                  onSave={async () => {}} // Will implement in Task 3
+                  onSave={handleSaveDescription}
                   minChars={2000}
                   maxChars={3000}
                   placeholder="Description will appear here..."
