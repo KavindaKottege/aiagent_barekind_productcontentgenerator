@@ -18,7 +18,13 @@ class ExcelParser:
         IMPORTANT: Caller must call close() when done.
         """
         self.wb = load_workbook(filename=str(self.file_path), read_only=True)
-        ws = self.wb.active
+
+        # Look for "Products" sheet (common in Faire templates)
+        # If not found, use the active sheet
+        if 'Products' in self.wb.sheetnames:
+            ws = self.wb['Products']
+        else:
+            ws = self.wb.active
 
         # Get headers from first row
         rows_iter = ws.iter_rows(values_only=True)
