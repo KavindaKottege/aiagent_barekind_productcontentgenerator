@@ -15,7 +15,7 @@ export async function GET(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/products/groups/${groupId}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/products/groups/${groupId}`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,

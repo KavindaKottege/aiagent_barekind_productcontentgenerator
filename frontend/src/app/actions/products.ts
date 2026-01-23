@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 export type UploadResult = {
   success: boolean
   error?: string
@@ -52,7 +54,7 @@ export async function uploadProducts(formData: FormData): Promise<UploadResult> 
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/products/upload?client_id=${clientId}`,
+      `${API_URL}/api/products/upload?client_id=${clientId}`,
       {
         method: 'POST',
         body: backendFormData,
@@ -107,7 +109,7 @@ export async function getProductGroups(clientId: string): Promise<ProductGroup[]
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/products/groups?client_id=${clientId}`,
+      `${API_URL}/api/products/groups?client_id=${clientId}`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`,

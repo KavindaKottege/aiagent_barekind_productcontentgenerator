@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Connect to backend SSE endpoint for generation progress
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000'
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
     const sseUrl = `${backendUrl}/api/generation/client/${clientId}/progress?token=${token}`
 
     const response = await fetch(sseUrl, {

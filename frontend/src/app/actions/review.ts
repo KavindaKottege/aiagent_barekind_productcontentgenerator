@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+const API_URL = API_URL
 
 // Types matching backend Pydantic schemas
 export interface ProductGroupReview {
@@ -61,7 +62,7 @@ export async function getReviewProducts(
   }
 
   try {
-    const url = new URL(`${process.env.BACKEND_URL}/api/review/${clientId}/products`)
+    const url = new URL(`${API_URL}/api/review/${clientId}/products`)
     if (statusFilter && statusFilter !== 'all') {
       url.searchParams.set('status', statusFilter)
     }
@@ -103,7 +104,7 @@ export async function getReviewProduct(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/product/${productGroupId}`,
+      `${API_URL}/api/review/${clientId}/product/${productGroupId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -140,7 +141,7 @@ export async function approveProduct(
   }
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/review/approve`, {
+    const response = await fetch(`${API_URL}/api/review/approve`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -188,7 +189,7 @@ export async function rejectProduct(
   }
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/review/reject`, {
+    const response = await fetch(`${API_URL}/api/review/reject`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -253,7 +254,7 @@ export async function saveEdit(
   }
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/review/edit`, {
+    const response = await fetch(`${API_URL}/api/review/edit`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -302,7 +303,7 @@ export async function undoReview(
   }
 
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/review/undo`, {
+    const response = await fetch(`${API_URL}/api/review/undo`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -348,7 +349,7 @@ export async function getReviewStats(clientId: string): Promise<ReviewStats> {
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/stats`,
+      `${API_URL}/api/review/${clientId}/stats`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -400,7 +401,7 @@ export async function getNextUnreviewed(clientId: string): Promise<string | null
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/next-unreviewed`,
+      `${API_URL}/api/review/${clientId}/next-unreviewed`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -456,7 +457,7 @@ export async function requestAIReview(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/ai-single`,
+      `${API_URL}/api/review/ai-single`,
       {
         method: 'POST',
         headers: {
@@ -496,7 +497,7 @@ export async function startBatchAIReview(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/start`,
+      `${API_URL}/api/review/${clientId}/ai-review/start`,
       {
         method: 'POST',
         headers: {
@@ -536,7 +537,7 @@ export async function getBatchAIReviewStatus(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/status`,
+      `${API_URL}/api/review/${clientId}/ai-review/status`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -571,7 +572,7 @@ export async function pauseBatchAIReview(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/pause`,
+      `${API_URL}/api/review/${clientId}/ai-review/pause`,
       {
         method: 'POST',
         headers: {
@@ -601,7 +602,7 @@ export async function cancelBatchAIReview(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/cancel`,
+      `${API_URL}/api/review/${clientId}/ai-review/cancel`,
       {
         method: 'POST',
         headers: {
@@ -632,7 +633,7 @@ export async function resumeBatchAIReview(
 
   try {
     const response = await fetch(
-      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/resume`,
+      `${API_URL}/api/review/${clientId}/ai-review/resume`,
       {
         method: 'POST',
         headers: {
