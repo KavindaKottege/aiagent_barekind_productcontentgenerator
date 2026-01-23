@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -43,8 +44,20 @@ class ProductGroup(Base):
     generated_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     generated_description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Edited content (filled by Phase 5 review)
+    edited_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    edited_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     # Status tracking
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", server_default="pending")
+
+    # Review status tracking (Phase 5)
+    review_status: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)  # approved, rejected, edited
+    ai_review_status: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)  # ai_approved, ai_rejected
+    ai_review_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    ai_review_safety_flags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True, default=list, server_default="[]")
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ai_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
