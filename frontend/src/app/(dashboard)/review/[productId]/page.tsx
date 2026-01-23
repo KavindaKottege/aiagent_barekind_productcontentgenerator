@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { redirect, notFound } from 'next/navigation'
 import { getReviewProduct, getReviewProducts } from '@/app/actions/review'
+import { getClient } from '@/app/actions/clients'
 import { ReviewInterface } from '@/components/review/review-interface'
 import { ReviewProvider } from '@/lib/review-context'
 
@@ -22,10 +23,11 @@ export default async function ReviewProductPage({ params, searchParams }: Review
     redirect('/review')
   }
 
-  // Fetch product and all products in parallel for navigation
-  const [product, allProducts] = await Promise.all([
+  // Fetch product, all products, and client in parallel
+  const [product, allProducts, client] = await Promise.all([
     getReviewProduct(clientId, productId),
     getReviewProducts(clientId),
+    getClient(clientId),
   ])
 
   if (!product) {
@@ -35,12 +37,16 @@ export default async function ReviewProductPage({ params, searchParams }: Review
   // Extract product IDs for navigation
   const allProductIds = allProducts.map(p => p.id)
 
+  // Get selected AI input fields (default to all fields if not set)
+  const selectedFields = client?.ai_input_fields || []
+
   return (
     <ReviewProvider>
       <ReviewInterface
         product={product}
         clientId={clientId}
         allProductIds={allProductIds}
+        selectedFields={selectedFields}
       />
     </ReviewProvider>
   )

@@ -18,14 +18,16 @@ import {
 import { useReviewHistory } from '@/lib/review-context'
 import { ImageDisplay } from './image-display'
 import { InlineEditor } from './inline-editor'
+import { MissingFieldsWarning } from './missing-fields-warning'
 
 interface ReviewInterfaceProps {
   product: ProductGroupReview
   clientId: string
   allProductIds: string[]
+  selectedFields: string[]
 }
 
-export function ReviewInterface({ product: initialProduct, clientId, allProductIds }: ReviewInterfaceProps) {
+export function ReviewInterface({ product: initialProduct, clientId, allProductIds, selectedFields }: ReviewInterfaceProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { recordAction, undo, canUndo, canRedo } = useReviewHistory()
@@ -249,6 +251,11 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
         <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
           <span className="font-semibold">AI Review Note:</span> {currentProduct.ai_review_reason}
         </div>
+      )}
+
+      {/* Missing fields warning */}
+      {selectedFields.length > 0 && (
+        <MissingFieldsWarning product={currentProduct} selectedFields={selectedFields} />
       )}
 
       {/* Main content area */}
