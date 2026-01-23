@@ -46,7 +46,7 @@ export async function getSettings(): Promise<Settings | null> {
     redirect("/login");
   }
 
-  const response = await fetch(`${API_URL}/settings/`, {
+  const response = await fetch(`${API_URL}/api/settings/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
@@ -87,7 +87,7 @@ export async function updateSettings(
     redirect("/login");
   }
 
-  const response = await fetch(`${API_URL}/settings/`, {
+  const response = await fetch(`${API_URL}/api/settings/`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -117,7 +117,7 @@ export async function getPromptSettings(): Promise<PromptSettings | null> {
     redirect("/login");
   }
 
-  const response = await fetch(`${API_URL}/settings/`, {
+  const response = await fetch(`${API_URL}/api/settings/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
@@ -151,7 +151,7 @@ export async function updatePromptSettings(
     default_task2_prompt: formData.get("default_task2_prompt") as string || null,
   };
 
-  const response = await fetch(`${API_URL}/settings/`, {
+  const response = await fetch(`${API_URL}/api/settings/`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -177,7 +177,7 @@ export async function getGenerationSettings(): Promise<GenerationSettings | null
     redirect("/login");
   }
 
-  const response = await fetch(`${API_URL}/settings/generation`, {
+  const response = await fetch(`${API_URL}/api/settings/generation`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
@@ -203,7 +203,7 @@ export async function updateGenerationSettings(
   }
 
   try {
-    const response = await fetch(`${API_URL}/settings/generation`, {
+    const response = await fetch(`${API_URL}/api/settings/generation`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,

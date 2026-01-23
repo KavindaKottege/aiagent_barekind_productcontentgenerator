@@ -40,7 +40,7 @@ export const getUser = cache(async (): Promise<User> => {
     redirect("/login");
   }
 
-  const response = await fetch(`${API_URL}/auth/me`, {
+  const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

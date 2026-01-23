@@ -38,7 +38,7 @@ export async function getClients(): Promise<Client[]> {
     redirect('/login')
   }
 
-  const response = await fetch(`${API_URL}/clients/`, {
+  const response = await fetch(`${API_URL}/api/clients/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: 'no-store',
   })
@@ -57,7 +57,7 @@ export async function getClient(id: string): Promise<Client | null> {
     redirect('/login')
   }
 
-  const response = await fetch(`${API_URL}/clients/${id}`, {
+  const response = await fetch(`${API_URL}/api/clients/${id}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: 'no-store',
   })
@@ -98,7 +98,7 @@ export async function createClient(
   }
 
   // Create client
-  const response = await fetch(`${API_URL}/clients/`, {
+  const response = await fetch(`${API_URL}/api/clients/`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -145,7 +145,7 @@ export async function updateClient(
   }
 
   // Update client
-  const response = await fetch(`${API_URL}/clients/${clientId}`, {
+  const response = await fetch(`${API_URL}/api/clients/${clientId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -172,7 +172,7 @@ export async function deleteClient(clientId: string): Promise<{ success: boolean
     redirect('/login')
   }
 
-  const response = await fetch(`${API_URL}/clients/${clientId}`, {
+  const response = await fetch(`${API_URL}/api/clients/${clientId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${accessToken}` },
   })
@@ -199,7 +199,7 @@ export async function updateClientFieldSelection(
 
   try {
     const response = await fetch(
-      `${API_URL}/clients/${clientId}`,
+      `${API_URL}/api/clients/${clientId}`,
       {
         method: 'PATCH',
         headers: {
