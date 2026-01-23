@@ -1,0 +1,341 @@
+'use client'
+
+import { useState, useTransition, useOptimistic, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { ChevronDown, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import {
+  ProductGroupReview,
+  approveProduct,
+  rejectProduct,
+  getNextUnreviewed,
+} from '@/app/actions/review'
+import { useReviewHistory } from '@/lib/review-context'
+import { ImageDisplay } from './image-display'
+import { InlineEditor } from './inline-editor'
+
+interface ReviewInterfaceProps {
+  product: ProductGroupReview
+  clientId: string
+  allProductIds: string[]
+}
+
+export function ReviewInterface({ product: initialProduct, clientId, allProductIds }: ReviewInterfaceProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const { recordAction, undo, canUndo, canRedo } = useReviewHistory()
+
+  // Local state
+  const [currentProduct, setCurrentProduct] = useState(initialProduct)
+  const [showOriginalData, setShowOriginalData] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Optimistic state for instant UI feedback
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(
+    currentProduct.review_status,
+    (state, newStatus: string | null) => newStatus
+  )
+
+  // Current product index for navigation
+  const currentIndex = allProductIds.indexOf(currentProduct.id)
+  const hasPrevious = currentIndex > 0
+  const hasNext = currentIndex < allProductIds.length - 1
+
+  // Navigation handlers
+  const navigateToProduct = useCallback((productId: string) => {
+    router.push(`/review/${productId}?client=${clientId}`)
+  }, [router, clientId])
+
+  const goToPrevious = useCallback(() => {
+    if (hasPrevious) {
+      navigateToProduct(allProductIds[currentIndex - 1])
+    }
+  }, [hasPrevious, allProductIds, currentIndex, navigateToProduct])
+
+  const goToNext = useCallback(() => {
+    if (hasNext) {
+      navigateToProduct(allProductIds[currentIndex + 1])
+    }
+  }, [hasNext, allProductIds, currentIndex, navigateToProduct])
+
+  // Approve handler
+  const handleApprove = useCallback(async () => {
+    setError(null)
+    startTransition(async () => {
+      setOptimisticStatus('approved')
+
+      const result = await approveProduct(currentProduct.id)
+
+      if (result.success) {
+        recordAction({
+          productId: currentProduct.id,
+          action: 'approve',
+          previousStatus: currentProduct.review_status,
+        })
+
+        // Auto-advance to next unreviewed
+        if (result.next_product_id) {
+          navigateToProduct(result.next_product_id)
+        } else {
+          // No more unreviewed, show completion message
+          router.push(`/review?client=${clientId}`)
+        }
+      } else {
+        setError(result.message || 'Failed to approve')
+        setOptimisticStatus(currentProduct.review_status || null)
+      }
+    })
+  }, [currentProduct, recordAction, navigateToProduct, clientId, router, setOptimisticStatus])
+
+  // Reject handler
+  const handleReject = useCallback(async () => {
+    setError(null)
+    startTransition(async () => {
+      setOptimisticStatus('rejected')
+
+      const result = await rejectProduct(currentProduct.id)
+
+      if (result.success) {
+        recordAction({
+          productId: currentProduct.id,
+          action: 'reject',
+          previousStatus: currentProduct.review_status,
+        })
+
+        // Auto-advance to next unreviewed
+        if (result.next_product_id) {
+          navigateToProduct(result.next_product_id)
+        } else {
+          // No more unreviewed, show completion message
+          router.push(`/review?client=${clientId}`)
+        }
+      } else {
+        setError(result.message || 'Failed to reject')
+        setOptimisticStatus(currentProduct.review_status || null)
+      }
+    })
+  }, [currentProduct, recordAction, navigateToProduct, clientId, router, setOptimisticStatus])
+
+  // Undo handler
+  const handleUndo = useCallback(() => {
+    const lastAction = undo()
+    if (lastAction) {
+      // Navigate back to the product and refresh
+      router.push(`/review/${lastAction.productId}?client=${clientId}`)
+      router.refresh()
+    }
+  }, [undo, router, clientId])
+
+  // Keyboard shortcuts - disabled when editing
+  useHotkeys('a', () => !isEditing && handleApprove(), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('r', () => !isEditing && handleReject(), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('e', () => !isEditing && setIsEditing(true), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('left, k', () => !isEditing && goToPrevious(), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('right, j', () => !isEditing && goToNext(), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('escape', () => setIsEditing(false), { enabled: isEditing, preventDefault: true })
+  useHotkeys('ctrl+z, meta+z', () => !isEditing && handleUndo(), { enabled: canUndo && !isEditing, preventDefault: true })
+
+  const displayTitle = currentProduct.edited_title || currentProduct.generated_title || ''
+  const displayDescription = currentProduct.edited_description || currentProduct.generated_description || ''
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header with navigation */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Review Product</h2>
+          <p className="text-sm text-gray-600">
+            Product {currentIndex + 1} of {allProductIds.length}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={goToPrevious}
+            disabled={!hasPrevious || isPending}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={goToNext}
+            disabled={!hasNext || isPending}
+          >
+            Next
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* Status indicators */}
+      <div className="flex gap-2">
+        {optimisticStatus && (
+          <Badge
+            variant={
+              optimisticStatus === 'approved' ? 'default' :
+              optimisticStatus === 'rejected' ? 'destructive' :
+              'secondary'
+            }
+          >
+            {optimisticStatus.charAt(0).toUpperCase() + optimisticStatus.slice(1)}
+          </Badge>
+        )}
+        {currentProduct.ai_review_status && (
+          <Badge variant="outline">
+            AI: {currentProduct.ai_review_status.replace('_', ' ')}
+          </Badge>
+        )}
+      </div>
+
+      {/* Safety warnings */}
+      {currentProduct.ai_review_safety_flags && currentProduct.ai_review_safety_flags.length > 0 && (
+        <div className="p-4 bg-orange-50 border border-orange-200 rounded flex items-start gap-2">
+          <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-orange-900">AI Safety Concerns:</p>
+            <ul className="list-disc list-inside text-orange-800 text-sm">
+              {currentProduct.ai_review_safety_flags.map((flag, idx) => (
+                <li key={idx}>{flag}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* AI review reason */}
+      {currentProduct.ai_review_reason && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+          <span className="font-semibold">AI Review Note:</span> {currentProduct.ai_review_reason}
+        </div>
+      )}
+
+      {/* Main content area */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Left: Generated content (60%) */}
+        <div className="lg:col-span-3 space-y-4">
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Generated Title
+                </label>
+                <InlineEditor
+                  value={displayTitle}
+                  onSave={async () => {}} // Will implement in Task 3
+                  minChars={30}
+                  maxChars={60}
+                  placeholder="Title will appear here..."
+                  multiline={false}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Generated Description
+                </label>
+                <InlineEditor
+                  value={displayDescription}
+                  onSave={async () => {}} // Will implement in Task 3
+                  minChars={2000}
+                  maxChars={3000}
+                  placeholder="Description will appear here..."
+                  multiline={true}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Collapsible original data */}
+          <Collapsible open={showOriginalData} onOpenChange={setShowOriginalData}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-4">
+                  <span className="font-semibold">Original Product Data</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${showOriginalData ? 'rotate-180' : ''}`}
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-6 pb-6 pt-0 space-y-3">
+                  <div>
+                    <span className="text-sm font-semibold text-gray-700">Product Name:</span>
+                    <p className="text-sm text-gray-900">{currentProduct.product_name}</p>
+                  </div>
+                  {Object.entries(currentProduct.original_data).map(([key, value]) => {
+                    if (!value) return null
+                    return (
+                      <div key={key}>
+                        <span className="text-sm font-semibold text-gray-700 capitalize">
+                          {key.replace(/_/g, ' ')}:
+                        </span>
+                        <p className="text-sm text-gray-900">{String(value)}</p>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
+
+        {/* Right: Images (40%) */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardContent className="p-4">
+              <ImageDisplay images={currentProduct.images} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center justify-between border-t pt-6">
+        <div className="space-y-1">
+          <div className="flex gap-4 text-sm text-gray-600">
+            <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">A</kbd> Approve</span>
+            <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">R</kbd> Reject</span>
+            <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">E</kbd> Edit</span>
+            <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">←/→</kbd> Navigate</span>
+          </div>
+          {canUndo && (
+            <div className="text-sm text-gray-600">
+              <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+Z</kbd> Undo</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={handleReject}
+            disabled={isPending}
+            className="min-w-[120px]"
+          >
+            Reject (R)
+          </Button>
+          <Button
+            onClick={handleApprove}
+            disabled={isPending}
+            className="min-w-[120px]"
+          >
+            Approve (A)
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
