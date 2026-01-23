@@ -424,3 +424,236 @@ export async function getNextUnreviewed(clientId: string): Promise<string | null
     return null
   }
 }
+
+// AI Review Types
+export interface AIReviewResult {
+  recommendation: 'approve' | 'reject'
+  reason: string
+  safety_flags: string[]
+  accuracy_score: number
+}
+
+export interface AIReviewJobStatus {
+  status: string
+  total_count: number
+  completed_count: number
+  total_cost: string
+  auto_approve: boolean  // Whether in AI-auto mode
+  estimated_remaining: number | null
+}
+
+/**
+ * Request AI review for single product (AI-assisted mode)
+ */
+export async function requestAIReview(
+  productGroupId: string
+): Promise<AIReviewResult | null> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return null
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/ai-single`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_group_id: productGroupId,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Failed to request AI review: ${response.status}`)
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error requesting AI review:', error)
+    return null
+  }
+}
+
+/**
+ * Start batch AI review job
+ */
+export async function startBatchAIReview(
+  clientId: string,
+  autoApprove: boolean = false
+): Promise<{ jobId: string } | { error: string }> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/start`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auto_approve: autoApprove,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to start AI review' }))
+      return { error: errorData.message || `Start failed: ${response.status}` }
+    }
+
+    const data = await response.json()
+    return { jobId: data.job_id }
+  } catch (error) {
+    console.error('Error starting batch AI review:', error)
+    return { error: error instanceof Error ? error.message : 'Network error' }
+  }
+}
+
+/**
+ * Get batch AI review status
+ */
+export async function getBatchAIReviewStatus(
+  clientId: string
+): Promise<AIReviewJobStatus | null> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return null
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/status`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: 'no-store',
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Failed to fetch AI review status: ${response.status}`)
+      return null
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching AI review status:', error)
+    return null
+  }
+}
+
+/**
+ * Pause batch AI review job
+ */
+export async function pauseBatchAIReview(
+  clientId: string
+): Promise<{ success: boolean }> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { success: false }
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/pause`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    return { success: response.ok }
+  } catch (error) {
+    console.error('Error pausing AI review:', error)
+    return { success: false }
+  }
+}
+
+/**
+ * Cancel batch AI review job
+ */
+export async function cancelBatchAIReview(
+  clientId: string
+): Promise<{ success: boolean }> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { success: false }
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    return { success: response.ok }
+  } catch (error) {
+    console.error('Error cancelling AI review:', error)
+    return { success: false }
+  }
+}
+
+/**
+ * Resume batch AI review job
+ */
+export async function resumeBatchAIReview(
+  clientId: string,
+  autoApprove: boolean = false
+): Promise<{ jobId: string } | { error: string }> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(
+      `${process.env.BACKEND_URL}/api/review/${clientId}/ai-review/resume`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auto_approve: autoApprove,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to resume AI review' }))
+      return { error: errorData.message || `Resume failed: ${response.status}` }
+    }
+
+    const data = await response.json()
+    return { jobId: data.job_id }
+  } catch (error) {
+    console.error('Error resuming AI review:', error)
+    return { error: error instanceof Error ? error.message : 'Network error' }
+  }
+}
