@@ -21,6 +21,14 @@ from app.schemas.product import (
     ProductPublic,
     UploadResponse,
 )
+from app.schemas.review import (
+    EditContentRequest,
+    ProductGroupReview,
+    ReviewActionRequest,
+    ReviewActionResponse,
+    ReviewStatsResponse,
+    UndoReviewRequest,
+)
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 
@@ -51,4 +59,10 @@ __all__ = [
     "GenerationAuditResponse",
     "JobListResponse",
     "AuditListResponse",
+    "ProductGroupReview",
+    "ReviewActionRequest",
+    "EditContentRequest",
+    "ReviewActionResponse",
+    "ReviewStatsResponse",
+    "UndoReviewRequest",
 ]
