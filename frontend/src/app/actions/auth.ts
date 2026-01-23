@@ -75,9 +75,16 @@ export async function signup(
     // Redirect to dashboard
     redirect("/dashboard");
   } catch (error) {
+    // Check if this is a Next.js redirect (expected behavior)
+    if (error && typeof error === 'object' && 'digest' in error &&
+        typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
+      throw error; // Re-throw redirect errors
+    }
+
+    console.error("Signup error:", error);
     return {
       errors: {
-        _form: ["An unexpected error occurred. Please try again."],
+        _form: [error instanceof Error ? error.message : "An unexpected error occurred. Please try again."],
       },
     };
   }
@@ -145,9 +152,16 @@ export async function login(
     // Redirect to dashboard
     redirect("/dashboard");
   } catch (error) {
+    // Check if this is a Next.js redirect (expected behavior)
+    if (error && typeof error === 'object' && 'digest' in error &&
+        typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
+      throw error; // Re-throw redirect errors
+    }
+
+    console.error("Login error:", error);
     return {
       errors: {
-        _form: ["An unexpected error occurred. Please try again."],
+        _form: [error instanceof Error ? error.message : "An unexpected error occurred. Please try again."],
       },
     };
   }
