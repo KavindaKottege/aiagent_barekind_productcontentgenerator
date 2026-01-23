@@ -64,6 +64,7 @@ class WorkerSettings:
     # Worker functions to register
     functions = [
         "app.workers.generation_worker.generation_worker",
+        "app.workers.review_worker.batch_ai_review_worker",
     ]
 
     # Lifecycle hooks
