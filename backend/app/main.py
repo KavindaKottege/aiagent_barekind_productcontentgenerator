@@ -10,6 +10,7 @@ from app.routers import (
     clients_router,
     generation_router,
     products_router,
+    review_router,
     settings_router,
 )
 
@@ -45,6 +46,7 @@ app.include_router(settings_router, prefix="/api")
 app.include_router(clients_router, prefix="/api")
 app.include_router(products_router, prefix="/api")
 app.include_router(generation_router, prefix="/api")
+app.include_router(review_router, prefix="/api")
 
 
 @app.get("/api/health")
