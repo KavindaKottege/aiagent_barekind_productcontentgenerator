@@ -17,7 +17,12 @@ export interface GenerationJob {
   failed_count: number
   total_cost: string
   total_input_tokens: number
+  total_cached_input_tokens: number
   total_output_tokens: number
+  total_input_cost: string
+  total_cached_input_cost: string
+  total_output_cost: string
+  elapsed_seconds: number
   started_at: string | null
   completed_at: string | null
   paused_at: string | null
@@ -36,6 +41,13 @@ export interface GenerationProgress {
   elapsed_seconds: number
   estimated_remaining_seconds: number | null
   status_reason?: string
+  // Cost breakdown
+  input_cost: string
+  cached_input_cost: string
+  output_cost: string
+  input_tokens: number
+  cached_input_tokens: number
+  output_tokens: number
 }
 
 export interface GenerationCompleteSummary {
@@ -169,13 +181,14 @@ export async function pauseGeneration(jobId: string): Promise<{
     })
 
     if (!response.ok) {
-      const error = await response.json()
+      const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}` }))
       return { success: false, error: error.detail || 'Failed to pause generation' }
     }
 
     return { success: true }
   } catch (error) {
-    return { success: false, error: 'Network error' }
+    console.error('[pauseGeneration] Error:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Network error' }
   }
 }
 
@@ -267,6 +280,93 @@ export async function softCapContinue(jobId: string, continueGeneration: boolean
     const text = await response.text()
     const job = text ? JSON.parse(text) : null
     return { success: true, job }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
+}
+
+export async function forceCancelJob(jobId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/generation/jobs/${jobId}/force-cancel`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      return { success: false, error: error.detail || 'Failed to cancel job' }
+    }
+
+    revalidatePath('/products')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
+}
+
+export async function resetJob(jobId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/generation/jobs/${jobId}/reset`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      return { success: false, error: error.detail || 'Failed to reset job' }
+    }
+
+    revalidatePath('/products')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
+}
+
+export async function deleteJob(jobId: string): Promise<{
+  success: boolean
+  error?: string
+}> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/generation/jobs/${jobId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      return { success: false, error: error.detail || 'Failed to delete job' }
+    }
+
+    revalidatePath('/products')
+    return { success: true }
   } catch (error) {
     return { success: false, error: 'Network error' }
   }

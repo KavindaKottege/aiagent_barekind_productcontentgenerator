@@ -64,12 +64,20 @@ class GenerationJobResponse(BaseModel):
     client_id: UUID
     user_id: UUID
     status: str
+    status_reason: str | None
     total_count: int
     completed_count: int
     success_count: int
     failed_count: int
     total_cost: Decimal
     projected_cost: Decimal
+    total_input_tokens: int
+    total_cached_input_tokens: int
+    total_output_tokens: int
+    total_input_cost: Decimal
+    total_cached_input_cost: Decimal
+    total_output_cost: Decimal
+    elapsed_seconds: int
     started_at: datetime | None
     completed_at: datetime | None
     paused_at: datetime | None

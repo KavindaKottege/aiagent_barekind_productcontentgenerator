@@ -61,13 +61,43 @@ class GenerationJob(Base):
         server_default="0",
     )
 
+    # Token tracking
+    total_input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    total_cached_input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    total_output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+
+    # Cost breakdown
+    total_input_cost: Mapped[Decimal] = mapped_column(
+        Numeric(10, 6),
+        nullable=False,
+        default=Decimal("0"),
+        server_default="0",
+    )
+    total_cached_input_cost: Mapped[Decimal] = mapped_column(
+        Numeric(10, 6),
+        nullable=False,
+        default=Decimal("0"),
+        server_default="0",
+    )
+    total_output_cost: Mapped[Decimal] = mapped_column(
+        Numeric(10, 6),
+        nullable=False,
+        default=Decimal("0"),
+        server_default="0",
+    )
+
     # Time tracking
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Cumulative running time (excludes paused time)
+    elapsed_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     # Error tracking
     error_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+
+    # Status reason (for pause, cancel, soft cap, etc.)
+    status_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

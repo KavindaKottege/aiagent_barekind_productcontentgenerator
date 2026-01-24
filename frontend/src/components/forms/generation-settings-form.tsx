@@ -135,7 +135,7 @@ export function GenerationSettingsForm({
                 value={softCap}
                 onChange={(e) => setSoftCap(e.target.value)}
                 min="0"
-                step="50"
+                step="0.01"
                 className="w-32"
               />
             </div>

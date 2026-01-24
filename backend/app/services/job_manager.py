@@ -1,6 +1,6 @@
 """Job manager service for generation job lifecycle management."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -138,7 +138,7 @@ class JobManager:
             )
             .values(
                 status="paused",
-                paused_at=datetime.utcnow(),
+                paused_at=datetime.now(timezone.utc),
                 status_reason="Paused by user",
             )
         )
@@ -161,7 +161,7 @@ class JobManager:
             )
             .values(
                 status="cancelled",
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
                 status_reason="Cancelled by user",
             )
         )
@@ -196,7 +196,14 @@ class JobManager:
             failed_count=job.failed_count,
             total_cost=job.total_cost,
             total_input_tokens=job.total_input_tokens,
+            total_cached_input_tokens=job.total_cached_input_tokens,
             total_output_tokens=job.total_output_tokens,
+            # Carry over cost breakdown
+            total_input_cost=job.total_input_cost,
+            total_cached_input_cost=job.total_cached_input_cost,
+            total_output_cost=job.total_output_cost,
+            # Preserve cumulative elapsed time
+            elapsed_seconds=job.elapsed_seconds,
         )
         self.db.add(new_job)
         await self.db.flush()
@@ -246,7 +253,7 @@ class JobManager:
         # Calculate elapsed time
         elapsed_seconds = 0
         if job.started_at:
-            end_time = job.completed_at or job.paused_at or datetime.utcnow()
+            end_time = job.completed_at or job.paused_at or datetime.now(timezone.utc)
             elapsed_seconds = int((end_time - job.started_at).total_seconds())
 
         # Estimate remaining time based on average

@@ -12,19 +12,38 @@ class CostTracker:
 
     Uses tiktoken for accurate token counting and stores running totals
     for real-time cost display and soft cap enforcement.
+
+    Tracks input, cached input, and output tokens separately for accurate costing.
     """
 
-    # GPT-5.2 pricing (per 1M tokens) - update if pricing changes
+    # Model pricing (per 1M tokens) - update if pricing changes
     # Source: https://platform.openai.com/docs/pricing (Jan 2026)
     PRICING = {
         "gpt-5.2": {
             "input": Decimal("1.75"),  # $1.75 per 1M input tokens
+            "cached_input": Decimal("0.875"),  # 50% discount for cached
             "output": Decimal("14.00"),  # $14.00 per 1M output tokens
+        },
+        "gpt-5.2-pro": {
+            "input": Decimal("3.50"),
+            "cached_input": Decimal("1.75"),
+            "output": Decimal("28.00"),
+        },
+        "gpt-4o": {
+            "input": Decimal("2.50"),  # $2.50 per 1M input tokens
+            "cached_input": Decimal("1.25"),  # 50% discount for cached
+            "output": Decimal("10.00"),  # $10.00 per 1M output tokens
+        },
+        "gpt-4o-mini": {
+            "input": Decimal("0.15"),
+            "cached_input": Decimal("0.075"),
+            "output": Decimal("0.60"),
         },
         # Fallback for unknown models
         "default": {
-            "input": Decimal("2.00"),
-            "output": Decimal("15.00"),
+            "input": Decimal("2.50"),
+            "cached_input": Decimal("1.25"),
+            "output": Decimal("10.00"),
         },
     }
 
@@ -37,9 +56,15 @@ class CostTracker:
 
         # Running totals
         self.total_input_tokens = 0
+        self.total_cached_input_tokens = 0
         self.total_output_tokens = 0
         self.total_generations = 0
         self.total_cost = Decimal("0")
+
+        # Cost breakdown
+        self.total_input_cost = Decimal("0")
+        self.total_cached_input_cost = Decimal("0")
+        self.total_output_cost = Decimal("0")
 
     @property
     def encoding(self) -> tiktoken.Encoding:
@@ -84,25 +109,61 @@ class CostTracker:
         """Get pricing for current model."""
         return self.PRICING.get(self.model, self.PRICING["default"])
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> Decimal:
-        """Calculate cost for given token counts."""
-        pricing = self.get_pricing()
-        input_cost = (Decimal(input_tokens) / self.TOKENS_PER_MILLION) * pricing["input"]
-        output_cost = (Decimal(output_tokens) / self.TOKENS_PER_MILLION) * pricing["output"]
-        return input_cost + output_cost
+    def calculate_cost(
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cached_input_tokens: int = 0
+    ) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+        """
+        Calculate cost for given token counts.
 
-    def add_usage(self, input_tokens: int, output_tokens: int) -> Decimal:
+        Returns tuple of (total_cost, input_cost, cached_input_cost, output_cost)
+        """
+        pricing = self.get_pricing()
+
+        # Regular input tokens (excluding cached)
+        regular_input = input_tokens - cached_input_tokens
+        input_cost = (Decimal(regular_input) / self.TOKENS_PER_MILLION) * pricing["input"]
+
+        # Cached input tokens (discounted rate)
+        cached_input_cost = (Decimal(cached_input_tokens) / self.TOKENS_PER_MILLION) * pricing["cached_input"]
+
+        # Output tokens
+        output_cost = (Decimal(output_tokens) / self.TOKENS_PER_MILLION) * pricing["output"]
+
+        total_cost = input_cost + cached_input_cost + output_cost
+        return total_cost, input_cost, cached_input_cost, output_cost
+
+    def add_usage(
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        cached_input_tokens: int = 0
+    ) -> Decimal:
         """
         Add token usage from a generation and return the cost.
 
         Updates running totals and returns cost for this generation.
-        """
-        cost = self.calculate_cost(input_tokens, output_tokens)
 
-        self.total_input_tokens += input_tokens
+        Args:
+            input_tokens: Total input tokens (including cached)
+            output_tokens: Output tokens
+            cached_input_tokens: Cached input tokens (subset of input_tokens)
+        """
+        cost, input_cost, cached_cost, output_cost = self.calculate_cost(
+            input_tokens, output_tokens, cached_input_tokens
+        )
+
+        self.total_input_tokens += (input_tokens - cached_input_tokens)
+        self.total_cached_input_tokens += cached_input_tokens
         self.total_output_tokens += output_tokens
         self.total_generations += 1
+
         self.total_cost += cost
+        self.total_input_cost += input_cost
+        self.total_cached_input_cost += cached_cost
+        self.total_output_cost += output_cost
 
         return cost
 
@@ -143,15 +204,23 @@ class CostTracker:
         return {
             "model": self.model,
             "total_input_tokens": self.total_input_tokens,
+            "total_cached_input_tokens": self.total_cached_input_tokens,
             "total_output_tokens": self.total_output_tokens,
             "total_generations": self.total_generations,
             "total_cost": float(self.total_cost),
+            "total_input_cost": float(self.total_input_cost),
+            "total_cached_input_cost": float(self.total_cached_input_cost),
+            "total_output_cost": float(self.total_output_cost),
             "average_cost": float(self.average_cost_per_generation()),
         }
 
     def reset(self) -> None:
         """Reset all counters (for new job)."""
         self.total_input_tokens = 0
+        self.total_cached_input_tokens = 0
         self.total_output_tokens = 0
         self.total_generations = 0
         self.total_cost = Decimal("0")
+        self.total_input_cost = Decimal("0")
+        self.total_cached_input_cost = Decimal("0")
+        self.total_output_cost = Decimal("0")

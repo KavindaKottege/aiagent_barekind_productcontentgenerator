@@ -81,11 +81,17 @@ class AIGenerationService:
                 model=self.model_name,
                 temperature=self.temperature,
                 api_key=self.api_key,
+                # Enable 24-hour extended prompt caching for cost savings
+                # OpenAI caches identical prompt prefixes (system messages, brand info)
+                # and charges 50% less for cached input tokens
+                extra_body={"prompt_cache_retention": "24h"},
             )
             # Enable structured output with Pydantic validation
+            # include_raw=True returns both parsed content and raw AIMessage with token usage
             self._model = base_model.with_structured_output(
                 ProductContent,
                 strict=True,
+                include_raw=True,
             )
         return self._model
 
@@ -222,6 +228,9 @@ class AIGenerationService:
         last_audit = None
         last_error = None
 
+        print(f"[AIService] Starting generation for product {product_group.id} (name: {product_group.product_name})")
+        print(f"[AIService] Using model: {self.model_name}, API key present: {bool(self.api_key)}, key starts with: {self.api_key[:8] if self.api_key else 'None'}...")
+
         for attempt in range(1, self.MAX_RETRIES + 2):  # +2 because range is exclusive
             start_time = time.time()
 
@@ -234,19 +243,36 @@ class AIGenerationService:
                 previous_error=last_error,
             )
 
-            # Format prompt as string for audit
+            # Format prompt as string for audit - format the messages to get actual content
+            formatted_messages = prompt.format_messages()
             prompt_str = "\n".join(
-                f"[{m[0]}] {m[1]}" for m in prompt.messages
+                f"[{m.type}] {m.content[:500]}..." if len(m.content) > 500 else f"[{m.type}] {m.content}"
+                for m in formatted_messages
             )
 
             try:
-                # Call the model
-                result = await self._invoke_with_retry(prompt)
+                # Call the model with client_id as cache key for better cache routing
+                print(f"[AIService] Attempt {attempt}: Invoking model...")
+                cache_key = str(client.id) if client else None
+                raw_result = await self._invoke_with_retry(prompt, cache_key=cache_key)
+                print(f"[AIService] Attempt {attempt}: Model returned result")
 
-                # Get token usage from response metadata
-                usage = getattr(result, "response_metadata", {}).get("token_usage", {})
+                # With include_raw=True, result is {"raw": AIMessage, "parsed": ProductContent}
+                raw_message = raw_result.get("raw")
+                result = raw_result.get("parsed")
+
+                # Get token usage from raw AIMessage response metadata
+                usage = {}
+                if raw_message and hasattr(raw_message, "response_metadata"):
+                    usage = raw_message.response_metadata.get("token_usage", {})
+                    print(f"[AIService] Token usage from API: {usage}")
+
                 input_tokens = usage.get("prompt_tokens", 0)
                 output_tokens = usage.get("completion_tokens", 0)
+
+                # Get cached tokens from prompt_tokens_details (OpenAI API)
+                prompt_details = usage.get("prompt_tokens_details", {})
+                cached_input_tokens = prompt_details.get("cached_tokens", 0) if prompt_details else 0
 
                 # If no token info in metadata, estimate with tiktoken
                 if input_tokens == 0:
@@ -256,8 +282,9 @@ class AIGenerationService:
                         f"{result.title} {result.description}"
                     )
 
-                # Calculate cost
-                cost = self.cost_tracker.add_usage(input_tokens, output_tokens)
+                # Calculate cost (with cached token discount)
+                cost = self.cost_tracker.add_usage(input_tokens, output_tokens, cached_input_tokens)
+                print(f"[AIService] Cost breakdown - input: ${self.cost_tracker.total_input_cost}, cached: ${self.cost_tracker.total_cached_input_cost}, output: ${self.cost_tracker.total_output_cost}")
 
                 duration_ms = int((time.time() - start_time) * 1000)
 
@@ -269,8 +296,8 @@ class AIGenerationService:
                     success=True,
                     generated_title=result.title,
                     generated_description=result.description,
-                    title_char_count=len(result.title),
-                    description_char_count=len(result.description),
+                    title_length=len(result.title),
+                    description_length=len(result.description),
                     prompt_used=prompt_str[:10000],  # Truncate if too long
                     model_version=self.model_name,
                     temperature=Decimal(str(self.temperature)),
@@ -324,6 +351,9 @@ class AIGenerationService:
 
             except Exception as e:
                 # Other error (API error, rate limit, etc.)
+                print(f"[AIService] API error for product {product_group.id}: {e}")
+                import traceback
+                traceback.print_exc()
                 last_error = str(e)
                 duration_ms = int((time.time() - start_time) * 1000)
 
@@ -355,13 +385,29 @@ class AIGenerationService:
         wait=wait_random_exponential(multiplier=1, min=4, max=60),
         reraise=True,
     )
-    async def _invoke_with_retry(self, prompt: ChatPromptTemplate) -> ProductContent:
+    async def _invoke_with_retry(self, prompt: ChatPromptTemplate, cache_key: str | None = None) -> dict:
         """
         Invoke the model with retry logic for rate limits.
 
         Uses tenacity for exponential backoff on API errors.
+        Returns dict with 'raw' (AIMessage) and 'parsed' (ProductContent) keys.
+
+        Args:
+            prompt: The prompt template to invoke
+            cache_key: Optional cache key (e.g. client_id) to improve cache hit rates
+                      by routing requests with same prefix to same server
         """
-        return await self.model.ainvoke(prompt.messages)
+        # Format the prompt template to get actual Message objects
+        formatted_messages = prompt.format_messages()
+
+        # Use prompt_cache_key to route requests with same client to same cache server
+        # This maximizes cache hits since all products for a client share the same
+        # system prompts, brand info, and instructions prefix
+        invoke_kwargs = {}
+        if cache_key:
+            invoke_kwargs["prompt_cache_key"] = cache_key
+
+        return await self.model.ainvoke(formatted_messages, **invoke_kwargs)
 
     async def get_pending_product_groups(
         self, client_id: str, status_filter: list[str] | None = None
