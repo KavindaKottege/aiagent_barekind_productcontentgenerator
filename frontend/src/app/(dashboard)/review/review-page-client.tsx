@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSelectedClient } from '@/lib/client-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,9 +23,9 @@ import {
 } from '@/app/actions/generation'
 
 interface ReviewPageClientProps {
-  clientId: string
+  clientId: string | null
   accessToken: string
-  stats: ReviewStats
+  stats: ReviewStats | null
   products: ProductGroupReview[]
   firstUnreviewed: ProductGroupReview | undefined
   statusFilter: string
@@ -39,6 +40,8 @@ export function ReviewPageClient({
   statusFilter,
 }: ReviewPageClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { selectedClientId } = useSelectedClient()
   const [showModeToggle, setShowModeToggle] = useState(false)
   const [autoApproveMode, setAutoApproveMode] = useState(false)
   const [isStarting, setIsStarting] = useState(false)
@@ -53,8 +56,19 @@ export function ReviewPageClient({
   const lastRefreshRef = useRef<number>(0)
   const REFRESH_DEBOUNCE_MS = 2000
 
+  // Sync URL with selected client from context (same pattern as products page)
+  useEffect(() => {
+    const urlClientId = searchParams.get('client')
+
+    if (selectedClientId && selectedClientId !== urlClientId) {
+      // Update URL when client changes
+      router.push(`/review?client=${selectedClientId}`)
+    }
+  }, [selectedClientId, searchParams, router])
+
   // Refresh products list from server
   const refreshProducts = useCallback(async () => {
+    if (!clientId) return
     try {
       const response = await fetch(`/api/review/products?clientId=${clientId}`, {
         cache: 'no-store',
@@ -71,6 +85,7 @@ export function ReviewPageClient({
 
   // Check for active AI review job on mount
   useEffect(() => {
+    if (!clientId) return
     const checkActiveJob = async () => {
       const status = await getBatchAIReviewStatus(clientId)
       if (status && (status.status === 'running' || status.status === 'paused')) {
@@ -82,6 +97,7 @@ export function ReviewPageClient({
 
   // Check for active generation job on mount
   useEffect(() => {
+    if (!clientId) return
     const checkActiveGeneration = async () => {
       const result = await getActiveJobForClient(clientId)
       if (result.success && result.job) {
@@ -135,6 +151,7 @@ export function ReviewPageClient({
   }
 
   const handleStartBatchReview = async () => {
+    if (!clientId) return
     setIsStarting(true)
     setError(null)
 
@@ -156,6 +173,24 @@ export function ReviewPageClient({
 
   // Update firstUnreviewed based on current products state
   const currentFirstUnreviewed = products.find(p => !p.review_status)
+
+  // Show empty state when no client is selected (will redirect via useEffect when context has client)
+  if (!clientId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Review Products</h2>
+        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-gray-600">
+              Select a client from the dropdown in the header to review their products.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -186,7 +221,7 @@ export function ReviewPageClient({
                 <p className="text-sm text-blue-700 mt-1">
                   {generationProgress.completed} of {generationProgress.total} products complete
                   {' · '}
-                  {stats.pending_review} ready for review
+                  {stats?.pending_review ?? 0} ready for review
                 </p>
               </div>
               <div className="flex gap-2">
@@ -290,13 +325,15 @@ export function ReviewPageClient({
       )}
 
       {/* Review Stats Bar */}
-      <ReviewStatsComponent
-        stats={stats}
-        onFilterClick={(status) => {
-          // This will be handled client-side in future enhancement
-          // For now, filter via URL params
-        }}
-      />
+      {stats && (
+        <ReviewStatsComponent
+          stats={stats}
+          onFilterClick={(status) => {
+            // This will be handled client-side in future enhancement
+            // For now, filter via URL params
+          }}
+        />
+      )}
 
       {/* Empty State */}
       {products.length === 0 && (

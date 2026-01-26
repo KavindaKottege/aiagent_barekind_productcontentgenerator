@@ -10,7 +10,7 @@ import { getReviewProducts, getReviewStats } from '@/app/actions/review'
 import { ReviewPageClient } from './review-page-client'
 
 export const metadata: Metadata = {
-  title: 'Review Products - Product Content Generator',
+  title: 'Review Products - SEO Content Generator',
   description: 'Review and approve generated product content',
 }
 
@@ -23,26 +23,23 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   const clientId = params.client || null
   const statusFilter = params.status || 'all'
 
-  if (!clientId) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Review Products</h2>
-        </div>
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-gray-600">
-              Select a client from the dropdown in the header to review their products.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   // Get access token for SSE
   const cookieStore = await cookies()
   const accessToken = cookieStore.get('access_token')?.value || ''
+
+  // If no client selected, render client component which will sync with context
+  if (!clientId) {
+    return (
+      <ReviewPageClient
+        clientId={null}
+        accessToken={accessToken}
+        stats={null}
+        products={[]}
+        firstUnreviewed={undefined}
+        statusFilter={statusFilter}
+      />
+    )
+  }
 
   // Fetch stats and products in parallel
   const [stats, products] = await Promise.all([

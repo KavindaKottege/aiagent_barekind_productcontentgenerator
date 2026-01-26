@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ProductList } from './product-list'
 import { FieldSelectionPanel } from './field-selection-panel'
 import { GenerationProgress } from './generation-progress'
-import { ProductGroup } from '@/app/actions/products'
+import { ProductGroup, getProductGroups } from '@/app/actions/products'
 import { Client } from '@/app/actions/clients'
 import {
   startGeneration,
@@ -21,22 +21,26 @@ interface ProductsPageContentProps {
   initialGroups: ProductGroup[]
   clientId: string | null
   client: Client | null
-  accessToken: string | null
 }
 
 export function ProductsPageContent({
   initialGroups,
   clientId,
   client,
-  accessToken,
 }: ProductsPageContentProps) {
   const { selectedClientId } = useSelectedClient()
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const [groups, setGroups] = useState<ProductGroup[]>(initialGroups)
   const [activeJob, setActiveJob] = useState<GenerationJob | null>(null)
   const [isStarting, setIsStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Update groups when initialGroups changes (e.g., from navigation)
+  useEffect(() => {
+    setGroups(initialGroups)
+  }, [initialGroups])
 
   // Sync URL with selected client
   useEffect(() => {
@@ -63,6 +67,19 @@ export function ProductsPageContent({
     checkActiveJob()
   }, [clientId])
 
+  // Periodically refresh product groups while generation is running
+  // This keeps the product list badges in sync with actual database state
+  useEffect(() => {
+    if (!activeJob || activeJob.status !== 'running' || !clientId) return
+
+    const interval = setInterval(async () => {
+      const updatedGroups = await getProductGroups(clientId)
+      setGroups(updatedGroups)
+    }, 3000) // Refresh every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [activeJob, clientId])
+
   const handleStartGeneration = useCallback(async () => {
     if (!clientId) return
 
@@ -80,12 +97,25 @@ export function ProductsPageContent({
     }
   }, [clientId])
 
-  const handleGenerationComplete = useCallback(() => {
-    setActiveJob(null)
-    router.refresh() // Refresh to update product statuses
-  }, [router])
+  const handleGenerationComplete = useCallback(async () => {
+    // Explicitly refetch product groups to show updated statuses
+    if (clientId) {
+      const updatedGroups = await getProductGroups(clientId)
+      setGroups(updatedGroups)
 
-  const groups = initialGroups
+      // Check if there's a new active job (e.g., from resume)
+      const jobResult = await getActiveJobForClient(clientId)
+      if (jobResult.success && jobResult.job) {
+        setActiveJob(jobResult.job)
+      } else {
+        setActiveJob(null)
+      }
+    } else {
+      setActiveJob(null)
+    }
+    router.refresh()
+  }, [clientId, router])
+
   const pendingCount = groups.filter((g) => g.status === 'pending').length
 
   if (!clientId && !selectedClientId) {
@@ -104,12 +134,11 @@ export function ProductsPageContent({
   return (
     <div className="space-y-6">
       {/* Active generation progress */}
-      {activeJob && accessToken && (
+      {activeJob && (
         <GenerationProgress
           jobId={activeJob.id}
           initialJob={activeJob}
           onComplete={handleGenerationComplete}
-          accessToken={accessToken}
         />
       )}
 
