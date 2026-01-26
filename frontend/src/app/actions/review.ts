@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-const API_URL = API_URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Types matching backend Pydantic schemas
 export interface ProductGroupReview {
