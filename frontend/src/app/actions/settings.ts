@@ -233,3 +233,86 @@ export async function updateGenerationSettings(
     return { success: false, error: "Network error" };
   }
 }
+
+// Task Settings types
+export interface TaskSettings {
+  default_system_prompt: string | null;
+  default_task1_prompt: string | null;
+  default_task2_prompt: string | null;
+  default_task3_prompt: string | null;
+  default_task4_prompt: string | null;
+  task1_default_attributes: string[] | null;
+  task1_mandatory_attributes: string[] | null;
+  task2_default_attributes: string[] | null;
+  task2_mandatory_attributes: string[] | null;
+  task3_default_attributes: string[] | null;
+  task3_mandatory_attributes: string[] | null;
+  task4_default_attributes: string[] | null;
+  task4_mandatory_attributes: string[] | null;
+  task1_min_length: number | null;
+  task1_max_length: number | null;
+  task1_target_length: number | null;
+  task2_min_length: number | null;
+  task2_max_length: number | null;
+  task2_target_length: number | null;
+}
+
+export async function getTaskSettings(): Promise<TaskSettings | null> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  const response = await fetch(`${API_URL}/api/settings/tasks`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) redirect("/login");
+    if (response.status === 403) redirect("/dashboard?error=admin_required");
+    return null;
+  }
+
+  return response.json();
+}
+
+export async function updateTaskSettings(
+  settings: Partial<TaskSettings>
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/settings/tasks`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) redirect("/login");
+      if (response.status === 403) {
+        return { success: false, error: "Admin access required" };
+      }
+      const error = await response.json();
+      return { success: false, error: error.detail || "Failed to update task settings" };
+    }
+
+    // Revalidate the settings pages
+    revalidatePath("/settings/prompts");
+    revalidatePath("/settings/tasks");
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Network error" };
+  }
+}

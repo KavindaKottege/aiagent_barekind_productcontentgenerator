@@ -34,14 +34,14 @@ export default async function SettingsPage() {
           <>
             <Card>
               <CardHeader>
-                <CardTitle>Prompt Settings</CardTitle>
+                <CardTitle>AI Task Settings</CardTitle>
                 <CardDescription>
-                  Configure default AI prompts for content generation
+                  Configure AI prompts, input attributes, and length constraints for generation and review tasks
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/settings/prompts">
-                  <Button variant="outline">Manage Prompts</Button>
+                  <Button variant="outline">Manage AI Tasks</Button>
                 </Link>
               </CardContent>
             </Card>

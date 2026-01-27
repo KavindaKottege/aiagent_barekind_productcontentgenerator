@@ -9,21 +9,30 @@ export function middleware(request: NextRequest) {
   // Check if current path is public
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
-  // Get session cookie
-  const sessionCookie = request.cookies.get("session");
+  // Get access token cookie (used by auth system)
+  const accessToken = request.cookies.get("access_token");
+
+  // Handle root path - redirect based on auth status
+  if (pathname === "/") {
+    if (accessToken) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+  }
 
   // If public path, allow through
   if (isPublicPath) {
     return NextResponse.next();
   }
 
-  // If protected path and no session, redirect to login
-  if (!sessionCookie) {
+  // If protected path and no access token, redirect to login
+  if (!accessToken) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Session exists, allow through (DAL will do real verification)
+  // Access token exists, allow through (DAL will do real verification)
   return NextResponse.next();
 }
 
