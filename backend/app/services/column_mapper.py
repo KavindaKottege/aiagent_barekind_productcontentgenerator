@@ -1,23 +1,29 @@
-"""Fuzzy column mapping using RapidFuzz."""
-from rapidfuzz import process, fuzz
+"""Exact 1:1 column mapping for Faire Excel templates."""
 from typing import Any
+from datetime import datetime, date
 
 
-class FuzzyColumnMapper:
-    """Map Excel column names to product fields using fuzzy matching."""
+class ExactColumnMapper:
+    """Map Excel column names to product fields using exact 1:1 matching."""
 
-    # Expected fields with common variations
-    FIELD_PATTERNS = {
-        'product_name': ['Product Name', 'Name', 'Title', 'Product Title'],
-        'product_token': ['Product Token', 'Token', 'Product ID', 'ID'],
-        'sku': ['SKU', 'Product SKU', 'Variant SKU', 'Item Number', 'Item SKU'],
-        'status': ['Status', 'Product Status', 'State'],
-        'description': ['Description', 'Product Description', 'Details', 'Long Description'],
-        'option_name': ['Option Name', 'Option', 'Variant Name', 'Variant', 'Size/Color'],
-        'product_type': ['Product Type', 'Type', 'Category'],
-        'country_of_origin': ['Country of Origin', 'Country', 'Origin', 'Made In'],
-        'made_to_order': ['Made to Order', 'MTO', 'Custom Order'],
-        'images': ['Images', 'Image URLs', 'Image', 'Product Images', 'Photo URLs'],
+    # Exact 1:1 mapping: field_name -> exact Excel column name
+    COLUMN_MAP = {
+        'product_name': 'Product Name (English)',
+        'product_token': 'Product Token',
+        'sku': 'SKU',
+        'status': 'Product Status',
+        'description': 'Description (English)',
+        'option_type': 'Option 1 Name',
+        'option_name': 'Option 1 Value',
+        'option_2_name': 'Option 2 Name',
+        'option_2_value': 'Option 2 Value',
+        'option_3_name': 'Option 3 Name',
+        'option_3_value': 'Option 3 Value',
+        'product_type': 'Product Type',
+        'country_of_origin': 'Made In Country',
+        'images': 'Product Images',
+        'wholesale_price_usd': 'USD Unit Wholesale Price',
+        'retail_price_usd': 'USD Unit Retail Price',
     }
 
     # Required fields that must be mapped for upload to succeed
@@ -25,36 +31,26 @@ class FuzzyColumnMapper:
 
     def map_columns(self, excel_headers: list[str]) -> dict:
         """
-        Map Excel columns to product fields.
+        Map Excel columns to product fields using exact matching.
         Returns: {
             'mapped': {'field_name': 'Excel Column Name', ...},
             'unmapped': ['Unmapped Col 1', ...],
-            'confidence': 'HIGH' | 'MEDIUM',
+            'confidence': 'HIGH' | 'LOW',
             'missing_required': ['field1', ...]  # Required fields not mapped
         }
         """
         mappings = {}
         used_columns = set()
 
-        for field, patterns in self.FIELD_PATTERNS.items():
-            best_match = None
-            best_score = 0
+        # Build reverse lookup: Excel column -> field name
+        reverse_map = {v: k for k, v in self.COLUMN_MAP.items()}
 
-            # Try each pattern against all headers
-            for pattern in patterns:
-                match = process.extractOne(
-                    query=pattern,
-                    choices=[h for h in excel_headers if h not in used_columns],
-                    scorer=fuzz.token_sort_ratio,
-                    score_cutoff=75.0  # 75% similarity threshold
-                )
-                if match and match[1] > best_score:
-                    best_match = match[0]
-                    best_score = match[1]
-
-            if best_match:
-                mappings[field] = best_match
-                used_columns.add(best_match)
+        # Check each Excel header for exact match
+        for header in excel_headers:
+            if header in reverse_map:
+                field = reverse_map[header]
+                mappings[field] = header
+                used_columns.add(header)
 
         # Unmapped columns (preserved for export)
         unmapped = [col for col in excel_headers if col not in used_columns]
@@ -62,13 +58,8 @@ class FuzzyColumnMapper:
         # Check required fields
         missing_required = [f for f in self.REQUIRED_FIELDS if f not in mappings]
 
-        # Confidence based on required fields and total mappings
-        if missing_required:
-            confidence = 'LOW'
-        elif len(mappings) >= 5:
-            confidence = 'HIGH'
-        else:
-            confidence = 'MEDIUM'
+        # Confidence: HIGH if all required fields present, LOW otherwise
+        confidence = 'LOW' if missing_required else 'HIGH'
 
         return {
             'mapped': mappings,
@@ -93,10 +84,10 @@ class FuzzyColumnMapper:
                 if col_name in reverse_mapping:
                     field_name = reverse_mapping[col_name]
                     # Handle special types
-                    if field_name == 'made_to_order':
-                        mapped[field_name] = self._parse_bool(value)
-                    elif field_name == 'images':
+                    if field_name == 'images':
                         mapped[field_name] = self._parse_images(value)
+                    elif field_name in ('wholesale_price_usd', 'retail_price_usd'):
+                        mapped[field_name] = self._parse_float(value)
                     else:
                         mapped[field_name] = self._sanitize(value)
                 else:
@@ -108,27 +99,37 @@ class FuzzyColumnMapper:
         return result
 
     def _sanitize(self, value: Any) -> Any:
-        """Sanitize cell value to prevent formula injection."""
+        """Sanitize cell value to prevent formula injection and ensure JSON serializability."""
+        # Convert datetime objects to ISO strings
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
+        # Prevent formula injection in strings
         if isinstance(value, str) and value and value[0] in ('=', '+', '-', '@'):
             return "'" + value
         return value
 
-    def _parse_bool(self, value: Any) -> bool | None:
-        """Parse boolean-like values."""
+    def _parse_float(self, value: Any) -> float | None:
+        """Parse float values."""
         if value is None:
             return None
-        if isinstance(value, bool):
-            return value
+        if isinstance(value, (int, float)):
+            return float(value)
         if isinstance(value, str):
-            return value.lower() in ('yes', 'true', '1', 'y')
-        return bool(value)
+            try:
+                # Remove currency symbols and commas
+                cleaned = value.replace('$', '').replace(',', '').strip()
+                return float(cleaned) if cleaned else None
+            except ValueError:
+                return None
+        return None
 
     def _parse_images(self, value: Any) -> list[str] | None:
-        """Parse image URLs (comma or newline separated)."""
+        """Parse image URLs (space, comma, or newline separated)."""
         if not value:
             return None
         if isinstance(value, str):
-            # Split by comma or newline
-            urls = [u.strip() for u in value.replace('\n', ',').split(',') if u.strip()]
+            # Normalize separators: replace newlines and commas with spaces, then split
+            normalized = value.replace('\n', ' ').replace(',', ' ')
+            urls = [u.strip() for u in normalized.split() if u.strip() and u.strip().startswith('http')]
             return urls if urls else None
         return None

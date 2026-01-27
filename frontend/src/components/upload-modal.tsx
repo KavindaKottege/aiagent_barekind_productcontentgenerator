@@ -17,9 +17,10 @@ import { uploadProducts, UploadResult } from '@/app/actions/products'
 interface UploadModalProps {
   selectedClientId: string | null
   selectedClientName: string | null
+  hasExistingProducts?: boolean
 }
 
-export function UploadModal({ selectedClientId, selectedClientName }: UploadModalProps) {
+export function UploadModal({ selectedClientId, selectedClientName, hasExistingProducts = false }: UploadModalProps) {
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -106,6 +107,13 @@ export function UploadModal({ selectedClientId, selectedClientName }: UploadModa
           </div>
         )}
 
+        {selectedClientId && hasExistingProducts && !result?.success && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
+            <strong>Warning:</strong> Uploading a new file will replace all existing products for this client.
+            Any generated content and review status will be lost.
+          </div>
+        )}
+
         {selectedClientId && !result?.success && (
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -174,11 +182,10 @@ export function UploadModal({ selectedClientId, selectedClientName }: UploadModa
             <div className="text-green-800 font-medium">Upload successful!</div>
             <div className="text-sm text-green-700 space-y-1">
               <div>Total rows: {result.data.total_rows}</div>
-              <div>Product groups: {result.data.product_groups}</div>
+              <div>Unique Products: {result.data.product_groups}</div>
               {result.data.variant_groups > 0 && (
-                <div>Groups with variants: {result.data.variant_groups}</div>
+                <div>Products with Variants: {result.data.variant_groups}</div>
               )}
-              <div>Mapping confidence: {result.data.mapping_confidence}</div>
             </div>
             <div className="text-sm text-green-600">
               Redirecting to products page...

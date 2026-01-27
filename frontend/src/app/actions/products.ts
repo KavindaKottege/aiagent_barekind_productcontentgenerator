@@ -16,7 +16,6 @@ export type UploadResult = {
     standalone_products: number
     mapped_columns: Record<string, string>
     unmapped_columns: string[]
-    mapping_confidence: string
   }
 }
 

@@ -3,8 +3,8 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -46,16 +46,29 @@ class Product(Base):
     status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Variant info
-    option_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Variant info (Option 1)
+    option_type: Mapped[str | None] = mapped_column(String(255), nullable=True)  # e.g., "Color", "Size"
+    option_name: Mapped[str | None] = mapped_column(String(255), nullable=True)  # e.g., "Black", "Small"
+
+    # Variant info (Option 2)
+    option_2_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    option_2_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Variant info (Option 3)
+    option_3_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    option_3_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Pricing (USD)
+    wholesale_price_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    retail_price_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Product metadata
     product_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
     country_of_origin: Mapped[str | None] = mapped_column(String(100), nullable=True)
     made_to_order: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
-    # Images (array of URLs)
-    images: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
+    # Images (array of URLs stored as JSONB)
+    images: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
 
     # Unmapped columns stored as JSONB (preserved for Phase 7 export)
     unmapped_data: Mapped[dict] = mapped_column(

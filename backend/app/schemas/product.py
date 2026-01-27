@@ -42,7 +42,8 @@ class ProductBase(BaseModel):
     sku: str
     status: str | None = None
     description: str | None = None
-    option_name: str | None = None
+    option_type: str | None = None  # e.g., "Color", "Size"
+    option_name: str | None = None  # e.g., "Black", "Small"
     product_type: str | None = None
     country_of_origin: str | None = None
     made_to_order: bool | None = None
@@ -81,8 +82,7 @@ class UploadResponse(BaseModel):
 
     total_rows: int = Field(..., description="Original Excel rows uploaded")
     product_groups: int = Field(..., description="Unique products after grouping")
-    variant_groups: int = Field(..., description="Groups with multiple variants")
-    standalone_products: int = Field(..., description="Groups with single product")
+    variant_groups: int = Field(..., description="Products with multiple variants")
+    standalone_products: int = Field(..., description="Products with single variant")
     mapped_columns: dict[str, str] = Field(..., description="Field -> Excel column name mapping")
     unmapped_columns: list[str] = Field(..., description="Excel columns not mapped to fields")
-    mapping_confidence: str = Field(..., description="HIGH or MEDIUM based on match quality")

@@ -14,7 +14,7 @@ from app.models.product import Product
 from app.models.product_group import ProductGroup
 from app.models.user import User
 from app.schemas.product import UploadResponse, ProductGroupPublic, ProductGroupWithVariants, ProductPublic
-from app.services import ExcelParser, FuzzyColumnMapper, VariantGrouper
+from app.services import ExcelParser, ExactColumnMapper, VariantGrouper
 from app.utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -31,7 +31,7 @@ async def upload_products(
     Upload Excel file with product data.
 
     - Parses Excel in streaming mode (memory efficient)
-    - Auto-maps columns using fuzzy matching
+    - Maps columns using exact 1:1 matching (Faire template format)
     - Groups variants by Name/Token/SKU
     - Replaces existing products for this client
     """
@@ -48,7 +48,7 @@ async def upload_products(
         shutil.copyfileobj(file.file, tmp)
 
     parser = ExcelParser(tmp_path)
-    mapper = FuzzyColumnMapper()
+    mapper = ExactColumnMapper()
     grouper = VariantGrouper()
 
     try:
@@ -109,6 +109,7 @@ async def upload_products(
                 'product_token': group['product_token'],
                 'sku': group['sku'],
                 'variant_count': group['variant_count'],
+                'first_row_index': group.get('first_row_index', 0),
                 'status': 'pending',
             })
 
@@ -144,7 +145,6 @@ async def upload_products(
             standalone_products=standalone,
             mapped_columns=mapping_result['mapped'],
             unmapped_columns=mapping_result['unmapped'],
-            mapping_confidence=mapping_result['confidence'],
         )
 
     finally:
@@ -163,7 +163,7 @@ async def list_product_groups(
     result = await db.execute(
         select(ProductGroup)
         .where(ProductGroup.client_id == client_id, ProductGroup.user_id == current_user.id)
-        .order_by(ProductGroup.product_name)
+        .order_by(ProductGroup.first_row_index)
     )
     groups = result.scalars().all()
     return [ProductGroupPublic.model_validate(g) for g in groups]
