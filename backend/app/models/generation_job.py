@@ -86,6 +86,16 @@ class GenerationJob(Base):
         server_default="0",
     )
 
+    # Soft cap threshold - the cost at which to next trigger soft cap pause
+    # For new jobs, this is initialized to the soft cap value from settings
+    # When user acknowledges soft cap, this is set to current_cost + soft_cap
+    soft_cap_threshold: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4),
+        nullable=False,
+        default=Decimal("0"),
+        server_default="0",
+    )
+
     # Time tracking
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

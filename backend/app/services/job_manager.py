@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.generation_job import GenerationJob
+from app.models.settings import AppSettings
 
 
 def get_redis_settings() -> RedisSettings:
@@ -108,14 +109,16 @@ class JobManager:
 
     async def get_active_job_for_client(self, client_id: UUID) -> GenerationJob | None:
         """
-        Get active (running/pending) job for a client.
+        Get active (running/pending/paused) job for a client.
 
         Returns None if no active job exists.
+        Includes paused jobs so users see them when returning to the page
+        (e.g., soft cap paused jobs that need user action).
         """
         result = await self.db.execute(
             select(GenerationJob)
             .where(GenerationJob.client_id == client_id)
-            .where(GenerationJob.status.in_(["pending", "running"]))
+            .where(GenerationJob.status.in_(["pending", "running", "paused"]))
             .order_by(GenerationJob.created_at.desc())
             .limit(1)
         )
@@ -167,6 +170,13 @@ class JobManager:
         )
         return result.rowcount > 0
 
+    async def _get_app_settings(self) -> AppSettings | None:
+        """Get app settings for soft cap value."""
+        result = await self.db.execute(
+            select(AppSettings).where(AppSettings.id == 1)
+        )
+        return result.scalar_one_or_none()
+
     async def resume_job(self, job: GenerationJob) -> GenerationJob:
         """
         Resume a paused job.
@@ -183,6 +193,14 @@ class JobManager:
         Returns:
             New GenerationJob instance
         """
+        # Get soft cap from settings to calculate next threshold
+        app_settings = await self._get_app_settings()
+        soft_cap = app_settings.generation_soft_cap if app_settings and app_settings.generation_soft_cap else Decimal(str(settings.GENERATION_SOFT_CAP))
+
+        # Calculate next soft cap threshold: current cost + soft cap increment
+        # This allows the job to continue until it accumulates another soft_cap worth of cost
+        next_threshold = job.total_cost + soft_cap
+
         # Create new job continuing from the paused one
         new_job = GenerationJob(
             id=uuid4(),
@@ -204,6 +222,8 @@ class JobManager:
             total_output_cost=job.total_output_cost,
             # Preserve cumulative elapsed time
             elapsed_seconds=job.elapsed_seconds,
+            # Set next soft cap threshold
+            soft_cap_threshold=next_threshold,
         )
         self.db.add(new_job)
         await self.db.flush()

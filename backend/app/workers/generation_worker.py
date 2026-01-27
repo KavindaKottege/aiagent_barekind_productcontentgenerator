@@ -107,7 +107,11 @@ async def generation_worker(
         success_count = job.success_count
         failed_count = job.failed_count
         soft_cap = app_settings.generation_soft_cap if app_settings.generation_soft_cap else Decimal(str(settings.GENERATION_SOFT_CAP))
-        print(f"[Worker] Using soft cap: ${soft_cap}, model: {app_settings.ai_model or settings.AI_MODEL}")
+
+        # For new jobs (soft_cap_threshold == 0), initialize threshold to soft_cap from settings
+        # For resumed jobs, soft_cap_threshold is already set to current_cost + soft_cap
+        soft_cap_threshold = job.soft_cap_threshold if job.soft_cap_threshold > 0 else soft_cap
+        print(f"[Worker] Using soft cap: ${soft_cap}, threshold: ${soft_cap_threshold}, model: {app_settings.ai_model or settings.AI_MODEL}")
 
         for product in products:
             # Check job status before each product (for pause/cancel)
@@ -141,20 +145,22 @@ async def generation_worker(
                     "failed": failed_count,
                 }
 
-            # Check soft cap
+            # Check soft cap against threshold (not raw soft_cap)
+            # For new jobs: threshold = soft_cap from settings
+            # For resumed jobs: threshold = previous_cost + soft_cap (set when user acknowledged)
             current_cost = ai_service.cost_tracker.total_cost
-            print(f"[Worker] Soft cap check: current=${current_cost}, cap=${soft_cap}, exceeded={current_cost >= soft_cap}")
-            if ai_service.cost_tracker.check_soft_cap(soft_cap):
+            print(f"[Worker] Soft cap check: current=${current_cost}, threshold=${soft_cap_threshold}, exceeded={current_cost >= soft_cap_threshold}")
+            if current_cost >= soft_cap_threshold:
                 await _update_job_status(
                     db, job_id, "paused",
                     paused_at=datetime.now(timezone.utc),
-                    status_reason=f"Cost soft cap reached (${ai_service.cost_tracker.total_cost:.2f})"
+                    status_reason=f"Cost soft cap reached (${current_cost:.2f})"
                 )
                 await db.commit()
                 return {
                     "status": "paused",
                     "reason": "soft_cap",
-                    "current_cost": float(ai_service.cost_tracker.total_cost),
+                    "current_cost": float(current_cost),
                     "soft_cap": float(soft_cap),
                     "completed": completed,
                     "success": success_count,
