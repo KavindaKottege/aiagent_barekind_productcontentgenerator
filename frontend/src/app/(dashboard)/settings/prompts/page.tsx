@@ -1,5 +1,5 @@
 import { getAdmin } from '@/lib/dal'
-import { getTaskSettings, updateTaskSettings, TaskSettings } from '@/app/actions/settings'
+import { getTaskSettings, updateTaskSettings } from '@/app/actions/settings'
 import { AiTaskSettingsForm } from '@/components/forms/ai-task-settings-form'
 
 export default async function TaskSettingsPage() {
@@ -22,10 +22,7 @@ export default async function TaskSettingsPage() {
     <div className="max-w-4xl mx-auto">
       <AiTaskSettingsForm
         initialSettings={settings}
-        onSave={async (updates: Partial<TaskSettings>) => {
-          'use server'
-          return updateTaskSettings(updates)
-        }}
+        onSave={updateTaskSettings}
       />
     </div>
   )
