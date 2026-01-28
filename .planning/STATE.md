@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 6 of 7 (Smart Regeneration)
-Plan: 5 of 7 (06-05 regeneration API endpoints complete)
-Status: In progress - Phase 6 wave 2 executing
-Last activity: 2026-01-29 — Completed 06-05-PLAN.md (regeneration API endpoints and worker integration)
+Plan: 6 of 7 (06-06 regeneration frontend UI complete)
+Status: In progress - Phase 6 wave 3 executing
+Last activity: 2026-01-29 — Completed 06-06-PLAN.md (regeneration frontend UI)
 
-Progress: [█████████░] 86% (30 of 35 total plans complete)
+Progress: [█████████░] 89% (31 of 35 total plans complete)
 
 ## Performance Metrics
 
@@ -217,6 +217,15 @@ Recent decisions affecting current work:
 - Default soft cap $500.00 prevents runaway costs while allowing large batches
 - Settings domain separation: /api/settings/generation for generation-specific settings
 - Cost estimation guidance provided inline for administrator context
+
+**From 06-06 execution:**
+- ScrollArea shadcn component added for generation history dialog scrolling
+- History button always visible in review header (view history regardless of status)
+- Regenerate button conditionally visible only for rejected products
+- On regeneration start, navigate to products page for SSE progress view
+- On history restore, router.refresh() reloads page to show restored content
+- Fetch-on-open dialog pattern: useEffect fetches data when dialog open=true
+- Server actions pattern follows review.ts for auth token handling
 
 ### Pending Todos
 
@@ -431,9 +440,9 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-05-PLAN.md (regeneration API endpoints and worker integration)
+Stopped at: Completed 06-06-PLAN.md (regeneration frontend UI)
 Resume file: None
-Next: Continue Phase 6 - remaining plans (06-06 through 06-07)
+Next: Continue Phase 6 - remaining plan (06-07)
 
 ---
 *State initialized: 2026-01-22*
