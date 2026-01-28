@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 6 of 7 (Smart Regeneration)
-Plan: 4 of 7 (06-04 generation history and restore endpoints complete)
+Plan: 5 of 7 (06-05 regeneration API endpoints complete)
 Status: In progress - Phase 6 wave 2 executing
-Last activity: 2026-01-29 — Completed 06-04-PLAN.md (generation history and restore endpoints)
+Last activity: 2026-01-29 — Completed 06-05-PLAN.md (regeneration API endpoints and worker integration)
 
-Progress: [█████████░] 83% (29 of 35 total plans complete)
+Progress: [█████████░] 86% (30 of 35 total plans complete)
 
 ## Performance Metrics
 
@@ -415,12 +415,25 @@ None yet.
 - Rejection reasons preserved on restore for context
 - Regeneration router registered at /api/regeneration prefix in main.py
 
+**From 06-05 execution:**
+- RegenerateSingleRequest/RegenerateBatchRequest use UUID types for consistency
+- RegenerationJobResponse includes is_regeneration flag for frontend differentiation
+- RegenerationEstimate provides rejected_count and estimated_cost (~$0.02/product)
+- POST /api/regeneration/regenerate-single creates single-product job with target_product_group_id
+- POST /api/regeneration/{client_id}/regenerate-rejected creates batch job for all rejected products
+- GET /api/regeneration/{client_id}/estimate returns cost estimate for batch regeneration
+- Endpoints clear edited content on regeneration (restorable via 06-04 history/restore)
+- Endpoints increment regeneration_count for feedback-enhanced prompts
+- Worker builds RegenerationContext when regeneration_count > 0
+- Worker passes regeneration_context to generate_title and generate_description
+- Full pipeline: endpoint resets product -> ARQ job -> worker detects regen -> builds context -> AI service injects feedback
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-03-PLAN.md (smart regeneration prompt context)
+Stopped at: Completed 06-05-PLAN.md (regeneration API endpoints and worker integration)
 Resume file: None
-Next: Continue Phase 6 - remaining plans (06-05 through 06-07)
+Next: Continue Phase 6 - remaining plans (06-06 through 06-07)
 
 ---
 *State initialized: 2026-01-22*
