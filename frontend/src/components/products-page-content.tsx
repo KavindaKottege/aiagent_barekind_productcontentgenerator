@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ProductList } from './product-list'
 import { FieldSelectionPanel } from './field-selection-panel'
 import { GenerationProgress } from './generation-progress'
+import { BatchRegenerateButton } from './products/batch-regenerate-button'
 import { ProductGroup, getProductGroups } from '@/app/actions/products'
 import { Client } from '@/app/actions/clients'
 import {
@@ -236,6 +237,16 @@ export function ProductsPageContent({
               >
                 {isStarting ? 'Starting...' : `Retry ${failedCount} Failed`}
               </Button>
+            )}
+
+            {/* Regenerate Rejected button - show when no active job */}
+            {!activeJob && clientId && (
+              <BatchRegenerateButton
+                clientId={clientId}
+                onRegenerateStart={(jobId) => {
+                  router.refresh()
+                }}
+              />
             )}
 
             {/* Block message when generation is running */}
