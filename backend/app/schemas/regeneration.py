@@ -1,6 +1,7 @@
 """Pydantic schemas for smart regeneration."""
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -24,5 +25,5 @@ REJECTION_REASON_LABELS = {
 class RejectWithReasonsRequest(BaseModel):
     """Request to reject product with optional feedback reasons."""
 
-    product_group_id: str
+    product_group_id: UUID
     rejection_reasons: list[RejectionReasonType] = []  # Optional, can be empty

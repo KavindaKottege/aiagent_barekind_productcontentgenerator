@@ -23,6 +23,7 @@ from app.models.review_job import ReviewJob
 from app.models.settings import AppSettings
 from app.models.user import User
 from app.schemas.ai_review import AIReviewRequest, BatchAIReviewRequest
+from app.schemas.regeneration import RejectWithReasonsRequest
 from app.schemas.review import (
     EditContentRequest,
     ProductGroupReview,
@@ -359,6 +360,70 @@ async def reject_product(
     return ReviewActionResponse(
         success=True,
         message="Product rejected successfully",
+        next_product_id=next_group.id if next_group else None,
+    )
+
+
+@router.post("/reject-with-reasons", response_model=ReviewActionResponse)
+async def reject_with_reasons(
+    request: RejectWithReasonsRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: AsyncSession = Depends(get_db),
+) -> ReviewActionResponse:
+    """
+    Reject a product with optional rejection reasons.
+
+    Stores rejection_reasons for use in regeneration prompts.
+    User can reject without reasons (empty array allowed).
+    """
+    # Get product group
+    result = await db.execute(
+        select(ProductGroup).where(ProductGroup.id == request.product_group_id)
+    )
+    group = result.scalar_one_or_none()
+
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product group not found",
+        )
+
+    # Verify user owns this product group
+    if group.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to review this product",
+        )
+
+    # Update with rejection reasons
+    await db.execute(
+        update(ProductGroup)
+        .where(ProductGroup.id == request.product_group_id)
+        .values(
+            review_status="rejected",
+            rejection_reasons=request.rejection_reasons,  # Store as JSONB array
+            reviewed_at=func.now(),
+        )
+    )
+    await db.commit()
+
+    # Get next unreviewed product (same pattern as existing reject)
+    next_result = await db.execute(
+        select(ProductGroup)
+        .join(Product, Product.group_id == ProductGroup.id)
+        .where(
+            ProductGroup.client_id == group.client_id,
+            ProductGroup.status == "generated",
+            ProductGroup.review_status.is_(None),
+        )
+        .order_by(Product.row_index)
+        .limit(1)
+    )
+    next_group = next_result.scalar_one_or_none()
+
+    return ReviewActionResponse(
+        success=True,
+        message="Product rejected with feedback",
         next_product_id=next_group.id if next_group else None,
     )
 
