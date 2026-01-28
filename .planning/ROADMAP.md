@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Client Management** - Client profiles with brand voice and prompt configuration
 - [x] **Phase 3: Excel Processing** - Upload and map Faire Excel with variant grouping
 - [x] **Phase 4: AI Generation Core** - LangChain + OpenAI with cost controls and progress tracking
-- [ ] **Phase 5: Review System** - Manual review workflow with keyboard shortcuts
+- [x] **Phase 5: Review System** - Manual review workflow with keyboard shortcuts
 - [ ] **Phase 6: Smart Regeneration** - Learning from rejections with enhanced prompts
 - [ ] **Phase 7: Export & Polish** - Download approved content and final UX refinements
 
@@ -135,7 +135,8 @@ Plans:
   8. User can start reviewing completed products while generation is still running
   9. Review UI updates in real-time as new products complete generation
 **Plans**: 7 plans in 3 waves (includes 1 gap closure plan)
-**Status**: In Progress
+**Status**: Complete
+**Completed**: 2026-01-29
 
 Plans:
 - [x] 05-01-PLAN.md — Backend: Review model fields, ReviewJob model, review API endpoints
@@ -144,7 +145,7 @@ Plans:
 - [x] 05-04-PLAN.md — Backend: AI review service and batch review worker
 - [x] 05-05-PLAN.md — Frontend: AI review panel and batch progress UI
 - [x] 05-06-PLAN.md — Frontend: Missing fields warning and real-time updates
-- [ ] 05-07-PLAN.md — Gap closure: Wire undo to backend and add redo functionality
+- [x] 05-07-PLAN.md — Gap closure: Wire undo to backend and add redo functionality
 
 ### Phase 6: Smart Regeneration
 **Goal**: Users can regenerate rejected products with enhanced prompts that learn from rejection feedback
@@ -188,10 +189,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Client Management | 5/5 | Complete | 2026-01-22 |
 | 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
 | 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
-| 5. Review System | 6/7 | In Progress | - |
+| 5. Review System | 7/7 | Complete | 2026-01-29 |
 | 6. Smart Regeneration | 0/TBD | Not started | - |
 | 7. Export & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-28 (Phase 5 gap closure plan added)*
+*Last updated: 2026-01-29 (Phase 5 complete)*

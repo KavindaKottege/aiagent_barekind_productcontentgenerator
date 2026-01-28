@@ -57,15 +57,15 @@
 
 ### Review & Approval
 
-- [ ] **REV-01**: User can manually review each product (approve/reject)
-- [ ] **REV-02**: User can navigate products with keyboard shortcuts
-- [ ] **REV-03**: UI auto-advances to next product after approve/reject
-- [ ] **REV-04**: User can choose AI-assisted review mode (GPT-5.2 recommendations)
-- [ ] **REV-05**: User can choose AI-auto review mode (auto-approve with optional review)
-- [ ] **REV-06**: User can undo/redo review decisions during session
-- [ ] **REV-07**: Review shows warnings for products with missing selected fields
-- [ ] **REV-08**: User can start reviewing completed products while generation is still running
-- [ ] **REV-09**: Review UI updates in real-time as new products complete generation
+- [x] **REV-01**: User can manually review each product (approve/reject)
+- [x] **REV-02**: User can navigate products with keyboard shortcuts
+- [x] **REV-03**: UI auto-advances to next product after approve/reject
+- [x] **REV-04**: User can choose AI-assisted review mode (GPT-5.2 recommendations)
+- [x] **REV-05**: User can choose AI-auto review mode (auto-approve with optional review)
+- [x] **REV-06**: User can undo/redo review decisions during session
+- [x] **REV-07**: Review shows warnings for products with missing selected fields
+- [x] **REV-08**: User can start reviewing completed products while generation is still running
+- [x] **REV-09**: Review UI updates in real-time as new products complete generation
 
 ### Smart Regeneration
 
@@ -162,15 +162,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GEN-12 | Phase 4 | Complete |
 | GEN-14 | Phase 4 | Complete |
 | GEN-15 | Phase 4 | Complete |
-| REV-01 | Phase 5 | Pending |
-| REV-02 | Phase 5 | Pending |
-| REV-03 | Phase 5 | Pending |
-| REV-04 | Phase 5 | Pending |
-| REV-05 | Phase 5 | Pending |
-| REV-06 | Phase 5 | Pending |
-| REV-07 | Phase 5 | Pending |
-| REV-08 | Phase 5 | Pending |
-| REV-09 | Phase 5 | Pending |
+| REV-01 | Phase 5 | Complete |
+| REV-02 | Phase 5 | Complete |
+| REV-03 | Phase 5 | Complete |
+| REV-04 | Phase 5 | Complete |
+| REV-05 | Phase 5 | Complete |
+| REV-06 | Phase 5 | Complete |
+| REV-07 | Phase 5 | Complete |
+| REV-08 | Phase 5 | Complete |
+| REV-09 | Phase 5 | Complete |
 | REGEN-01 | Phase 6 | Pending |
 | REGEN-02 | Phase 6 | Pending |
 | REGEN-03 | Phase 6 | Pending |
@@ -186,4 +186,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after roadmap creation*
+*Last updated: 2026-01-29 (Phase 5 complete)*
