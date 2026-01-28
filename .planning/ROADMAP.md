@@ -156,10 +156,16 @@ Plans:
   2. System stores previous generation attempts per product
   3. System includes AI review feedback in regeneration prompts when available
   4. User can regenerate only rejected products without re-running entire batch
-**Plans**: TBD
+**Plans**: 7 plans in 3 waves
 
 Plans:
-- [ ] TBD after planning
+- [ ] 06-01-PLAN.md — Backend: Extend ProductGroup model with rejection_reasons and regeneration_count fields
+- [ ] 06-02-PLAN.md — Frontend: Rejection reasons dialog and rejectWithReasons server action
+- [ ] 06-03-PLAN.md — Backend: Enhanced prompts with RegenerationContext support
+- [ ] 06-04-PLAN.md — Backend: Generation history and restore endpoints
+- [ ] 06-05-PLAN.md — Backend: Single and batch regeneration endpoints with worker integration
+- [ ] 06-06-PLAN.md — Frontend: History dialog, regenerate button, restore functionality
+- [ ] 06-07-PLAN.md — Frontend: Batch regenerate button on products and review pages
 
 ### Phase 7: Export & Polish
 **Goal**: Users can download approved content in original Excel format with all columns preserved
@@ -190,9 +196,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
 | 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
 | 5. Review System | 7/7 | Complete | 2026-01-29 |
-| 6. Smart Regeneration | 0/TBD | Not started | - |
+| 6. Smart Regeneration | 0/7 | Not started | - |
 | 7. Export & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 5 complete)*
+*Last updated: 2026-01-29 (Phase 6 planned)*
