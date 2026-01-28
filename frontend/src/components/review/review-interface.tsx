@@ -13,16 +13,19 @@ import {
   ReviewActionResult,
   approveProduct,
   rejectProduct,
+  rejectWithReasons,
   saveEditTitle,
   saveEditDescription,
   getNextUnreviewed,
   undoReview,
 } from '@/app/actions/review'
 import { useReviewHistory } from '@/lib/review-context'
+import { RejectionReason } from '@/lib/rejection-reasons'
 import { ImageDisplay } from './image-display'
 import { InlineEditor } from './inline-editor'
 import { AIReviewPanel } from './ai-review-panel'
 import { MissingFieldsWarning } from './missing-fields-warning'
+import { RejectionReasonsDialog } from './rejection-reasons-dialog'
 import { statusBadgeStyles } from './review-stats'
 
 interface ReviewInterfaceProps {
@@ -55,6 +58,7 @@ export function ReviewInterface({
   const [showOriginalData, setShowOriginalData] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
 
   // Sync currentProduct when initialProduct prop changes (e.g., after router.refresh())
   useEffect(() => {
@@ -118,13 +122,19 @@ export function ReviewInterface({
     })
   }, [currentProduct, recordAction, navigateToProduct, clientId, router, setOptimisticStatus])
 
-  // Reject handler
-  const handleReject = useCallback(async () => {
+  // Reject handler - opens dialog for rejection reasons
+  const handleRejectClick = useCallback(() => {
+    setShowRejectDialog(true)
+  }, [])
+
+  // Confirm rejection with optional reasons
+  const handleRejectConfirm = useCallback(async (reasons: RejectionReason[]) => {
+    setShowRejectDialog(false)
     setError(null)
     startTransition(async () => {
       setOptimisticStatus('rejected')
 
-      const result = await rejectProduct(currentProduct.id)
+      const result = await rejectWithReasons(currentProduct.id, reasons)
 
       if (result.success) {
         recordAction({
@@ -137,7 +147,6 @@ export function ReviewInterface({
         if (result.next_product_id) {
           navigateToProduct(result.next_product_id)
         } else {
-          // No more unreviewed, show completion message
           router.push(`/review?client=${clientId}`)
         }
       } else {
@@ -226,7 +235,7 @@ export function ReviewInterface({
 
   // Keyboard shortcuts - disabled when editing
   useHotkeys('a', () => !isEditing && handleApprove(), { enabled: !isEditing, preventDefault: true })
-  useHotkeys('r', () => !isEditing && handleReject(), { enabled: !isEditing, preventDefault: true })
+  useHotkeys('r', () => !isEditing && handleRejectClick(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('e', () => !isEditing && setIsEditing(true), { enabled: !isEditing, preventDefault: true })
   useHotkeys('left, k', () => !isEditing && goToPrevious(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('right, j', () => !isEditing && goToNext(), { enabled: !isEditing, preventDefault: true })
@@ -427,7 +436,7 @@ export function ReviewInterface({
         <div className="flex gap-3">
           <Button
             variant="outline"
-            onClick={handleReject}
+            onClick={handleRejectClick}
             disabled={isPending}
             className="min-w-[120px] border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
           >
@@ -442,6 +451,14 @@ export function ReviewInterface({
           </Button>
         </div>
       </div>
+
+      {/* Rejection reasons dialog */}
+      <RejectionReasonsDialog
+        open={showRejectDialog}
+        onClose={() => setShowRejectDialog(false)}
+        onConfirm={handleRejectConfirm}
+        isLoading={isPending}
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { RejectionReason } from '@/lib/rejection-reasons'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Types matching backend Pydantic schemas
@@ -217,6 +218,55 @@ export async function rejectProduct(
     }
   } catch (error) {
     console.error('Error rejecting product:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Network error',
+    }
+  }
+}
+
+/**
+ * Reject product with optional rejection reasons for smart regeneration
+ */
+export async function rejectWithReasons(
+  productGroupId: string,
+  rejectionReasons: RejectionReason[] = []
+): Promise<ReviewActionResult> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { success: false, message: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/review/reject-with-reasons`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product_group_id: productGroupId,
+        rejection_reasons: rejectionReasons,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to reject' }))
+      return {
+        success: false,
+        message: errorData.message || `Reject failed: ${response.status}`,
+      }
+    }
+
+    const data = await response.json()
+    return {
+      success: true,
+      message: data.message || 'Product rejected with feedback',
+      next_product_id: data.next_product_id,
+    }
+  } catch (error) {
+    console.error('Error rejecting with reasons:', error)
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Network error',
