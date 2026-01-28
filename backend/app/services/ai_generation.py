@@ -22,6 +22,7 @@ from app.models.product import Product
 from app.models.product_group import ProductGroup
 from app.models.settings import AppSettings
 from app.schemas.ai_output import DescriptionContent, ProductContent, TitleContent
+from app.schemas.regeneration import RegenerationContext, get_positive_guidance
 from app.services.cost_tracker import CostTracker
 
 # Callback type for tracking attempt results
@@ -128,6 +129,64 @@ class AIGenerationService:
                 include_raw=True,
             )
         return self._description_model
+
+    def _build_feedback_section(self, context: RegenerationContext) -> str:
+        """Build feedback section for regeneration prompts.
+
+        Includes:
+        - Previous content to avoid (truncated)
+        - User rejection reasons
+        - AI review flags
+        - Positive guidance based on reasons
+
+        Args:
+            context: RegenerationContext with rejection feedback.
+
+        Returns:
+            Multi-line string with all feedback sections.
+        """
+        sections = []
+
+        # Previous title to avoid
+        if context.previous_title:
+            sections.append(f'PREVIOUS TITLE (DO NOT REUSE - was rejected): "{context.previous_title}"')
+
+        # Previous description to avoid (truncated to first 500 chars)
+        if context.previous_description:
+            truncated = context.previous_description[:500]
+            if len(context.previous_description) > 500:
+                truncated += "..."
+            sections.append(f'PREVIOUS DESCRIPTION (DO NOT REUSE - was rejected): "{truncated}"')
+
+        # User rejection reasons
+        if context.rejection_reasons:
+            reason_labels = {
+                "off_brand_tone": "off-brand tone",
+                "generic_boring": "generic/boring content",
+                "factually_wrong": "factual inaccuracies",
+                "seo_issues": "SEO problems",
+            }
+            reasons_text = ", ".join(reason_labels.get(r, r) for r in context.rejection_reasons)
+            sections.append(f"USER REJECTED FOR: {reasons_text}")
+
+        # AI review safety flags
+        if context.ai_review_flags:
+            flags_text = ", ".join(context.ai_review_flags)
+            sections.append(f"AI REVIEW FLAGGED: {flags_text}")
+
+        # Positive guidance
+        positive = get_positive_guidance(context.rejection_reasons)
+        if positive:
+            sections.append(f"FOCUS ON: {positive}")
+
+        # Regeneration count context
+        if context.regeneration_count > 0:
+            sections.append(
+                f"This is regeneration attempt #{context.regeneration_count + 1}. "
+                "Create significantly different content that addresses the feedback above."
+            )
+
+        return "\n".join(sections)
 
     def build_prompt(
         self,
@@ -239,6 +298,7 @@ Product Information:
         app_settings: AppSettings | None = None,
         is_retry: bool = False,
         previous_error: str | None = None,
+        regeneration_context: RegenerationContext | None = None,
     ) -> ChatPromptTemplate:
         """
         Build prompt for Task 1 (Title Generation) only.
@@ -252,6 +312,7 @@ Product Information:
             app_settings: App settings with default prompts
             is_retry: Whether this is a retry attempt
             previous_error: Error message from previous attempt
+            regeneration_context: Optional context with rejection feedback for regeneration
 
         Returns:
             ChatPromptTemplate ready for invocation
@@ -311,6 +372,11 @@ Product Information:
         if is_retry and previous_error:
             user_content += f"\n\n[Previous attempt failed: {previous_error}]"
 
+        # Add regeneration feedback if this is a regeneration
+        if regeneration_context and regeneration_context.regeneration_count > 0:
+            feedback_section = self._build_feedback_section(regeneration_context)
+            user_content += f"\n\n--- REGENERATION FEEDBACK ---\n{feedback_section}"
+
         messages = [
             ("system", system_content),
             ("user", user_content),
@@ -326,6 +392,7 @@ Product Information:
         app_settings: AppSettings | None = None,
         is_retry: bool = False,
         previous_error: str | None = None,
+        regeneration_context: RegenerationContext | None = None,
     ) -> ChatPromptTemplate:
         """
         Build prompt for Task 2 (Description Generation) only.
@@ -339,6 +406,7 @@ Product Information:
             app_settings: App settings with default prompts
             is_retry: Whether this is a retry attempt
             previous_error: Error message from previous attempt
+            regeneration_context: Optional context with rejection feedback for regeneration
 
         Returns:
             ChatPromptTemplate ready for invocation
@@ -399,6 +467,11 @@ Product Information:
 
         if is_retry and previous_error:
             user_content += f"\n\n[Previous attempt failed: {previous_error}]"
+
+        # Add regeneration feedback if this is a regeneration
+        if regeneration_context and regeneration_context.regeneration_count > 0:
+            feedback_section = self._build_feedback_section(regeneration_context)
+            user_content += f"\n\n--- REGENERATION FEEDBACK ---\n{feedback_section}"
 
         messages = [
             ("system", system_content),
@@ -589,6 +662,7 @@ Product Information:
         job: GenerationJob,
         app_settings: AppSettings | None = None,
         on_attempt: AttemptCallback | None = None,
+        regeneration_context: RegenerationContext | None = None,
     ) -> tuple[TitleContent | None, GenerationAudit]:
         """
         Generate title only (Task 1) for a product group with retry logic.
@@ -600,6 +674,7 @@ Product Information:
             job: Current generation job
             app_settings: App settings for defaults
             on_attempt: Optional callback called after each attempt with (attempt_number, success, error)
+            regeneration_context: Optional context with rejection feedback for regeneration
 
         Returns:
             Tuple of (TitleContent or None if failed, GenerationAudit)
@@ -620,6 +695,7 @@ Product Information:
                 app_settings,
                 is_retry=(attempt > 1),
                 previous_error=last_error,
+                regeneration_context=regeneration_context,
             )
 
             # Format prompt as string for audit
@@ -770,6 +846,7 @@ Product Information:
         job: GenerationJob,
         app_settings: AppSettings | None = None,
         on_attempt: AttemptCallback | None = None,
+        regeneration_context: RegenerationContext | None = None,
     ) -> tuple[DescriptionContent | None, GenerationAudit]:
         """
         Generate description only (Task 2) for a product group with retry logic.
@@ -781,6 +858,7 @@ Product Information:
             job: Current generation job
             app_settings: App settings for defaults
             on_attempt: Optional callback called after each attempt with (attempt_number, success, error)
+            regeneration_context: Optional context with rejection feedback for regeneration
 
         Returns:
             Tuple of (DescriptionContent or None if failed, GenerationAudit)
@@ -801,6 +879,7 @@ Product Information:
                 app_settings,
                 is_retry=(attempt > 1),
                 previous_error=last_error,
+                regeneration_context=regeneration_context,
             )
 
             # Format prompt as string for audit
