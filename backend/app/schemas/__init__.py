@@ -31,8 +31,12 @@ from app.schemas.review import (
 )
 from app.schemas.regeneration import (
     REJECTION_REASON_LABELS,
+    GenerationHistoryItem,
+    GenerationHistoryResponse,
     RejectWithReasonsRequest,
     RejectionReasonType,
+    RestoreVersionRequest,
+    RestoreVersionResponse,
 )
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
@@ -73,4 +77,8 @@ __all__ = [
     "RejectionReasonType",
     "RejectWithReasonsRequest",
     "REJECTION_REASON_LABELS",
+    "GenerationHistoryItem",
+    "GenerationHistoryResponse",
+    "RestoreVersionRequest",
+    "RestoreVersionResponse",
 ]
