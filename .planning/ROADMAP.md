@@ -1,4 +1,4 @@
-# Roadmap: Product Content Generator
+# Roadmap: Candid Founders Content Generator
 
 ## Overview
 
@@ -134,16 +134,17 @@ Plans:
   7. Review UI displays warnings when products are missing selected fields
   8. User can start reviewing completed products while generation is still running
   9. Review UI updates in real-time as new products complete generation
-**Plans**: 6 plans in 3 waves
-**Status**: Planned
+**Plans**: 7 plans in 3 waves (includes 1 gap closure plan)
+**Status**: In Progress
 
 Plans:
-- [ ] 05-01-PLAN.md — Backend: Review model fields, ReviewJob model, review API endpoints
-- [ ] 05-02-PLAN.md — Frontend: Dependencies, Server Actions, undo/redo context
-- [ ] 05-03-PLAN.md — Frontend: Review UI with keyboard navigation and image display
-- [ ] 05-04-PLAN.md — Backend: AI review service and batch review worker
-- [ ] 05-05-PLAN.md — Frontend: AI review panel and batch progress UI
-- [ ] 05-06-PLAN.md — Frontend: Missing fields warning and real-time updates
+- [x] 05-01-PLAN.md — Backend: Review model fields, ReviewJob model, review API endpoints
+- [x] 05-02-PLAN.md — Frontend: Dependencies, Server Actions, undo/redo context
+- [x] 05-03-PLAN.md — Frontend: Review UI with keyboard navigation and image display
+- [x] 05-04-PLAN.md — Backend: AI review service and batch review worker
+- [x] 05-05-PLAN.md — Frontend: AI review panel and batch progress UI
+- [x] 05-06-PLAN.md — Frontend: Missing fields warning and real-time updates
+- [ ] 05-07-PLAN.md — Gap closure: Wire undo to backend and add redo functionality
 
 ### Phase 6: Smart Regeneration
 **Goal**: Users can regenerate rejected products with enhanced prompts that learn from rejection feedback
@@ -187,10 +188,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Client Management | 5/5 | Complete | 2026-01-22 |
 | 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
 | 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
-| 5. Review System | 0/6 | Planned | - |
+| 5. Review System | 6/7 | In Progress | - |
 | 6. Smart Regeneration | 0/TBD | Not started | - |
 | 7. Export & Polish | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-23 (Phase 5 planned)*
+*Last updated: 2026-01-28 (Phase 5 gap closure plan added)*
