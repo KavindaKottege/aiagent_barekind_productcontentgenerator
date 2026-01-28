@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 6 of 7 (Smart Regeneration)
-Plan: 2 of 7 (06-02 rejection feedback UI complete)
-Status: In progress - Phase 6 wave 1 executing
-Last activity: 2026-01-29 — Completed 06-02-PLAN.md (rejection reasons dialog)
+Plan: 4 of 7 (06-04 generation history and restore endpoints complete)
+Status: In progress - Phase 6 wave 2 executing
+Last activity: 2026-01-29 — Completed 06-04-PLAN.md (generation history and restore endpoints)
 
-Progress: [█████████░] 74% (26 of 35 total plans complete)
+Progress: [█████████░] 80% (28 of 35 total plans complete)
 
 ## Performance Metrics
 
@@ -398,12 +398,20 @@ None yet.
 - POST /api/review/reject-with-reasons endpoint stores reasons as JSONB array
 - Predefined rejection reasons only (no free text) per CONTEXT.md decision
 
+**From 06-04 execution:**
+- GET /api/regeneration/{product_group_id}/history returns successful generation audits
+- POST /api/regeneration/{product_group_id}/restore/{audit_id} restores previous version
+- is_current flag compares audit content to effective current content (edited or generated)
+- Restore clears edited fields and resets review_status to None (pending re-review)
+- Rejection reasons preserved on restore for context
+- Regeneration router registered at /api/regeneration prefix in main.py
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-02-PLAN.md (rejection feedback UI)
+Stopped at: Completed 06-04-PLAN.md (generation history and restore endpoints)
 Resume file: None
-Next: Continue Phase 6 - remaining plans (06-03 through 06-07)
+Next: Continue Phase 6 - remaining plans (06-05 through 06-07)
 
 ---
 *State initialized: 2026-01-22*
