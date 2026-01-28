@@ -39,6 +39,7 @@ class ProductGroup(Base):
 
     # Variant metadata
     variant_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    first_row_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")  # For sorting by original Excel order
 
     # Generated content (filled by Phase 4)
     generated_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -56,6 +57,8 @@ class ProductGroup(Base):
     ai_review_status: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)  # ai_approved, ai_rejected
     ai_review_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     ai_review_safety_flags: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True, default=list, server_default="[]")
+    ai_suggested_title: Mapped[str | None] = mapped_column(Text, nullable=True)  # AI-suggested corrected title
+    ai_suggested_description: Mapped[str | None] = mapped_column(Text, nullable=True)  # AI-suggested corrected description
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ai_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

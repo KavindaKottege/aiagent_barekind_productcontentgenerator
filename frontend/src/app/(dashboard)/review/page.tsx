@@ -48,6 +48,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   ])
 
   // Find first unreviewed product for "Start Review" button
+  // Pending = review_status is null
   const firstUnreviewed = products.find(p => !p.review_status)
 
   return (

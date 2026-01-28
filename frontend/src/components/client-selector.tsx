@@ -55,7 +55,7 @@ export function ClientSelector({ clients }: ClientSelectorProps) {
     return (
       <button
         onClick={() => router.push('/clients/new')}
-        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        className="text-sm text-brand-blue hover:text-brand-blue-hover hover:underline"
       >
         + Create your first client
       </button>
@@ -64,7 +64,7 @@ export function ClientSelector({ clients }: ClientSelectorProps) {
 
   return (
     <Select value={selectedClientId || undefined} onValueChange={setSelectedClientId}>
-      <SelectTrigger className="w-[200px]">
+      <SelectTrigger className="w-[200px] bg-white text-gray-900 border-gray-300">
         <SelectValue placeholder="Select client" />
       </SelectTrigger>
       <SelectContent>

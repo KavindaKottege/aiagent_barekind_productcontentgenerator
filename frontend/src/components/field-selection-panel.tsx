@@ -29,7 +29,7 @@ export function FieldSelectionPanel({
   onSelectionChange,
 }: FieldSelectionPanelProps) {
   // Filter saved selection to only include valid field IDs (handles old 8-field selections)
-  const validFieldIds = AVAILABLE_FIELDS.map(f => f.id)
+  const validFieldIds: string[] = AVAILABLE_FIELDS.map(f => f.id)
   const defaultSelection = currentSelection
     ? currentSelection.filter(id => validFieldIds.includes(id))
     : validFieldIds

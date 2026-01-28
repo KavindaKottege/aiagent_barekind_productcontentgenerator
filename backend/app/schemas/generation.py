@@ -58,6 +58,12 @@ class GenerationJobSummary(BaseModel):
         from_attributes = True
 
 
+class AttemptResult(BaseModel):
+    """Result of a single generation attempt."""
+    success: bool
+    error: str | None = None
+
+
 class GenerationJobResponse(BaseModel):
     """Response for generation job details."""
     id: UUID
@@ -84,6 +90,12 @@ class GenerationJobResponse(BaseModel):
     error_message: str | None
     created_at: datetime
     updated_at: datetime
+
+    # Current task tracking for real-time UI updates
+    current_product_name: str | None = None
+    current_task: str | None = None  # "title" or "description"
+    task1_attempts: list[AttemptResult] | None = None
+    task2_attempts: list[AttemptResult] | None = None
 
     class Config:
         from_attributes = True

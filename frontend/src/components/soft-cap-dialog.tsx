@@ -11,12 +11,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { softCapContinue, SoftCapInfo } from '@/app/actions/generation'
+import { softCapContinue, SoftCapInfo, GenerationJob } from '@/app/actions/generation'
 
 interface SoftCapDialogProps {
   info: SoftCapInfo
   jobId: string
-  onResponse: (continueGeneration: boolean) => void
+  onResponse: (continueGeneration: boolean, newJob?: GenerationJob) => void
 }
 
 export function SoftCapDialog({ info, jobId, onResponse }: SoftCapDialogProps) {
@@ -24,8 +24,8 @@ export function SoftCapDialog({ info, jobId, onResponse }: SoftCapDialogProps) {
 
   const handleContinue = async () => {
     setIsProcessing(true)
-    await softCapContinue(jobId, true)
-    onResponse(true)
+    const result = await softCapContinue(jobId, true)
+    onResponse(true, result.job ?? undefined)
     setIsProcessing(false)
   }
 
@@ -50,19 +50,19 @@ export function SoftCapDialog({ info, jobId, onResponse }: SoftCapDialogProps) {
               <div className="bg-yellow-50 border border-yellow-200 rounded p-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Current cost:</span>
-                  <span className="font-semibold">${info.current_cost}</span>
+                  <span className="font-semibold text-gray-900">${info.current_cost}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Projected total:</span>
-                  <span className="font-semibold">${info.projected_cost}</span>
+                  <span className="font-semibold text-gray-900">${info.projected_cost}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Soft cap:</span>
-                  <span className="font-semibold">${info.soft_cap}</span>
+                  <span className="font-semibold text-gray-900">${info.soft_cap}</span>
                 </div>
-                <div className="flex justify-between border-t pt-2 mt-2">
+                <div className="flex justify-between border-t border-yellow-200 pt-2 mt-2">
                   <span className="text-gray-600">Progress:</span>
-                  <span className="font-semibold">{info.completed} / {info.total} products</span>
+                  <span className="font-semibold text-gray-900">{info.completed} / {info.total} products</span>
                 </div>
               </div>
 

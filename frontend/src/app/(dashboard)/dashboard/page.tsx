@@ -3,7 +3,7 @@ import { getUser } from "@/lib/dal";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Dashboard - Product Content Generator",
+  title: "Dashboard - SEO Content Generator",
   description: "Your dashboard",
 };
 

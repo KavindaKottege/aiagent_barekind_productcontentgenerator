@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Product Content Generator API",
+    title="Candid Founders Content Generator API",
     description="AI-powered product content generation for marketing agencies",
     version="1.0.0",
     lifespan=lifespan,

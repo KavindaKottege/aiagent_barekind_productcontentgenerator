@@ -21,6 +21,7 @@ export function UploadButtonWrapper({ clients }: UploadButtonWrapperProps) {
     <UploadModal
       selectedClientId={selectedClientId}
       selectedClientName={selectedClient?.brand_name || null}
+      hasExistingProducts={!!selectedClientId}  // Show warning whenever a client is selected
     />
   )
 }

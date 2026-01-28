@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/forms/login-form";
 import { login } from "@/app/actions/auth";
 
 export const metadata: Metadata = {
-  title: "Log In - Product Content Generator",
+  title: "Log In - SEO Content Generator",
   description: "Log in to your account",
 };
 

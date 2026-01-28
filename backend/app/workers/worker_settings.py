@@ -4,6 +4,8 @@ from arq.connections import RedisSettings
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from app.config import settings
+from app.workers.generation_worker import generation_worker
+from app.workers.review_worker import batch_ai_review_worker
 
 
 async def startup(ctx: dict) -> None:
@@ -63,8 +65,8 @@ class WorkerSettings:
 
     # Worker functions to register
     functions = [
-        "app.workers.generation_worker.generation_worker",
-        "app.workers.review_worker.batch_ai_review_worker",
+        generation_worker,
+        batch_ai_review_worker,
     ]
 
     # Lifecycle hooks

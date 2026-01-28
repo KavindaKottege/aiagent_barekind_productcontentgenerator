@@ -1,4 +1,4 @@
-# Product Content Generator
+# Candid Founders Content Generator
 
 ## What This Is
 

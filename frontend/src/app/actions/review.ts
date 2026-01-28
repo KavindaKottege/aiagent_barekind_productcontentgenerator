@@ -225,12 +225,11 @@ export async function rejectProduct(
 }
 
 /**
- * Save edited title and description with client-side validation
+ * Save edited title with client-side validation
  */
-export async function saveEdit(
+export async function saveEditTitle(
   productGroupId: string,
-  title: string,
-  description: string
+  title: string
 ): Promise<ReviewActionResult> {
   const accessToken = await getAccessToken()
 
@@ -246,6 +245,55 @@ export async function saveEdit(
     }
   }
 
+  try {
+    const response = await fetch(`${API_URL}/api/review/edit`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        product_group_id: productGroupId,
+        edited_title: title,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Failed to save edit' }))
+      return {
+        success: false,
+        message: errorData.message || `Save failed: ${response.status}`,
+      }
+    }
+
+    const data = await response.json()
+    return {
+      success: true,
+      message: data.message || 'Edit saved successfully',
+    }
+  } catch (error) {
+    console.error('Error saving edit:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Network error',
+    }
+  }
+}
+
+/**
+ * Save edited description with client-side validation
+ */
+export async function saveEditDescription(
+  productGroupId: string,
+  description: string
+): Promise<ReviewActionResult> {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    return { success: false, message: 'Not authenticated' }
+  }
+
+  // Client-side validation for character limits
   if (description.length < 2000 || description.length > 3000) {
     return {
       success: false,
@@ -262,7 +310,6 @@ export async function saveEdit(
       },
       body: JSON.stringify({
         product_group_id: productGroupId,
-        edited_title: title,
         edited_description: description,
       }),
     })
@@ -487,7 +534,8 @@ export async function requestAIReview(
  */
 export async function startBatchAIReview(
   clientId: string,
-  autoApprove: boolean = false
+  autoApprove: boolean = false,
+  forceRerun: boolean = false
 ): Promise<{ jobId: string } | { error: string }> {
   const accessToken = await getAccessToken()
 
@@ -506,13 +554,14 @@ export async function startBatchAIReview(
         },
         body: JSON.stringify({
           auto_approve: autoApprove,
+          force_rerun: forceRerun,
         }),
       }
     )
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Failed to start AI review' }))
-      return { error: errorData.message || `Start failed: ${response.status}` }
+      const errorData = await response.json().catch(() => ({ detail: 'Failed to start AI review' }))
+      return { error: errorData.detail || errorData.message || `Start failed: ${response.status}` }
     }
 
     const data = await response.json()

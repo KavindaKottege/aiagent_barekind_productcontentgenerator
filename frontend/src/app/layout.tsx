@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Product Content Generator",
-  description: "AI-powered product content generation for marketing agencies",
+  title: "SEO Content Generator | Candid Founders",
+  description: "AI-powered SEO content generation for e-commerce products",
 };
 
 export default function RootLayout({

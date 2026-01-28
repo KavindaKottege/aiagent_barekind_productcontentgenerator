@@ -35,7 +35,7 @@ export function ApiKeyForm({ currentKey }: ApiKeyFormProps) {
             href="https://platform.openai.com/api-keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-brand-blue hover:underline"
           >
             OpenAI Platform
           </a>

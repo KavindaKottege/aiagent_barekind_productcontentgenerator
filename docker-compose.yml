@@ -7,13 +7,13 @@ services:
     environment:
       POSTGRES_USER: devuser
       POSTGRES_PASSWORD: devpassword
-      POSTGRES_DB: saas_dev
+      POSTGRES_DB: candidfounders_db
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devuser -d saas_dev"]
+      test: ["CMD-SHELL", "pg_isready -U devuser -d candidfounders_db"]
       interval: 10s
       timeout: 5s
       retries: 5

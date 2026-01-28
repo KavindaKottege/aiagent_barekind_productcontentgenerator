@@ -1,11 +1,10 @@
 import { Metadata } from 'next'
 import { getProductGroups, ProductGroup } from '@/app/actions/products'
 import { getClient, Client } from '@/app/actions/clients'
-import { getAccessToken } from '@/lib/session'
 import { ProductsPageContent } from '@/components/products-page-content'
 
 export const metadata: Metadata = {
-  title: 'Products - Product Content Generator',
+  title: 'Products - SEO Content Generator',
   description: 'Manage uploaded products',
 }
 
@@ -19,7 +18,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   let groups: ProductGroup[] = []
   let client: Client | null = null
-  const accessToken = await getAccessToken()
 
   if (clientId) {
     try {
@@ -43,7 +41,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         initialGroups={groups}
         clientId={clientId}
         client={client}
-        accessToken={accessToken}
       />
     </div>
   )

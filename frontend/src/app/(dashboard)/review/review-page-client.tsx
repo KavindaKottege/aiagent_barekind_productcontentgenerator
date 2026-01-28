@@ -7,7 +7,7 @@ import { useSelectedClient } from '@/lib/client-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ReviewStatsComponent } from '@/components/review/review-stats'
+import { ReviewStatsComponent, statusBadgeStyles } from '@/components/review/review-stats'
 import { AIReviewProgress } from '@/components/review/ai-review-progress'
 import { Sparkles } from 'lucide-react'
 import {
@@ -47,6 +47,7 @@ export function ReviewPageClient({
   const [isStarting, setIsStarting] = useState(false)
   const [hasActiveJob, setHasActiveJob] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string>('all')
 
   // Real-time generation monitoring state
   const [products, setProducts] = useState(initialProducts)
@@ -56,15 +57,27 @@ export function ReviewPageClient({
   const lastRefreshRef = useRef<number>(0)
   const REFRESH_DEBOUNCE_MS = 2000
 
+  // Sync products state when props change (e.g., after redirect adds client param)
+  useEffect(() => {
+    setProducts(initialProducts)
+  }, [initialProducts])
+
+  // Sync stats state when props change
+  useEffect(() => {
+    setStats(initialStats)
+  }, [initialStats])
+
+  // Detect if we're in a "syncing" state - context has client but URL doesn't yet
+  const urlClientId = searchParams.get('client')
+  const isSyncingClient = !clientId && selectedClientId && selectedClientId !== urlClientId
+
   // Sync URL with selected client from context (same pattern as products page)
   useEffect(() => {
-    const urlClientId = searchParams.get('client')
-
     if (selectedClientId && selectedClientId !== urlClientId) {
       // Update URL when client changes
       router.push(`/review?client=${selectedClientId}`)
     }
-  }, [selectedClientId, searchParams, router])
+  }, [selectedClientId, urlClientId, router])
 
   // Refresh products list from server
   const refreshProducts = useCallback(async () => {
@@ -150,12 +163,12 @@ export function ReviewPageClient({
     setError(null)
   }
 
-  const handleStartBatchReview = async () => {
+  const handleStartBatchReview = async (forceRerun: boolean = false) => {
     if (!clientId) return
     setIsStarting(true)
     setError(null)
 
-    const result = await startBatchAIReview(clientId, autoApproveMode)
+    const result = await startBatchAIReview(clientId, autoApproveMode, forceRerun)
 
     if ('error' in result) {
       setError(result.error)
@@ -166,15 +179,44 @@ export function ReviewPageClient({
     }
   }
 
+  // Check if error is the "already reviewed" message
+  const isAlreadyReviewedError = error?.includes("Re-run AI Review") || error?.includes("already been AI reviewed")
+
   const handleComplete = () => {
     setHasActiveJob(false)
     router.refresh()
   }
 
   // Update firstUnreviewed based on current products state
+  // Pending = review_status is null (approved/rejected are the only final statuses)
   const currentFirstUnreviewed = products.find(p => !p.review_status)
 
-  // Show empty state when no client is selected (will redirect via useEffect when context has client)
+  // Filter products based on active filter
+  const filteredProducts = activeFilter === 'all'
+    ? products
+    : products.filter(p => {
+        const status = p.review_status || 'pending'
+        return status === activeFilter
+      })
+
+  // Show loading state when syncing client from context to URL
+  // This prevents the brief "No products" flash during redirect
+  if (isSyncingClient) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Review Products</h2>
+        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-gray-600">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Show empty state when no client is selected
   if (!clientId) {
     return (
       <div className="space-y-6">
@@ -200,8 +242,8 @@ export function ReviewPageClient({
           <p className="text-gray-600 mt-1">Review and approve AI-generated content</p>
         </div>
 
-        {/* Review All with AI button */}
-        {products.length > 0 && !hasActiveJob && !activeGenerationJob && (
+        {/* Review All with AI button - can run alongside generation */}
+        {products.length > 0 && !hasActiveJob && (
           <Button onClick={handleShowModeToggle} className="gap-2">
             <Sparkles className="w-4 h-4" />
             Review All with AI
@@ -289,7 +331,7 @@ export function ReviewPageClient({
 
             {/* Error display */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <div className={`p-3 border rounded text-sm ${isAlreadyReviewedError ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-700'}`}>
                 {error}
               </div>
             )}
@@ -298,18 +340,32 @@ export function ReviewPageClient({
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setShowModeToggle(false)}
+                onClick={() => {
+                  setShowModeToggle(false)
+                  setError(null)
+                }}
                 disabled={isStarting}
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleStartBatchReview}
-                disabled={isStarting}
-                className="flex-1"
-              >
-                {isStarting ? 'Starting...' : 'Start AI Review'}
-              </Button>
+              {isAlreadyReviewedError ? (
+                <Button
+                  onClick={() => handleStartBatchReview(true)}
+                  disabled={isStarting}
+                  className="flex-1"
+                  variant="default"
+                >
+                  {isStarting ? 'Starting...' : 'Re-run AI Review'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => handleStartBatchReview(false)}
+                  disabled={isStarting}
+                  className="flex-1"
+                >
+                  {isStarting ? 'Starting...' : 'Start AI Review'}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -328,10 +384,8 @@ export function ReviewPageClient({
       {stats && (
         <ReviewStatsComponent
           stats={stats}
-          onFilterClick={(status) => {
-            // This will be handled client-side in future enhancement
-            // For now, filter via URL params
-          }}
+          activeFilter={activeFilter}
+          onFilterClick={(status) => setActiveFilter(status)}
         />
       )}
 
@@ -363,16 +417,39 @@ export function ReviewPageClient({
         </div>
       )}
 
+      {/* Filtered empty state */}
+      {products.length > 0 && filteredProducts.length === 0 && (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-gray-600">
+              No products match the selected filter.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setActiveFilter('all')}
+            >
+              Show All Products
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Product Grid */}
-      {products.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product) => {
+      {filteredProducts.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          {filteredProducts.map((product) => {
             const displayTitle = product.edited_title || product.generated_title || product.product_name
             const statusBadge = product.review_status || 'pending'
+            const badgeStyle = statusBadgeStyles[statusBadge as keyof typeof statusBadgeStyles] || statusBadgeStyles.pending
 
             return (
-              <Card key={product.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
+              <Card
+                key={product.id}
+                className="hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer"
+                onClick={() => router.push(`/review/${product.id}?client=${clientId}`)}
+              >
+                <CardContent className="p-4 flex flex-col flex-1">
                   {/* Thumbnail */}
                   {product.images.length > 0 ? (
                     <div className="w-full h-40 mb-3 bg-gray-100 rounded overflow-hidden">
@@ -391,47 +468,26 @@ export function ReviewPageClient({
                     </div>
                   )}
 
-                  {/* Product Name */}
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                  {/* Product Name - fixed height for 2 lines */}
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 min-h-[3rem]">
                     {product.product_name}
                   </h3>
 
-                  {/* Generated Title Preview */}
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {/* Generated Title Preview - fixed height for 2 lines */}
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
                     {displayTitle}
                   </p>
 
-                  {/* Status Badge */}
-                  <div className="flex items-center justify-between">
-                    <Badge
-                      variant={
-                        statusBadge === 'approved' ? 'default' :
-                        statusBadge === 'rejected' ? 'destructive' :
-                        statusBadge === 'edited' ? 'secondary' :
-                        statusBadge === 'ai_approved' ? 'default' :
-                        statusBadge === 'ai_rejected' ? 'destructive' :
-                        'outline'
-                      }
-                      className={
-                        statusBadge === 'ai_approved' ? 'bg-purple-600' :
-                        statusBadge === 'ai_rejected' ? 'bg-purple-600' :
-                        ''
-                      }
-                    >
+                  {/* Status Badge - pushed to bottom */}
+                  <div className="flex items-center justify-between mt-auto pt-2">
+                    <span className={`${badgeStyle} px-2.5 py-0.5 rounded-full text-xs font-medium`}>
                       {statusBadge === 'approved' ? 'Approved' :
                        statusBadge === 'rejected' ? 'Rejected' :
                        statusBadge === 'edited' ? 'Edited' :
                        statusBadge === 'ai_approved' ? 'AI Approved' :
                        statusBadge === 'ai_rejected' ? 'AI Rejected' :
                        'Pending Review'}
-                    </Badge>
-
-                    {/* Review Link */}
-                    <Link href={`/review/${product.id}?client=${clientId}`}>
-                      <Button variant="ghost" size="sm">
-                        Review
-                      </Button>
-                    </Link>
+                    </span>
                   </div>
                 </CardContent>
               </Card>

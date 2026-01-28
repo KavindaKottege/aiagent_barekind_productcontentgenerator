@@ -99,7 +99,7 @@ export function InlineEditor({ value, onSave, minChars, maxChars, placeholder, m
             isSaving ? 'bg-gray-50 cursor-wait' : 'bg-white'
           } ${
             error ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'
-          } focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none`}
+          } text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none`}
           rows={multiline ? 12 : 2}
         />
 
@@ -119,7 +119,7 @@ export function InlineEditor({ value, onSave, minChars, maxChars, placeholder, m
             <button
               onClick={handleSave}
               disabled={isSaving || !isInRange}
-              className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm bg-brand-blue text-white hover:bg-brand-blue-hover rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? 'Saving...' : multiline ? 'Save (Ctrl+Enter)' : 'Save (Enter)'}
             </button>
@@ -138,9 +138,13 @@ export function InlineEditor({ value, onSave, minChars, maxChars, placeholder, m
     <div
       ref={divRef}
       onClick={handleClick}
-      className="group cursor-text border rounded-md px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors relative"
+      className="group cursor-text border border-gray-200 rounded-md px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors relative"
     >
-      <div className={`text-sm font-mono whitespace-pre-wrap ${value ? 'text-gray-900' : 'text-gray-400'}`}>
+      <div
+        className={`text-sm font-mono whitespace-pre-wrap ${value ? 'text-gray-900' : 'text-gray-400'} ${
+          multiline ? 'max-h-[300px] overflow-y-auto' : ''
+        }`}
+      >
         {value || placeholder}
       </div>
 

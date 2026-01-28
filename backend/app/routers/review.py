@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -15,7 +15,7 @@ from sqlalchemy.orm import selectinload
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import settings
-from app.database import get_db
+from app.database import get_db, async_session_maker
 from app.models.client import Client
 from app.models.product import Product
 from app.models.product_group import ProductGroup
@@ -32,6 +32,7 @@ from app.schemas.review import (
     UndoReviewRequest,
 )
 from app.services.ai_review_service import AIReviewService
+from app.utils.auth import decode_access_token
 from app.utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/review", tags=["review"])
@@ -277,6 +278,7 @@ async def approve_product(
     await db.commit()
 
     # Find next unreviewed product (same client, row_index order)
+    # Pending = review_status IS NULL (approved/rejected are the only final statuses)
     next_result = await db.execute(
         select(ProductGroup)
         .join(Product, Product.group_id == ProductGroup.id)
@@ -340,6 +342,7 @@ async def reject_product(
     await db.commit()
 
     # Find next unreviewed product (same client, row_index order)
+    # Pending = review_status IS NULL
     next_result = await db.execute(
         select(ProductGroup)
         .join(Product, Product.group_id == ProductGroup.id)
@@ -391,15 +394,18 @@ async def edit_product_content(
             detail="Not authorized to edit this product",
         )
 
+    # Build update values - only update fields that are provided
+    update_values = {"review_status": "edited"}
+    if request.edited_title is not None:
+        update_values["edited_title"] = request.edited_title
+    if request.edited_description is not None:
+        update_values["edited_description"] = request.edited_description
+
     # Update edited content
     await db.execute(
         update(ProductGroup)
         .where(ProductGroup.id == request.product_group_id)
-        .values(
-            edited_title=request.edited_title,
-            edited_description=request.edited_description,
-            review_status="edited",
-        )
+        .values(**update_values)
     )
     await db.commit()
 
@@ -586,6 +592,7 @@ async def get_next_unreviewed(
         )
 
     # Find next unreviewed product (row_index order)
+    # Pending = review_status IS NULL
     next_result = await db.execute(
         select(ProductGroup)
         .join(Product, Product.group_id == ProductGroup.id)
@@ -615,12 +622,14 @@ async def start_ai_review(
     Start batch AI review for all generated products.
 
     Creates ReviewJob and enqueues to ARQ worker.
-    Blocks if active ReviewJob already exists for client.
+    Automatically cancels any existing active jobs for this client.
 
     Args:
         auto_approve: If True, AI-auto mode sets review_status directly.
                       If False, AI-assisted mode only sets ai_review_status.
     """
+    print(f"[AI Review] START endpoint called for client {client_id}, auto_approve={request.auto_approve}, force_rerun={request.force_rerun}")
+
     # Validate client belongs to user
     result = await db.execute(
         select(Client).where(
@@ -648,20 +657,26 @@ async def start_ai_review(
             detail="OpenAI API key not configured. Please configure it in Settings.",
         )
 
-    # Check for existing active review job
-    result = await db.execute(
-        select(ReviewJob)
+    # Cancel any existing active review jobs for this client
+    await db.execute(
+        update(ReviewJob)
         .where(ReviewJob.client_id == client_id)
-        .where(ReviewJob.status.in_(["pending", "running"]))
-        .order_by(ReviewJob.created_at.desc())
-        .limit(1)
+        .where(ReviewJob.status.in_(["pending", "running", "paused"]))
+        .values(status="cancelled", completed_at=datetime.now(timezone.utc))
     )
-    existing_job = result.scalar_one_or_none()
 
-    if existing_job:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"AI review already in progress for this client. Job ID: {existing_job.id}",
+    # If force_rerun, reset AI review status on all generated products
+    if request.force_rerun:
+        await db.execute(
+            update(ProductGroup)
+            .where(ProductGroup.client_id == client_id)
+            .where(ProductGroup.status == "generated")
+            .values(
+                ai_review_status=None,
+                ai_review_reason=None,
+                ai_review_safety_flags=[],
+                ai_reviewed_at=None,
+            )
         )
 
     # Count products needing review
@@ -674,10 +689,24 @@ async def start_ai_review(
     products_needing_review = result.scalars().all()
 
     if not products_needing_review:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No products need AI review. All generated products have already been reviewed.",
+        # Check if there are any generated products at all
+        result = await db.execute(
+            select(func.count(ProductGroup.id))
+            .where(ProductGroup.client_id == client_id)
+            .where(ProductGroup.status == "generated")
         )
+        total_generated = result.scalar() or 0
+
+        if total_generated == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No generated products found. Generate product content first before running AI review.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"All {total_generated} products have already been AI reviewed. Use 'Re-run AI Review' to review them again.",
+            )
 
     # Create review job
     job = ReviewJob(
@@ -688,21 +717,34 @@ async def start_ai_review(
         total_count=len(products_needing_review),
     )
     db.add(job)
-    await db.flush()
+
+    # IMPORTANT: Commit before enqueuing to ARQ.
+    # The worker uses a separate session and needs to see committed data.
+    await db.commit()
 
     # Enqueue to ARQ worker
-    pool = await create_pool(get_redis_settings())
+    # Note: Don't use _job_id to avoid conflicts with previously cancelled jobs
+    # whose results may still be in Redis
     try:
-        await pool.enqueue_job(
-            "batch_ai_review_worker",
-            str(job.id),
-            request.auto_approve,  # Pass auto_approve parameter to worker
-            _job_id=str(job.id),
-        )
-    finally:
-        await pool.close()
-
-    await db.commit()
+        print(f"[AI Review] Creating Redis pool...")
+        pool = await create_pool(get_redis_settings())
+        try:
+            print(f"[AI Review] Enqueueing job {job.id} to batch_ai_review_worker...")
+            arq_job = await pool.enqueue_job(
+                "batch_ai_review_worker",
+                str(job.id),
+                request.auto_approve,  # Pass auto_approve parameter to worker
+            )
+            print(f"[AI Review] Enqueue result: {arq_job}")
+            if arq_job is None:
+                print(f"[AI Review] WARNING: enqueue_job returned None - job may already exist in queue")
+        finally:
+            await pool.close()
+    except Exception as e:
+        print(f"[AI Review] ERROR enqueueing job: {e}")
+        import traceback
+        traceback.print_exc()
+        # Job is already committed, so we don't roll back, but log the error
 
     return {
         "job_id": str(job.id),
@@ -754,7 +796,7 @@ async def get_ai_review_status(
     # Calculate elapsed time
     elapsed_seconds = 0
     if job.started_at:
-        end_time = job.completed_at or datetime.utcnow()
+        end_time = job.completed_at or datetime.now(timezone.utc)
         elapsed_seconds = int((end_time - job.started_at).total_seconds())
 
     # Estimate remaining time
@@ -779,37 +821,71 @@ async def get_ai_review_status(
 @router.get("/{client_id}/ai-review/progress")
 async def stream_ai_review_progress(
     client_id: UUID,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: AsyncSession = Depends(get_db),
+    token: str = Query(..., description="JWT access token for authentication"),
 ):
     """
     Server-Sent Events endpoint for real-time AI review progress.
 
     Polls job status every 500ms and streams progress events.
     Events: progress, complete, error
-    """
-    # Validate client belongs to user
-    result = await db.execute(
-        select(Client).where(
-            Client.id == client_id,
-            Client.user_id == current_user.id,
-        )
-    )
-    client = result.scalar_one_or_none()
 
-    if not client:
+    Note: Uses token query param instead of Authorization header because
+    EventSource/SSE does not support custom headers.
+    Note: Does not use FastAPI db dependency to avoid session cleanup issues
+    with long-running SSE connections.
+    """
+    # Validate token and get user
+    payload = decode_access_token(token)
+    if payload is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Client not found",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
         )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    # Use async_session_maker directly for SSE endpoints (long-running)
+    async with async_session_maker() as db:
+        # Get user from database
+        result = await db.execute(
+            select(User).where(User.id == user_id)
+        )
+        current_user = result.scalar_one_or_none()
+
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+
+        # Validate client belongs to user
+        result = await db.execute(
+            select(Client).where(
+                Client.id == client_id,
+                Client.user_id == current_user.id,
+            )
+        )
+        client = result.scalar_one_or_none()
+
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found",
+            )
 
     async def event_generator():
         """Generate SSE events for job progress."""
+        print(f"[SSE] Starting event generator for client {client_id}")
         try:
             while True:
-                # Get latest job for this client
-                async with db.begin():
-                    result = await db.execute(
+                # Create fresh session for each poll (SSE is long-running)
+                async with async_session_maker() as poll_db:
+                    result = await poll_db.execute(
                         select(ReviewJob)
                         .where(ReviewJob.client_id == client_id)
                         .order_by(ReviewJob.created_at.desc())
@@ -817,55 +893,96 @@ async def stream_ai_review_progress(
                     )
                     job = result.scalar_one_or_none()
 
-                    if not job:
-                        yield {
-                            "event": "error",
-                            "data": json.dumps({"message": "No review job found"}),
-                        }
-                        break
+                    # Count approved and rejected
+                    approved_count = 0
+                    rejected_count = 0
+                    if job:
+                        approved_result = await poll_db.execute(
+                            select(func.count(ProductGroup.id))
+                            .where(ProductGroup.client_id == client_id)
+                            .where(ProductGroup.ai_review_status == "ai_approved")
+                        )
+                        approved_count = approved_result.scalar() or 0
 
-                    # Calculate progress
-                    elapsed_seconds = 0
-                    if job.started_at:
-                        end_time = job.completed_at or datetime.utcnow()
-                        elapsed_seconds = int((end_time - job.started_at).total_seconds())
+                        rejected_result = await poll_db.execute(
+                            select(func.count(ProductGroup.id))
+                            .where(ProductGroup.client_id == client_id)
+                            .where(ProductGroup.ai_review_status == "ai_rejected")
+                        )
+                        rejected_count = rejected_result.scalar() or 0
 
-                    estimated_remaining = None
-                    if job.completed_count > 0 and job.total_count > job.completed_count:
-                        avg_time = elapsed_seconds / job.completed_count
-                        remaining = job.total_count - job.completed_count
-                        estimated_remaining = int(avg_time * remaining)
-
-                    progress = {
-                        "status": job.status,
-                        "completed": job.completed_count,
-                        "total": job.total_count,
-                        "cost": f"{job.total_cost:.2f}",
-                        "elapsed_seconds": elapsed_seconds,
-                        "estimated_remaining_seconds": estimated_remaining,
-                    }
-
-                    # Send progress update
+                if not job:
+                    print(f"[SSE] No job found for client {client_id}")
                     yield {
-                        "event": "progress",
-                        "data": json.dumps(progress),
+                        "event": "error",
+                        "data": json.dumps({"message": "No review job found"}),
                     }
+                    break
 
-                    # Check for terminal states
-                    if job.status in ["completed", "failed", "cancelled"]:
-                        yield {
-                            "event": "complete",
-                            "data": json.dumps({
-                                "status": job.status,
-                                "summary": {
-                                    "total_products": job.total_count,
-                                    "completed": job.completed_count,
-                                    "total_cost": f"{job.total_cost:.2f}",
-                                    "elapsed_seconds": elapsed_seconds,
-                                },
-                            }),
-                        }
-                        break
+                print(f"[SSE] Job {job.id} status={job.status} progress={job.completed_count}/{job.total_count}")
+                import sys
+                sys.stdout.flush()  # Force log output
+
+                # Calculate progress
+                elapsed_seconds = 0
+                if job.started_at:
+                    # When paused, freeze elapsed time at when it was paused (updated_at)
+                    # When running, use current time
+                    # When completed, use completed_at
+                    if job.status == "paused":
+                        end_time = job.updated_at or datetime.now(timezone.utc)
+                    elif job.completed_at:
+                        end_time = job.completed_at
+                    else:
+                        end_time = datetime.now(timezone.utc)
+                    elapsed_seconds = int((end_time - job.started_at).total_seconds())
+
+                estimated_remaining = None
+                if job.completed_count > 0 and job.total_count > job.completed_count:
+                    avg_time = elapsed_seconds / job.completed_count
+                    remaining = job.total_count - job.completed_count
+                    estimated_remaining = int(avg_time * remaining)
+
+                # Format cost - show 4 decimal places for small amounts, 2 for larger
+                cost_val = float(job.total_cost) if job.total_cost else 0.0
+                if cost_val < 0.01:
+                    cost_str = f"{cost_val:.4f}"
+                else:
+                    cost_str = f"{cost_val:.2f}"
+
+                progress = {
+                    "status": job.status,
+                    "completed": job.completed_count,
+                    "total": job.total_count,
+                    "cost": cost_str,
+                    "elapsed_seconds": elapsed_seconds,
+                    "estimated_remaining_seconds": estimated_remaining,
+                    "approved_count": approved_count,
+                    "rejected_count": rejected_count,
+                }
+
+                # Send progress update
+                yield {
+                    "event": "progress",
+                    "data": json.dumps(progress),
+                }
+
+                # Check for terminal states
+                if job.status in ["completed", "failed", "cancelled"]:
+                    print(f"[SSE] Job {job.id} terminal state: {job.status}, sending complete event")
+                    yield {
+                        "event": "complete",
+                        "data": json.dumps({
+                            "status": job.status,
+                            "summary": {
+                                "total_products": job.total_count,
+                                "completed": job.completed_count,
+                                "total_cost": f"{job.total_cost:.2f}",
+                                "elapsed_seconds": elapsed_seconds,
+                            },
+                        }),
+                    }
+                    break
 
                 # Poll every 500ms
                 await asyncio.sleep(0.5)
@@ -874,7 +991,14 @@ async def stream_ai_review_progress(
             # Client disconnected
             pass
 
-    return EventSourceResponse(event_generator())
+    return EventSourceResponse(
+        event_generator(),
+        headers={
+            "Access-Control-Allow-Origin": settings.FRONTEND_URL,
+            "Access-Control-Allow-Credentials": "true",
+            "Cache-Control": "no-cache",
+        }
+    )
 
 
 @router.post("/{client_id}/ai-review/pause")
@@ -978,7 +1102,7 @@ async def cancel_ai_review(
         .where(ReviewJob.id == job.id)
         .values(
             status="cancelled",
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
         )
     )
     await db.commit()
@@ -996,8 +1120,8 @@ async def resume_ai_review(
     """
     Resume paused AI review job.
 
-    Creates new job that continues from where previous job stopped.
-    Can change auto_approve mode on resume.
+    Continues the existing paused job from where it left off.
+    Preserves original total_count and completed_count for accurate progress display.
     """
     # Validate client belongs to user
     result = await db.execute(
@@ -1014,52 +1138,74 @@ async def resume_ai_review(
             detail="Client not found",
         )
 
-    # Count products still needing review
+    # Find the paused job
     result = await db.execute(
-        select(ProductGroup)
-        .where(ProductGroup.client_id == client_id)
-        .where(ProductGroup.status == "generated")
-        .where(ProductGroup.ai_review_status.is_(None))
+        select(ReviewJob)
+        .where(ReviewJob.client_id == client_id)
+        .where(ReviewJob.status == "paused")
+        .order_by(ReviewJob.created_at.desc())
+        .limit(1)
     )
-    products_needing_review = result.scalars().all()
+    job = result.scalar_one_or_none()
 
-    if not products_needing_review:
+    if not job:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No products need AI review.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No paused AI review job found to resume.",
         )
 
-    # Create new review job
-    job = ReviewJob(
-        id=uuid4(),
-        client_id=client_id,
-        user_id=current_user.id,
-        status="pending",
-        total_count=len(products_needing_review),
+    # Calculate adjusted started_at to compensate for paused duration
+    # This ensures elapsed time continues from where it was when paused
+    new_started_at = job.started_at
+    print(f"[Resume] Job started_at: {job.started_at}")
+    print(f"[Resume] Job updated_at: {job.updated_at}")
+    if job.started_at and job.updated_at:
+        # Elapsed time when paused = updated_at - started_at
+        elapsed_when_paused = job.updated_at - job.started_at
+        print(f"[Resume] Elapsed when paused: {elapsed_when_paused.total_seconds()}s")
+        # New started_at = now - elapsed_when_paused
+        now = datetime.now(timezone.utc)
+        new_started_at = now - elapsed_when_paused
+        print(f"[Resume] Now: {now}")
+        print(f"[Resume] New started_at: {new_started_at}")
+
+    # Update job status back to running with adjusted started_at
+    await db.execute(
+        update(ReviewJob)
+        .where(ReviewJob.id == job.id)
+        .values(status="running", started_at=new_started_at)
     )
-    db.add(job)
-    await db.flush()
+
+    # IMPORTANT: Commit before enqueuing to ARQ.
+    # The worker uses a separate session and needs to see committed data.
+    await db.commit()
 
     # Enqueue to ARQ worker
-    pool = await create_pool(get_redis_settings())
     try:
-        await pool.enqueue_job(
-            "batch_ai_review_worker",
-            str(job.id),
-            request.auto_approve,
-            _job_id=str(job.id),
-        )
-    finally:
-        await pool.close()
-
-    await db.commit()
+        print(f"[AI Review Resume] Creating Redis pool...")
+        pool = await create_pool(get_redis_settings())
+        try:
+            print(f"[AI Review Resume] Enqueueing job {job.id}...")
+            arq_job = await pool.enqueue_job(
+                "batch_ai_review_worker",
+                str(job.id),
+                request.auto_approve,
+            )
+            print(f"[AI Review Resume] Enqueue result: {arq_job}")
+        finally:
+            await pool.close()
+    except Exception as e:
+        print(f"[AI Review Resume] ERROR enqueueing: {e}")
+        import traceback
+        traceback.print_exc()
 
     return {
         "job_id": str(job.id),
-        "status": "pending",
-        "total_count": len(products_needing_review),
+        "status": "running",
+        "total_count": job.total_count,
+        "completed_count": job.completed_count,
         "auto_approve": request.auto_approve,
-        "message": f"AI review resumed for {len(products_needing_review)} products",
+        "message": f"AI review resumed from {job.completed_count}/{job.total_count}",
     }
 
 
@@ -1111,7 +1257,7 @@ async def review_single_product(
     # Get related products
     result = await db.execute(
         select(Product)
-        .where(Product.product_group_id == product_group.id)
+        .where(Product.group_id == product_group.id)
         .order_by(Product.created_at)
     )
     products = result.scalars().all()
@@ -1136,7 +1282,7 @@ async def review_single_product(
                 ai_review_status=f"ai_{result_obj.recommendation}d",
                 ai_review_reason=result_obj.reason,
                 ai_review_safety_flags=result_obj.safety_flags,
-                ai_reviewed_at=datetime.utcnow(),
+                ai_reviewed_at=datetime.now(timezone.utc),
             )
         )
         await db.commit()

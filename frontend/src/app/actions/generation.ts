@@ -5,6 +5,11 @@ import { getAccessToken } from '@/lib/session'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+export interface AttemptResult {
+  success: boolean
+  error: string | null
+}
+
 export interface GenerationJob {
   id: string
   client_id: string
@@ -28,6 +33,11 @@ export interface GenerationJob {
   paused_at: string | null
   created_at: string
   updated_at: string
+  // Current task tracking for real-time UI updates
+  current_product_name: string | null
+  current_task: 'title' | 'description' | null
+  task1_attempts: AttemptResult[] | null
+  task2_attempts: AttemptResult[] | null
 }
 
 export interface GenerationProgress {
@@ -118,6 +128,7 @@ export async function getJobStatus(jobId: string): Promise<{
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      cache: 'no-store',
     })
 
     if (!response.ok) {

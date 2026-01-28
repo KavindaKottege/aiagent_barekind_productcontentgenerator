@@ -117,6 +117,16 @@ async def generation_worker(
         print(f"[Worker] Using soft cap: ${soft_cap}, threshold: ${soft_cap_threshold}, model: {app_settings.ai_model or settings.AI_MODEL}")
 
         for product_group in products:
+            # Set current product name and reset attempt tracking for UI
+            await _update_current_task(
+                db, job_id,
+                current_product_name=product_group.product_name,
+                current_task=None,
+                task1_attempts=[],
+                task2_attempts=[],
+            )
+            await db.commit()
+
             # Check job status before each product (for pause/cancel)
             current_status = await _get_job_status(db, job_id)
 
@@ -180,6 +190,15 @@ async def generation_worker(
                 continue
 
             # === TASK 1: Generate Title ===
+            # Set current task and create callback for attempt tracking
+            await _update_current_task(db, job_id, current_task="title")
+            await db.commit()
+
+            async def on_title_attempt(attempt: int, success: bool, error: str | None) -> None:
+                """Callback to track title generation attempts."""
+                await _append_task_attempt(db, job_id, task=1, success=success, error=error)
+                await db.commit()
+
             try:
                 title_result, title_audit = await ai_service.generate_title(
                     product_group=product_group,
@@ -187,6 +206,7 @@ async def generation_worker(
                     client=client,
                     job=job,
                     app_settings=app_settings,
+                    on_attempt=on_title_attempt,
                 )
 
                 if not title_result:
@@ -232,6 +252,15 @@ async def generation_worker(
                 continue
 
             # === TASK 2: Generate Description ===
+            # Set current task and create callback for attempt tracking
+            await _update_current_task(db, job_id, current_task="description")
+            await db.commit()
+
+            async def on_desc_attempt(attempt: int, success: bool, error: str | None) -> None:
+                """Callback to track description generation attempts."""
+                await _append_task_attempt(db, job_id, task=2, success=success, error=error)
+                await db.commit()
+
             try:
                 desc_result, desc_audit = await ai_service.generate_description(
                     product_group=product_group,
@@ -239,6 +268,7 @@ async def generation_worker(
                     client=client,
                     job=job,
                     app_settings=app_settings,
+                    on_attempt=on_desc_attempt,
                 )
 
                 if desc_result:
@@ -471,3 +501,77 @@ async def _update_product_group(
             .where(ProductGroup.id == product_group_id)
             .values(**values)
         )
+
+
+async def _update_current_task(
+    db: AsyncSession,
+    job_id: str,
+    current_product_name: str | None = None,
+    current_task: str | None = None,
+    task1_attempts: list | None = None,
+    task2_attempts: list | None = None,
+) -> None:
+    """Update current task tracking fields for real-time UI updates."""
+    values = {}
+    if current_product_name is not None:
+        values["current_product_name"] = current_product_name
+    # Always set current_task even if None (to clear it)
+    values["current_task"] = current_task
+    if task1_attempts is not None:
+        values["task1_attempts"] = task1_attempts
+    if task2_attempts is not None:
+        values["task2_attempts"] = task2_attempts
+
+    if values:
+        await db.execute(
+            update(GenerationJob)
+            .where(GenerationJob.id == job_id)
+            .values(**values)
+        )
+
+
+async def _append_task_attempt(
+    db: AsyncSession,
+    job_id: str,
+    task: int,  # 1 or 2
+    success: bool,
+    error: str | None,
+) -> None:
+    """Append an attempt result to the appropriate task attempts array."""
+    print(f"[Worker] _append_task_attempt called: task={task}, success={success}, error={error}")
+
+    # First, get current attempts
+    result = await db.execute(
+        select(GenerationJob.task1_attempts, GenerationJob.task2_attempts)
+        .where(GenerationJob.id == job_id)
+    )
+    row = result.first()
+    if not row:
+        print(f"[Worker] _append_task_attempt: No row found for job_id={job_id}")
+        return
+
+    task1_attempts = row[0] or []
+    task2_attempts = row[1] or []
+    print(f"[Worker] _append_task_attempt: Current task1_attempts={task1_attempts}, task2_attempts={task2_attempts}")
+
+    # Create attempt record
+    attempt_record = {"success": success, "error": error}
+
+    # Append to appropriate list
+    if task == 1:
+        task1_attempts = task1_attempts + [attempt_record]
+        print(f"[Worker] _append_task_attempt: Updating task1_attempts to {task1_attempts}")
+        await db.execute(
+            update(GenerationJob)
+            .where(GenerationJob.id == job_id)
+            .values(task1_attempts=task1_attempts)
+        )
+    else:
+        task2_attempts = task2_attempts + [attempt_record]
+        print(f"[Worker] _append_task_attempt: Updating task2_attempts to {task2_attempts}")
+        await db.execute(
+            update(GenerationJob)
+            .where(GenerationJob.id == job_id)
+            .values(task2_attempts=task2_attempts)
+        )
+    print(f"[Worker] _append_task_attempt: Update executed, ready for commit")

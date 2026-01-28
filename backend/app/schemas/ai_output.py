@@ -54,3 +54,23 @@ class ProductContentLenient(BaseModel):
 
     title: str | None = None
     description: str | None = None
+
+
+class TitleContent(BaseModel):
+    """
+    Task 1: Title generation structured output.
+
+    Generates only the product title. Validation happens in service with settings.
+    """
+
+    title: str = Field(..., description="Product title")
+
+
+class DescriptionContent(BaseModel):
+    """
+    Task 2: Description generation structured output.
+
+    Generates only the product description. Validation happens in service with settings.
+    """
+
+    description: str = Field(..., description="Product description")

@@ -14,13 +14,80 @@ import {
   GenerationJob,
   GenerationProgress as ProgressData,
   SoftCapInfo,
+  AttemptResult,
 } from '@/app/actions/generation'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { SoftCapDialog } from './soft-cap-dialog'
 
 interface GenerationProgressProps {
   jobId: string
   initialJob: GenerationJob
-  onComplete: () => void
+  onComplete: (newJob?: GenerationJob) => void
+}
+
+// Component to render attempt circles for a task
+function AttemptCircles({
+  attempts,
+  maxAttempts = 4,
+  isActive = false,
+}: {
+  attempts: AttemptResult[] | null
+  maxAttempts?: number
+  isActive?: boolean
+}) {
+  const attemptsList = attempts || []
+
+  return (
+    <TooltipProvider>
+      <div className="flex gap-1.5 items-center">
+        {Array.from({ length: maxAttempts }).map((_, i) => {
+          const attempt = attemptsList[i]
+          const isCurrentAttempt = isActive && i === attemptsList.length
+
+          if (!attempt) {
+            // Not attempted yet
+            return (
+              <div
+                key={i}
+                className={`w-4 h-4 rounded-full transition-all border ${
+                  isCurrentAttempt
+                    ? 'bg-brand-blue animate-pulse border-brand-blue'
+                    : 'bg-gray-200 border-gray-400'
+                }`}
+              />
+            )
+          }
+
+          if (attempt.success) {
+            // Success - green
+            return (
+              <div
+                key={i}
+                className="w-4 h-4 rounded-full bg-green-500 border border-green-600"
+              />
+            )
+          }
+
+          // Failed - red with tooltip
+          return (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <div className="w-4 h-4 rounded-full bg-red-500 border border-red-600 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs">{attempt.error || 'Unknown error'}</p>
+              </TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </div>
+    </TooltipProvider>
+  )
 }
 
 export function GenerationProgress({
@@ -46,6 +113,19 @@ export function GenerationProgress({
     output_tokens: initialJob.total_output_tokens || 0,
   })
   const [softCapInfo, setSoftCapInfo] = useState<SoftCapInfo | null>(null)
+  // Current task tracking for real-time UI
+  const [currentProductName, setCurrentProductName] = useState<string | null>(
+    initialJob.current_product_name
+  )
+  const [currentTask, setCurrentTask] = useState<'title' | 'description' | null>(
+    initialJob.current_task
+  )
+  const [task1Attempts, setTask1Attempts] = useState<AttemptResult[] | null>(
+    initialJob.task1_attempts
+  )
+  const [task2Attempts, setTask2Attempts] = useState<AttemptResult[] | null>(
+    initialJob.task2_attempts
+  )
   // Local display time that updates every second while running
   const [displayElapsed, setDisplayElapsed] = useState(initialJob.elapsed_seconds || 0)
   const [isPausing, setIsPausing] = useState(false)
@@ -57,7 +137,11 @@ export function GenerationProgress({
   const [error, setError] = useState<string | null>(null)
 
   // Poll for job progress (more reliable than SSE)
+  // Stop polling when soft cap dialog is showing to prevent race conditions
   useEffect(() => {
+    // Don't poll while soft cap dialog is showing
+    if (softCapInfo) return
+
     let isActive = true
     let pollInterval: NodeJS.Timeout | null = null
 
@@ -105,6 +189,12 @@ export function GenerationProgress({
             output_tokens: job.total_output_tokens || 0,
           })
 
+          // Update current task tracking
+          setCurrentProductName(job.current_product_name)
+          setCurrentTask(job.current_task)
+          setTask1Attempts(job.task1_attempts)
+          setTask2Attempts(job.task2_attempts)
+
           // Check for soft cap pause - show dialog
           console.log('[Poll] Job status:', job.status, 'status_reason:', job.status_reason)
           if (job.status === 'paused' && job.status_reason?.startsWith('Cost soft cap')) {
@@ -140,7 +230,7 @@ export function GenerationProgress({
       isActive = false
       if (pollInterval) clearInterval(pollInterval)
     }
-  }, [jobId, onComplete])
+  }, [jobId, onComplete, softCapInfo])
 
   // Increment display elapsed every second while running
   useEffect(() => {
@@ -229,14 +319,16 @@ export function GenerationProgress({
     }
   }, [jobId, onComplete])
 
-  const handleSoftCapResponse = useCallback(async (continueGeneration: boolean) => {
-    setSoftCapInfo(null)
-    if (continueGeneration) {
-      // Resume will be handled by the dialog
-      await handleResume()
+  const handleSoftCapResponse = useCallback((continueGeneration: boolean, newJob?: GenerationJob) => {
+    if (continueGeneration && newJob) {
+      // Don't clear softCapInfo - component will remount with new job
+      // This prevents polling from restarting on the old job during the transition
+      onComplete(newJob)
+    } else {
+      // User chose to stop - clear dialog and let polling resume
+      setSoftCapInfo(null)
     }
-    // If not continuing, job stays paused
-  }, [handleResume])
+  }, [onComplete])
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -250,9 +342,9 @@ export function GenerationProgress({
 
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-500',
-    running: 'bg-blue-500',
+    running: 'bg-brand-blue',
     paused: 'bg-orange-500',
-    completed: 'bg-green-500',
+    completed: 'bg-brand-green',
     failed: 'bg-red-500',
     cancelled: 'bg-gray-500',
   }
@@ -277,11 +369,39 @@ export function GenerationProgress({
             </div>
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-600 transition-all duration-300"
+                className="h-full bg-brand-blue transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
+
+          {/* Currently Processing Panel - only show when running */}
+          {progress.status === 'running' && currentProductName && (
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                Currently Processing
+              </div>
+              <div className="font-medium text-gray-900 mb-3 truncate" title={currentProductName}>
+                {currentProductName}
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 w-32">Task 1: Title</span>
+                  <AttemptCircles
+                    attempts={task1Attempts}
+                    isActive={currentTask === 'title'}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 w-32">Task 2: Description</span>
+                  <AttemptCircles
+                    attempts={task2Attempts}
+                    isActive={currentTask === 'description'}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -297,10 +417,10 @@ export function GenerationProgress({
               <p className="text-gray-500">Cost</p>
               <div className="flex items-center gap-3">
                 <div>
-                  <p className="font-bold text-xl">${progress.cost}</p>
+                  <p className="font-bold text-xl text-gray-900">${progress.cost}</p>
                   <p className="text-xs text-gray-400">est. ${progress.projected_cost}</p>
                 </div>
-                <div className="text-xs text-gray-500 border-l pl-2 font-mono tabular-nums">
+                <div className="text-xs text-gray-500 border-l border-gray-200 pl-2 font-mono tabular-nums">
                   <p className="flex justify-between gap-1"><span>Input</span><span>${parseFloat(progress.input_cost || '0').toFixed(4)}</span></p>
                   <p className="flex justify-between gap-1"><span>Cached</span><span>${parseFloat(progress.cached_input_cost || '0').toFixed(4)}</span></p>
                   <p className="flex justify-between gap-1"><span>Output</span><span>${parseFloat(progress.output_cost || '0').toFixed(4)}</span></p>
@@ -309,7 +429,7 @@ export function GenerationProgress({
             </div>
             <div>
               <p className="text-gray-500">Time</p>
-              <p className="font-semibold">
+              <p className="font-semibold text-gray-900">
                 {formatTime(displayElapsed)}
                 {progress.estimated_remaining_seconds !== null && (
                   <span className="text-gray-500 font-normal">

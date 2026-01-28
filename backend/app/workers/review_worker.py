@@ -1,7 +1,7 @@
 """ARQ worker function for batch AI review."""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import select, update
@@ -38,7 +38,11 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
             return {"status": "error", "message": "Job not found"}
 
         # Mark job as running
-        await _update_job_status(db, job_id, "running", started_at=datetime.utcnow())
+        # Only set started_at for fresh jobs, not resumed ones (which already have started_at set)
+        if job.started_at:
+            await _update_job_status(db, job_id, "running")
+        else:
+            await _update_job_status(db, job_id, "running", started_at=datetime.now(timezone.utc))
         await db.commit()
 
         # Load client and app settings
@@ -61,14 +65,16 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
         if not product_groups:
             await _update_job_status(
                 db, job_id, "completed",
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
             )
             await db.commit()
             return {"status": "completed", "message": "No products need review"}
 
-        # Update total count
-        await _update_job_progress(db, job_id, total_count=len(product_groups))
-        await db.commit()
+        # Only update total count if this is a fresh job (not a resume)
+        # A resumed job already has the correct total_count set
+        if job.completed_count == 0:
+            await _update_job_progress(db, job_id, total_count=len(product_groups))
+            await db.commit()
 
         # Initialize AI review service
         ai_service = AIReviewService(
@@ -79,7 +85,8 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
         )
 
         # Process each product group
-        completed = 0
+        # Start from job's current completed count (for resume support)
+        completed = job.completed_count or 0
         success_count = 0
         failed_count = 0
 
@@ -90,7 +97,7 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
             if current_status == "cancelled":
                 await _update_job_status(
                     db, job_id, "cancelled",
-                    completed_at=datetime.utcnow(),
+                    completed_at=datetime.now(timezone.utc),
                 )
                 await db.commit()
                 return {
@@ -115,24 +122,49 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
             # Fetch related products (for original data)
             products = await _get_products_for_group(db, product_group.id)
 
-            # Review this product
+            # Review this product with separate Task 3 (title) and Task 4 (description) calls
             try:
-                result, cost = await ai_service.review_product(product_group, products)
+                # Task 3: Review title
+                title_result, title_cost = await ai_service.review_title(product_group, products, client, app_settings)
 
-                # Update product_group with AI review result
+                # Task 4: Review description
+                desc_result, desc_cost = await ai_service.review_description(product_group, products, client, app_settings)
+
+                # Combine results - reject if either task rejects
+                title_approved = title_result.recommendation == "approve"
+                desc_approved = desc_result.recommendation == "approve"
+                both_approved = title_approved and desc_approved
+
+                ai_status = "ai_approved" if both_approved else "ai_rejected"
+
+                # Combine reasons
+                reasons = []
+                if not title_approved:
+                    reasons.append(f"Title: {title_result.reason}")
+                if not desc_approved:
+                    reasons.append(f"Description: {desc_result.reason}")
+                combined_reason = " | ".join(reasons) if reasons else "Content approved"
+
+                # Combine safety flags
+                combined_flags = list(set(title_result.safety_flags + desc_result.safety_flags))
+
                 update_values = {
-                    "ai_review_status": f"ai_{result.recommendation}d",  # ai_approved or ai_rejected
-                    "ai_review_reason": result.reason,
-                    "ai_review_safety_flags": result.safety_flags,
-                    "ai_reviewed_at": datetime.utcnow(),
+                    "ai_review_status": ai_status,
+                    "ai_review_reason": combined_reason[:500],  # Truncate to fit column
+                    "ai_review_safety_flags": combined_flags,
+                    "ai_reviewed_at": datetime.now(timezone.utc),
+                    # Only store suggested corrections if that task rejected
+                    "ai_suggested_title": title_result.suggested_title if not title_approved else None,
+                    "ai_suggested_description": desc_result.suggested_description if not desc_approved else None,
                 }
 
-                # CRITICAL - AI-auto mode: set review_status directly
+                # CRITICAL - AI-auto mode: set review_status to approved/rejected directly
+                # (not ai_approved/ai_rejected - those are only for ai_review_status)
                 if auto_approve:
-                    if result.recommendation == "approve":
-                        update_values["review_status"] = "ai_approved"
+                    if both_approved:
+                        update_values["review_status"] = "approved"
                     else:
-                        update_values["review_status"] = "ai_rejected"
+                        update_values["review_status"] = "rejected"
 
                 # AI-assisted mode: only ai_review_status is set, user must manually approve/reject
                 # (no review_status update)
@@ -143,17 +175,21 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
 
             except Exception as e:
                 # Log error but continue processing
+                print(f"[Worker] Error reviewing product {product_group.id}: {e}")
+                import traceback
+                traceback.print_exc()
                 failed_count += 1
-                # Could optionally store error in product_group
 
             completed += 1
 
             # Update job progress
+            current_cost = ai_service.cost_tracker.total_cost
+            print(f"[Worker] Updating job progress: completed={completed}, total_cost=${current_cost:.6f}")
             await _update_job_progress(
                 db,
                 job_id,
                 completed_count=completed,
-                total_cost=ai_service.cost_tracker.total_cost,
+                total_cost=current_cost,
             )
             await db.commit()
 
@@ -163,7 +199,7 @@ async def batch_ai_review_worker(ctx: dict, job_id: str, auto_approve: bool = Fa
         # Job completed
         await _update_job_status(
             db, job_id, "completed",
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
         )
         await db.commit()
 
@@ -227,7 +263,7 @@ async def _get_products_for_group(db: AsyncSession, group_id: str) -> list[Produ
     """Get all products in a product group."""
     result = await db.execute(
         select(Product)
-        .where(Product.product_group_id == group_id)
+        .where(Product.group_id == group_id)
         .order_by(Product.created_at)
     )
     return list(result.scalars().all())

@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -115,6 +115,15 @@ class GenerationJob(Base):
         nullable=True,
         index=True,
     )
+
+    # Current processing state (for real-time UI updates)
+    current_product_name: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    current_task: Mapped[str | None] = mapped_column(String(50), nullable=True)  # "title" or "description"
+
+    # Attempt tracking for current product (JSON arrays)
+    # Format: [{"success": true/false, "error": "message or null"}, ...]
+    task1_attempts: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    task2_attempts: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

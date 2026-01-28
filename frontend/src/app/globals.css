@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand colors */
+  --brand-blue: #0279ff;
+  --brand-blue-hover: #0066dd;
+  --brand-blue-light: #e6f2ff;
+  --brand-green: #98a96f;
+  --brand-green-hover: #889960;
+  --brand-green-light: #f0f3e8;
+  --brand-dark: #212121;
+  --brand-dark-hover: #2a2a2a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #ffffff;
+  --color-foreground: #171717;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Brand color utility classes */
+.bg-brand-blue { background-color: #0279ff !important; }
+.bg-brand-blue-hover { background-color: #0066dd !important; }
+.bg-brand-blue-light { background-color: #e6f2ff !important; }
+.bg-brand-green { background-color: #98a96f !important; }
+.bg-brand-green-hover { background-color: #889960 !important; }
+.bg-brand-green-light { background-color: #f0f3e8 !important; }
+.bg-brand-dark { background-color: #212121 !important; }
+.bg-brand-dark-hover { background-color: #2a2a2a !important; }
+
+.text-brand-blue { color: #0279ff !important; }
+.text-brand-blue-hover { color: #0066dd !important; }
+.text-brand-green { color: #98a96f !important; }
+.text-brand-green-hover { color: #889960 !important; }
+
+.border-brand-blue { border-color: #0279ff !important; }
+.border-brand-dark { border-color: #212121 !important; }
+.border-brand-dark-hover { border-color: #2a2a2a !important; }
+
+.ring-brand-blue { --tw-ring-color: #0279ff !important; }
+
+/* Hover variants */
+.hover\:bg-brand-blue:hover { background-color: #0279ff !important; }
+.hover\:bg-brand-blue-hover:hover { background-color: #0066dd !important; }
+.hover\:bg-brand-green-hover:hover { background-color: #889960 !important; }
+.hover\:bg-brand-dark-hover:hover { background-color: #2a2a2a !important; }
+.hover\:text-brand-blue-hover:hover { color: #0066dd !important; }
+
+/* Focus variants */
+.focus\:ring-brand-blue:focus { --tw-ring-color: #0279ff !important; }
+.focus-visible\:ring-brand-blue:focus-visible { --tw-ring-color: #0279ff !important; }
+
+/* Data state variants for checkboxes */
+.data-\[state\=checked\]\:bg-brand-blue[data-state="checked"] { background-color: #0279ff !important; }
+.data-\[state\=checked\]\:border-brand-blue[data-state="checked"] { border-color: #0279ff !important; }

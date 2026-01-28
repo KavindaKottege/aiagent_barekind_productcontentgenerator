@@ -41,25 +41,29 @@ class ReviewActionRequest(BaseModel):
 
 
 class EditContentRequest(BaseModel):
-    """Request schema for saving edited content."""
+    """Request schema for saving edited content.
+
+    Both fields are optional - only provided fields will be updated.
+    Validation only applies to fields that are provided.
+    """
 
     product_group_id: UUID
-    edited_title: str = Field(..., min_length=30, max_length=60)
-    edited_description: str = Field(..., min_length=2000, max_length=3000)
+    edited_title: str | None = None
+    edited_description: str | None = None
 
     @field_validator("edited_title")
     @classmethod
-    def validate_title_length(cls, v: str) -> str:
-        """Validate title character count."""
-        if not (30 <= len(v) <= 60):
+    def validate_title_length(cls, v: str | None) -> str | None:
+        """Validate title character count if provided."""
+        if v is not None and not (30 <= len(v) <= 60):
             raise ValueError("Title must be between 30 and 60 characters")
         return v
 
     @field_validator("edited_description")
     @classmethod
-    def validate_description_length(cls, v: str) -> str:
-        """Validate description character count."""
-        if not (2000 <= len(v) <= 3000):
+    def validate_description_length(cls, v: str | None) -> str | None:
+        """Validate description character count if provided."""
+        if v is not None and not (2000 <= len(v) <= 3000):
             raise ValueError("Description must be between 2000 and 3000 characters")
         return v
 

@@ -4,7 +4,7 @@ import { SignupForm } from "@/components/forms/signup-form";
 import { signup } from "@/app/actions/auth";
 
 export const metadata: Metadata = {
-  title: "Sign Up - Product Content Generator",
+  title: "Sign Up - SEO Content Generator",
   description: "Create your account",
 };
 
