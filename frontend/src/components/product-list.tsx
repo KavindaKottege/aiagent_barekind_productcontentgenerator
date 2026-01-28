@@ -8,30 +8,46 @@ import { Button } from '@/components/ui/button'
 
 interface ProductVariant {
   id: string
-  option_name: string | null
+  option_type: string | null  // e.g., "Color"
+  option_name: string | null  // e.g., "Black"
   status: string | null
+  description: string | null
+  images: string[] | null
   row_index: number
 }
 
 interface ProductListProps {
   groups: ProductGroup[]
+  onGenerateProduct?: (groupId: string) => Promise<void>
+  isGenerationActive?: boolean
 }
 
 // Available statuses for filtering
-const STATUSES = ['all', 'pending', 'generated', 'approved', 'rejected'] as const
+const STATUSES = ['all', 'pending', 'generated', 'failed', 'approved', 'rejected'] as const
 type StatusFilter = typeof STATUSES[number]
 
-export function ProductList({ groups }: ProductListProps) {
+export function ProductList({ groups, onGenerateProduct, isGenerationActive }: ProductListProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
   const handleFetchVariants = async (groupId: string): Promise<ProductVariant[]> => {
     // Client-side fetch to Next.js API route
     try {
+      console.log('[ProductList] Fetching variants for group:', groupId)
       const response = await fetch(`/api/products/groups/${groupId}`)
-      if (!response.ok) return []
+      console.log('[ProductList] Response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('[ProductList] Fetch failed:', errorData)
+        return []
+      }
+
       const data = await response.json()
+      console.log('[ProductList] Received data:', data)
+      console.log('[ProductList] Variants:', data.variants)
       return data.variants || []
-    } catch {
+    } catch (error) {
+      console.error('[ProductList] Exception:', error)
       return []
     }
   }
@@ -100,6 +116,8 @@ export function ProductList({ groups }: ProductListProps) {
               key={group.id}
               group={group}
               onFetchVariants={handleFetchVariants}
+              onGenerateProduct={onGenerateProduct}
+              isGenerationActive={isGenerationActive}
             />
           ))}
         </div>

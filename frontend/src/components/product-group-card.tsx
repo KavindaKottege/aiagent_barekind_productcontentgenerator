@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Package, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Package, X, Play, RefreshCw, RotateCcw } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ProductGroup } from '@/app/actions/products'
 
 interface ProductVariant {
@@ -19,9 +20,11 @@ interface ProductVariant {
 interface ProductGroupCardProps {
   group: ProductGroup
   onFetchVariants?: (groupId: string) => Promise<ProductVariant[]>
+  onGenerateProduct?: (groupId: string) => Promise<void>
+  isGenerationActive?: boolean
 }
 
-export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardProps) {
+export function ProductGroupCard({ group, onFetchVariants, onGenerateProduct, isGenerationActive }: ProductGroupCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [variants, setVariants] = useState<ProductVariant[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -49,9 +52,10 @@ export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardPro
 
   const statusColor = {
     pending: 'bg-gray-100 text-gray-800',
-    generated: 'bg-blue-100 text-blue-800',
-    approved: 'bg-green-100 text-green-800',
+    generated: 'bg-brand-blue-light text-brand-blue',
+    approved: 'bg-brand-green-light text-brand-green-hover',
     rejected: 'bg-red-100 text-red-800',
+    failed: 'bg-orange-100 text-orange-800',
   }[group.status] || 'bg-gray-100 text-gray-800'
 
   return (
@@ -65,7 +69,7 @@ export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardPro
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
-            <div className="h-6 w-6 p-0 mt-0.5 flex items-center justify-center">
+            <div className="h-6 w-6 p-0 mt-0.5 flex items-center justify-center text-gray-600">
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
@@ -90,14 +94,45 @@ export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardPro
               </div>
             </div>
           </div>
-          <Badge className={statusColor}>
-            {group.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* Generate/Regenerate/Retry button */}
+            {onGenerateProduct && !isGenerationActive && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onGenerateProduct(group.id)
+                }}
+              >
+                {group.status === 'pending' ? (
+                  <>
+                    <Play className="h-3 w-3 mr-1" />
+                    Generate
+                  </>
+                ) : group.status === 'failed' ? (
+                  <>
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Retry
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Regenerate
+                  </>
+                )}
+              </Button>
+            )}
+            <Badge className={statusColor}>
+              {group.status}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0 border-t bg-gray-50">
+        <CardContent className="pt-0 border-t border-gray-200 bg-gray-50">
           {isLoading ? (
             <div className="py-4 text-center text-sm text-gray-500">
               Loading...
@@ -171,7 +206,7 @@ export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardPro
           )}
 
           {group.generated_title && (
-            <div className="border-t pt-3 mt-3">
+            <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Generated Title
@@ -185,7 +220,7 @@ export function ProductGroupCard({ group, onFetchVariants }: ProductGroupCardPro
           )}
 
           {group.generated_description && (
-            <div className="border-t pt-3 mt-3">
+            <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Generated Description

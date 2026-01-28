@@ -55,6 +55,7 @@ class JobManager:
         client_id: UUID,
         user_id: UUID,
         total_count: int = 0,
+        target_product_group_id: UUID | None = None,
     ) -> GenerationJob:
         """
         Create a new generation job in pending state.
@@ -63,6 +64,7 @@ class JobManager:
             client_id: Client to generate content for
             user_id: User who initiated the job
             total_count: Number of products to generate
+            target_product_group_id: If set, generate only this specific product
 
         Returns:
             Created GenerationJob instance
@@ -73,6 +75,7 @@ class JobManager:
             user_id=user_id,
             status="pending",
             total_count=total_count,
+            target_product_group_id=target_product_group_id,
         )
         self.db.add(job)
         await self.db.flush()  # Get the ID without committing
@@ -90,11 +93,15 @@ class JobManager:
         """
         pool = await self.get_redis_pool()
 
+        # Pass target_product_group_id for single-product generation
+        target_id = str(job.target_product_group_id) if job.target_product_group_id else None
+
         arq_job = await pool.enqueue_job(
             "generation_worker",
             str(job.id),
             str(job.client_id),
             str(job.user_id),
+            target_id,  # None for batch, UUID string for single product
             _job_id=str(job.id),  # Use our UUID as ARQ job ID
         )
 

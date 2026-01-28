@@ -371,3 +371,65 @@ export async function deleteJob(jobId: string): Promise<{
     return { success: false, error: 'Network error' }
   }
 }
+
+export async function retryFailedProducts(clientId: string): Promise<{
+  success: boolean
+  job?: GenerationJob
+  error?: string
+}> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/generation/retry-failed/${clientId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      return { success: false, error: error.detail || 'Failed to retry failed products' }
+    }
+
+    const job = await response.json()
+    revalidatePath('/products')
+    return { success: true, job }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
+}
+
+export async function generateSingleProduct(productGroupId: string): Promise<{
+  success: boolean
+  job?: GenerationJob
+  error?: string
+}> {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/generation/product/${productGroupId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      return { success: false, error: error.detail || 'Failed to generate product' }
+    }
+
+    const job = await response.json()
+    revalidatePath('/products')
+    return { success: true, job }
+  } catch (error) {
+    return { success: false, error: 'Network error' }
+  }
+}

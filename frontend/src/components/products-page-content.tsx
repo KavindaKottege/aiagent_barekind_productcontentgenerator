@@ -14,6 +14,8 @@ import { Client } from '@/app/actions/clients'
 import {
   startGeneration,
   getActiveJobForClient,
+  retryFailedProducts,
+  generateSingleProduct,
   GenerationJob,
 } from '@/app/actions/generation'
 
@@ -97,8 +99,19 @@ export function ProductsPageContent({
     }
   }, [clientId])
 
-  const handleGenerationComplete = useCallback(async () => {
-    // Explicitly refetch product groups to show updated statuses
+  const handleGenerationComplete = useCallback(async (newJob?: GenerationJob) => {
+    // If a new job is provided (e.g., from soft cap continue), switch to it directly
+    if (newJob) {
+      setActiveJob(newJob)
+      // Still refresh product groups to show updated statuses
+      if (clientId) {
+        const updatedGroups = await getProductGroups(clientId)
+        setGroups(updatedGroups)
+      }
+      return
+    }
+
+    // Original behavior for terminal states
     if (clientId) {
       const updatedGroups = await getProductGroups(clientId)
       setGroups(updatedGroups)
@@ -117,6 +130,39 @@ export function ProductsPageContent({
   }, [clientId, router])
 
   const pendingCount = groups.filter((g) => g.status === 'pending').length
+  const failedCount = groups.filter((g) => g.status === 'failed').length
+
+  const handleRetryFailed = useCallback(async () => {
+    if (!clientId) return
+
+    setIsStarting(true)
+    setError(null)
+
+    const result = await retryFailedProducts(clientId)
+
+    setIsStarting(false)
+
+    if (result.success && result.job) {
+      setActiveJob(result.job)
+    } else {
+      setError(result.error || 'Failed to retry failed products')
+    }
+  }, [clientId])
+
+  const handleGenerateSingle = useCallback(async (productGroupId: string) => {
+    setIsStarting(true)
+    setError(null)
+
+    const result = await generateSingleProduct(productGroupId)
+
+    setIsStarting(false)
+
+    if (result.success && result.job) {
+      setActiveJob(result.job)
+    } else {
+      setError(result.error || 'Failed to generate product')
+    }
+  }, [])
 
   if (!clientId && !selectedClientId) {
     return (
@@ -136,6 +182,7 @@ export function ProductsPageContent({
       {/* Active generation progress */}
       {activeJob && (
         <GenerationProgress
+          key={activeJob.id}
           jobId={activeJob.id}
           initialJob={activeJob}
           onComplete={handleGenerationComplete}
@@ -179,6 +226,18 @@ export function ProductsPageContent({
               </Button>
             )}
 
+            {/* Retry Failed button - show when no active job and has failed products */}
+            {!activeJob && failedCount > 0 && (
+              <Button
+                onClick={handleRetryFailed}
+                disabled={isStarting}
+                variant="outline"
+                className="ml-2"
+              >
+                {isStarting ? 'Starting...' : `Retry ${failedCount} Failed`}
+              </Button>
+            )}
+
             {/* Block message when generation is running */}
             {activeJob && activeJob.status === 'running' && (
               <Badge variant="secondary" className="ml-4">
@@ -197,7 +256,11 @@ export function ProductsPageContent({
       )}
 
       {/* Product List */}
-      <ProductList groups={groups} />
+      <ProductList
+        groups={groups}
+        onGenerateProduct={handleGenerateSingle}
+        isGenerationActive={!!activeJob}
+      />
     </div>
   )
 }

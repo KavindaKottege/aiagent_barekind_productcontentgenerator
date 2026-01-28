@@ -109,6 +109,13 @@ class GenerationJob(Base):
     # Status reason (for pause, cancel, soft cap, etc.)
     status_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # Target product group for single-product generation (null = batch generation)
+    target_product_group_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("product_groups.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
