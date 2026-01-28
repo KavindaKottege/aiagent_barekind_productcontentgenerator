@@ -13,6 +13,7 @@ from app.models.client import Client
 from app.models.generation_job import GenerationJob
 from app.models.product_group import ProductGroup
 from app.models.settings import AppSettings
+from app.schemas.regeneration import RegenerationContext
 from app.services.ai_generation import AIGenerationService
 from app.services.cost_tracker import CostTracker
 from app.config import settings
@@ -189,6 +190,18 @@ async def generation_worker(
                 completed += 1
                 continue
 
+            # Build regeneration context if this is a regeneration
+            regeneration_context = None
+            if product_group.regeneration_count > 0:
+                regeneration_context = RegenerationContext(
+                    previous_title=product_group.generated_title,
+                    previous_description=product_group.generated_description,
+                    rejection_reasons=product_group.rejection_reasons or [],
+                    ai_review_flags=product_group.ai_review_safety_flags or [],
+                    regeneration_count=product_group.regeneration_count,
+                )
+                print(f"[Worker] Building regeneration context: count={product_group.regeneration_count}, reasons={product_group.rejection_reasons}")
+
             # === TASK 1: Generate Title ===
             # Set current task and create callback for attempt tracking
             await _update_current_task(db, job_id, current_task="title")
@@ -207,6 +220,7 @@ async def generation_worker(
                     job=job,
                     app_settings=app_settings,
                     on_attempt=on_title_attempt,
+                    regeneration_context=regeneration_context,
                 )
 
                 if not title_result:
@@ -269,6 +283,7 @@ async def generation_worker(
                     job=job,
                     app_settings=app_settings,
                     on_attempt=on_desc_attempt,
+                    regeneration_context=regeneration_context,
                 )
 
                 if desc_result:

@@ -14,7 +14,7 @@ Plan: 4 of 7 (06-04 generation history and restore endpoints complete)
 Status: In progress - Phase 6 wave 2 executing
 Last activity: 2026-01-29 — Completed 06-04-PLAN.md (generation history and restore endpoints)
 
-Progress: [█████████░] 80% (28 of 35 total plans complete)
+Progress: [█████████░] 83% (29 of 35 total plans complete)
 
 ## Performance Metrics
 
@@ -398,6 +398,15 @@ None yet.
 - POST /api/review/reject-with-reasons endpoint stores reasons as JSONB array
 - Predefined rejection reasons only (no free text) per CONTEXT.md decision
 
+**From 06-03 execution:**
+- RegenerationContext Pydantic model carries previous_title, previous_description, rejection_reasons, ai_review_flags, regeneration_count
+- REASON_TO_POSITIVE_GUIDANCE static mapping converts rejection reasons to constructive focus areas
+- get_positive_guidance() helper returns comma-separated positive guidance string
+- _build_feedback_section() builds multi-line feedback with negative (DO NOT REUSE) + positive (FOCUS ON) guidance
+- Feedback only injected when regeneration_count > 0 (initial generation unaffected)
+- Previous description truncated at 500 chars in feedback to prevent token explosion
+- build_title_prompt, build_description_prompt, generate_title, generate_description all accept regeneration_context
+
 **From 06-04 execution:**
 - GET /api/regeneration/{product_group_id}/history returns successful generation audits
 - POST /api/regeneration/{product_group_id}/restore/{audit_id} restores previous version
@@ -409,7 +418,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-04-PLAN.md (generation history and restore endpoints)
+Stopped at: Completed 06-03-PLAN.md (smart regeneration prompt context)
 Resume file: None
 Next: Continue Phase 6 - remaining plans (06-05 through 06-07)
 
