@@ -29,6 +29,11 @@ from app.schemas.review import (
     ReviewStatsResponse,
     UndoReviewRequest,
 )
+from app.schemas.regeneration import (
+    REJECTION_REASON_LABELS,
+    RejectWithReasonsRequest,
+    RejectionReasonType,
+)
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 
@@ -65,4 +70,7 @@ __all__ = [
     "ReviewActionResponse",
     "ReviewStatsResponse",
     "UndoReviewRequest",
+    "RejectionReasonType",
+    "RejectWithReasonsRequest",
+    "REJECTION_REASON_LABELS",
 ]
