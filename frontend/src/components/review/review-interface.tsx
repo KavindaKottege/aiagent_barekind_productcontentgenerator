@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, AlertTriangle, History } from 'lucide-react'
 import {
   ProductGroupReview,
   ReviewActionResult,
@@ -26,6 +26,8 @@ import { InlineEditor } from './inline-editor'
 import { AIReviewPanel } from './ai-review-panel'
 import { MissingFieldsWarning } from './missing-fields-warning'
 import { RejectionReasonsDialog } from './rejection-reasons-dialog'
+import { GenerationHistoryDialog } from './generation-history-dialog'
+import { RegenerateButton } from './regenerate-button'
 import { statusBadgeStyles } from './review-stats'
 
 interface ReviewInterfaceProps {
@@ -59,6 +61,7 @@ export function ReviewInterface({
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false)
 
   // Sync currentProduct when initialProduct prop changes (e.g., after router.refresh())
   useEffect(() => {
@@ -233,6 +236,16 @@ export function ReviewInterface({
     setIsEditing(false)
   }, [currentProduct, router])
 
+  // Regeneration handlers
+  const handleRegenerateStart = useCallback((jobId: string) => {
+    // Navigate to products page to see generation progress
+    router.push(`/products?client=${clientId}`)
+  }, [router, clientId])
+
+  const handleHistoryRestore = useCallback(() => {
+    router.refresh() // Refresh to get restored content
+  }, [router])
+
   // Keyboard shortcuts - disabled when editing
   useHotkeys('a', () => !isEditing && handleApprove(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('r', () => !isEditing && handleRejectClick(), { enabled: !isEditing, preventDefault: true })
@@ -254,6 +267,20 @@ export function ReviewInterface({
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowHistoryDialog(true)}
+          >
+            <History className="w-4 h-4 mr-2" />
+            History
+          </Button>
+          {currentProduct.review_status === 'rejected' && (
+            <RegenerateButton
+              productGroupId={currentProduct.id}
+              onRegenerateStart={handleRegenerateStart}
+            />
+          )}
           <Button
             variant="outline"
             onClick={goToPrevious}
@@ -458,6 +485,14 @@ export function ReviewInterface({
         onClose={() => setShowRejectDialog(false)}
         onConfirm={handleRejectConfirm}
         isLoading={isPending}
+      />
+
+      {/* Generation history dialog */}
+      <GenerationHistoryDialog
+        productGroupId={currentProduct.id}
+        open={showHistoryDialog}
+        onClose={() => setShowHistoryDialog(false)}
+        onRestore={handleHistoryRestore}
       />
     </div>
   )
