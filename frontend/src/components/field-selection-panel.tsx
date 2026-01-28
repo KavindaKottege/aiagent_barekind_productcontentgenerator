@@ -7,14 +7,11 @@ import { Button } from '@/components/ui/button'
 import { updateClientFieldSelection } from '@/app/actions/clients'
 
 // Available product fields that can be used for AI generation
+// These match the attributes used in Task 1 (title) and Task 2 (description) prompts
 const AVAILABLE_FIELDS = [
   { id: 'product_name', label: 'Product Name', required: true, description: 'Base product name' },
   { id: 'description', label: 'Original Description', required: false, description: 'Existing product description' },
-  { id: 'product_type', label: 'Product Type', required: false, description: 'Category or type' },
-  { id: 'option_name', label: 'Option Name', required: false, description: 'Size, color, variant info' },
   { id: 'country_of_origin', label: 'Country of Origin', required: false, description: 'Where product is made' },
-  { id: 'made_to_order', label: 'Made to Order', required: false, description: 'Custom/MTO status' },
-  { id: 'sku', label: 'SKU', required: false, description: 'Product identifier' },
   { id: 'images', label: 'Image URLs', required: false, description: 'Product images (for reference)' },
 ] as const
 
@@ -31,8 +28,11 @@ export function FieldSelectionPanel({
   currentSelection,
   onSelectionChange,
 }: FieldSelectionPanelProps) {
-  // Default to all fields if no selection saved
-  const defaultSelection = currentSelection || AVAILABLE_FIELDS.map(f => f.id)
+  // Filter saved selection to only include valid field IDs (handles old 8-field selections)
+  const validFieldIds = AVAILABLE_FIELDS.map(f => f.id)
+  const defaultSelection = currentSelection
+    ? currentSelection.filter(id => validFieldIds.includes(id))
+    : validFieldIds
 
   const [selectedFields, setSelectedFields] = useState<string[]>(defaultSelection)
   const [isPending, startTransition] = useTransition()
