@@ -91,4 +91,8 @@ __all__ = [
     "GenerationHistoryResponse",
     "RestoreVersionRequest",
     "RestoreVersionResponse",
+    "RegenerateSingleRequest",
+    "RegenerateBatchRequest",
+    "RegenerationJobResponse",
+    "RegenerationEstimate",
 ]
