@@ -10,11 +10,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
 import {
   ProductGroupReview,
+  ReviewActionResult,
   approveProduct,
   rejectProduct,
   saveEditTitle,
   saveEditDescription,
   getNextUnreviewed,
+  undoReview,
 } from '@/app/actions/review'
 import { useReviewHistory } from '@/lib/review-context'
 import { ImageDisplay } from './image-display'
@@ -46,7 +48,7 @@ export function ReviewInterface({
 }: ReviewInterfaceProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const { recordAction, undo, canUndo, canRedo } = useReviewHistory()
+  const { recordAction, undo, redo, canUndo, canRedo } = useReviewHistory()
 
   // Local state
   const [currentProduct, setCurrentProduct] = useState(initialProduct)
@@ -145,15 +147,53 @@ export function ReviewInterface({
     })
   }, [currentProduct, recordAction, navigateToProduct, clientId, router, setOptimisticStatus])
 
-  // Undo handler
-  const handleUndo = useCallback(() => {
+  // Undo handler - reverts database status then navigates
+  const handleUndo = useCallback(async () => {
     const lastAction = undo()
     if (lastAction) {
-      // Navigate back to the product and refresh
-      router.push(`/review/${lastAction.productId}?client=${clientId}`)
-      router.refresh()
+      // Revert the database status BEFORE navigating
+      const result = await undoReview(lastAction.productId, lastAction.previousStatus)
+      if (result.success) {
+        router.push(`/review/${lastAction.productId}?client=${clientId}`)
+        router.refresh()
+      } else {
+        setError(result.message || 'Failed to undo')
+        // Re-record the action since undo failed
+        recordAction({
+          productId: lastAction.productId,
+          action: lastAction.action,
+          previousStatus: lastAction.previousStatus,
+        })
+      }
     }
-  }, [undo, router, clientId])
+  }, [undo, router, clientId, recordAction])
+
+  // Redo handler - re-applies the undone action
+  const handleRedo = useCallback(async () => {
+    const nextAction = redo()
+    if (nextAction) {
+      setError(null)
+      let result: ReviewActionResult
+
+      if (nextAction.action === 'approve') {
+        result = await approveProduct(nextAction.productId)
+      } else if (nextAction.action === 'reject') {
+        result = await rejectProduct(nextAction.productId)
+      } else {
+        // Edit actions don't need redo (edits are preserved)
+        router.push(`/review/${nextAction.productId}?client=${clientId}`)
+        router.refresh()
+        return
+      }
+
+      if (result.success) {
+        router.push(`/review/${nextAction.productId}?client=${clientId}`)
+        router.refresh()
+      } else {
+        setError(result.message || 'Failed to redo')
+      }
+    }
+  }, [redo, router, clientId])
 
   // Computed display values
   const displayTitle = currentProduct.edited_title || currentProduct.generated_title || ''
@@ -192,6 +232,7 @@ export function ReviewInterface({
   useHotkeys('right, j', () => !isEditing && goToNext(), { enabled: !isEditing, preventDefault: true })
   useHotkeys('escape', () => setIsEditing(false), { enabled: isEditing, preventDefault: true })
   useHotkeys('ctrl+z, meta+z', () => !isEditing && handleUndo(), { enabled: canUndo && !isEditing, preventDefault: true })
+  useHotkeys('ctrl+shift+z, meta+shift+z', () => !isEditing && handleRedo(), { enabled: canRedo && !isEditing, preventDefault: true })
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -371,9 +412,14 @@ export function ReviewInterface({
             <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">E</kbd> Edit</span>
             <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">←/→</kbd> Navigate</span>
           </div>
-          {canUndo && (
-            <div className="text-sm text-gray-600">
-              <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+Z</kbd> Undo</span>
+          {(canUndo || canRedo) && (
+            <div className="text-sm text-gray-600 flex gap-4">
+              {canUndo && (
+                <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+Z</kbd> Undo</span>
+              )}
+              {canRedo && (
+                <span><kbd className="px-2 py-1 bg-gray-100 rounded border text-xs">Ctrl+Shift+Z</kbd> Redo</span>
+              )}
             </div>
           )}
         </div>
