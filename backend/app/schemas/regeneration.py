@@ -113,3 +113,35 @@ class RestoreVersionResponse(BaseModel):
     message: str
     restored_title: str | None
     restored_description: str | None
+
+
+# --- Regeneration API schemas (06-05) ---
+
+
+class RegenerateSingleRequest(BaseModel):
+    """Request to regenerate a single product."""
+
+    product_group_id: UUID
+
+
+class RegenerateBatchRequest(BaseModel):
+    """Request to regenerate all rejected products for a client."""
+
+    client_id: UUID
+
+
+class RegenerationJobResponse(BaseModel):
+    """Response after starting regeneration job."""
+
+    job_id: str
+    status: str
+    total_count: int
+    is_regeneration: bool
+    message: str
+
+
+class RegenerationEstimate(BaseModel):
+    """Estimate for batch regeneration."""
+
+    rejected_count: int
+    estimated_cost: str  # Based on average cost per product

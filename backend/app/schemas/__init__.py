@@ -30,13 +30,20 @@ from app.schemas.review import (
     UndoReviewRequest,
 )
 from app.schemas.regeneration import (
+    REASON_TO_POSITIVE_GUIDANCE,
     REJECTION_REASON_LABELS,
     GenerationHistoryItem,
     GenerationHistoryResponse,
+    RegenerateBatchRequest,
+    RegenerateSingleRequest,
+    RegenerationContext,
+    RegenerationEstimate,
+    RegenerationJobResponse,
     RejectWithReasonsRequest,
     RejectionReasonType,
     RestoreVersionRequest,
     RestoreVersionResponse,
+    get_positive_guidance,
 )
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
@@ -77,6 +84,9 @@ __all__ = [
     "RejectionReasonType",
     "RejectWithReasonsRequest",
     "REJECTION_REASON_LABELS",
+    "REASON_TO_POSITIVE_GUIDANCE",
+    "RegenerationContext",
+    "get_positive_guidance",
     "GenerationHistoryItem",
     "GenerationHistoryResponse",
     "RestoreVersionRequest",
