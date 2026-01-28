@@ -2,11 +2,12 @@ import { Metadata } from 'next'
 import { redirect, notFound } from 'next/navigation'
 import { getReviewProduct, getReviewProducts } from '@/app/actions/review'
 import { getClient } from '@/app/actions/clients'
+import { getTaskSettings } from '@/app/actions/settings'
 import { ReviewInterface } from '@/components/review/review-interface'
 import { ReviewProvider } from '@/lib/review-context'
 
 export const metadata: Metadata = {
-  title: 'Review Product - Product Content Generator',
+  title: 'Review Product - SEO Content Generator',
   description: 'Review and approve generated product content',
 }
 
@@ -23,11 +24,12 @@ export default async function ReviewProductPage({ params, searchParams }: Review
     redirect('/review')
   }
 
-  // Fetch product, all products, and client in parallel
-  const [product, allProducts, client] = await Promise.all([
+  // Fetch product, all products, client, and task settings in parallel
+  const [product, allProducts, client, taskSettings] = await Promise.all([
     getReviewProduct(clientId, productId),
     getReviewProducts(clientId),
     getClient(clientId),
+    getTaskSettings(),
   ])
 
   if (!product) {
@@ -47,6 +49,10 @@ export default async function ReviewProductPage({ params, searchParams }: Review
         clientId={clientId}
         allProductIds={allProductIds}
         selectedFields={selectedFields}
+        titleMinChars={taskSettings?.task1_min_length ?? undefined}
+        titleMaxChars={taskSettings?.task1_max_length ?? undefined}
+        descMinChars={taskSettings?.task2_min_length ?? undefined}
+        descMaxChars={taskSettings?.task2_max_length ?? undefined}
       />
     </ReviewProvider>
   )

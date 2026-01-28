@@ -180,7 +180,7 @@ export function AIReviewPanel({ product, onAIReviewComplete }: AIReviewPanelProp
 
         {/* Timestamp */}
         {product.ai_reviewed_at && (
-          <p className="text-xs text-gray-500 pt-2 border-t">
+          <p className="text-xs text-gray-500 pt-2 border-t" suppressHydrationWarning>
             Reviewed: {new Date(product.ai_reviewed_at).toLocaleString()}
           </p>
         )}

@@ -12,7 +12,8 @@ import {
   ProductGroupReview,
   approveProduct,
   rejectProduct,
-  saveEdit,
+  saveEditTitle,
+  saveEditDescription,
   getNextUnreviewed,
 } from '@/app/actions/review'
 import { useReviewHistory } from '@/lib/review-context'
@@ -20,15 +21,29 @@ import { ImageDisplay } from './image-display'
 import { InlineEditor } from './inline-editor'
 import { AIReviewPanel } from './ai-review-panel'
 import { MissingFieldsWarning } from './missing-fields-warning'
+import { statusBadgeStyles } from './review-stats'
 
 interface ReviewInterfaceProps {
   product: ProductGroupReview
   clientId: string
   allProductIds: string[]
   selectedFields: string[]
+  titleMinChars?: number
+  titleMaxChars?: number
+  descMinChars?: number
+  descMaxChars?: number
 }
 
-export function ReviewInterface({ product: initialProduct, clientId, allProductIds, selectedFields }: ReviewInterfaceProps) {
+export function ReviewInterface({
+  product: initialProduct,
+  clientId,
+  allProductIds,
+  selectedFields,
+  titleMinChars = 30,
+  titleMaxChars = 60,
+  descMinChars = 2000,
+  descMaxChars = 3000,
+}: ReviewInterfaceProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const { recordAction, undo, canUndo, canRedo } = useReviewHistory()
@@ -38,6 +53,11 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
   const [showOriginalData, setShowOriginalData] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync currentProduct when initialProduct prop changes (e.g., after router.refresh())
+  useEffect(() => {
+    setCurrentProduct(initialProduct)
+  }, [initialProduct])
 
   // Optimistic state for instant UI feedback
   const [optimisticStatus, setOptimisticStatus] = useOptimistic(
@@ -141,8 +161,7 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
 
   // Save edit handlers
   const handleSaveTitle = useCallback(async (newTitle: string) => {
-    const currentDescription = currentProduct.edited_description || currentProduct.generated_description || ''
-    const result = await saveEdit(currentProduct.id, newTitle, currentDescription)
+    const result = await saveEditTitle(currentProduct.id, newTitle)
 
     if (!result.success) {
       throw new Error(result.message || 'Failed to save title')
@@ -154,8 +173,7 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
   }, [currentProduct, router])
 
   const handleSaveDescription = useCallback(async (newDescription: string) => {
-    const currentTitle = currentProduct.edited_title || currentProduct.generated_title || ''
-    const result = await saveEdit(currentProduct.id, currentTitle, newDescription)
+    const result = await saveEditDescription(currentProduct.id, newDescription)
 
     if (!result.success) {
       throw new Error(result.message || 'Failed to save description')
@@ -215,24 +233,14 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
       {/* Status indicators */}
       <div className="flex gap-2">
         {optimisticStatus && (
-          <Badge
-            variant={
-              optimisticStatus === 'approved' ? 'default' :
-              optimisticStatus === 'rejected' ? 'destructive' :
-              optimisticStatus === 'ai_approved' ? 'default' :
-              optimisticStatus === 'ai_rejected' ? 'destructive' :
-              'secondary'
-            }
-            className={
-              optimisticStatus === 'ai_approved' ? 'bg-purple-600' :
-              optimisticStatus === 'ai_rejected' ? 'bg-purple-600' :
-              ''
-            }
-          >
+          <span className={`${statusBadgeStyles[optimisticStatus as keyof typeof statusBadgeStyles] || statusBadgeStyles.pending} px-3 py-1 rounded-full text-sm font-medium`}>
             {optimisticStatus === 'ai_approved' ? 'Auto-approved by AI' :
              optimisticStatus === 'ai_rejected' ? 'Auto-rejected by AI' :
+             optimisticStatus === 'approved' ? 'Approved' :
+             optimisticStatus === 'rejected' ? 'Rejected' :
+             optimisticStatus === 'edited' ? 'Edited' :
              optimisticStatus.charAt(0).toUpperCase() + optimisticStatus.slice(1)}
-          </Badge>
+          </span>
         )}
         {currentProduct.ai_review_status && !optimisticStatus?.startsWith('ai_') && (
           <Badge variant="outline">
@@ -281,8 +289,8 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
                 <InlineEditor
                   value={displayTitle}
                   onSave={handleSaveTitle}
-                  minChars={30}
-                  maxChars={60}
+                  minChars={titleMinChars}
+                  maxChars={titleMaxChars}
                   placeholder="Title will appear here..."
                   multiline={false}
                 />
@@ -295,8 +303,8 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
                 <InlineEditor
                   value={displayDescription}
                   onSave={handleSaveDescription}
-                  minChars={2000}
-                  maxChars={3000}
+                  minChars={descMinChars}
+                  maxChars={descMaxChars}
                   placeholder="Description will appear here..."
                   multiline={true}
                 />
@@ -375,14 +383,14 @@ export function ReviewInterface({ product: initialProduct, clientId, allProductI
             variant="outline"
             onClick={handleReject}
             disabled={isPending}
-            className="min-w-[120px]"
+            className="min-w-[120px] border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
           >
             Reject (R)
           </Button>
           <Button
             onClick={handleApprove}
             disabled={isPending}
-            className="min-w-[120px]"
+            className="min-w-[120px] bg-brand-green hover:bg-brand-green-hover text-white"
           >
             Approve (A)
           </Button>
