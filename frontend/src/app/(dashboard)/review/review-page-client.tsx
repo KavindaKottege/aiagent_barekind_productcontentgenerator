@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ReviewStatsComponent, statusBadgeStyles } from '@/components/review/review-stats'
 import { AIReviewProgress } from '@/components/review/ai-review-progress'
+import { BatchRegenerateButton } from '@/components/products/batch-regenerate-button'
 import { Sparkles } from 'lucide-react'
 import {
   startBatchAIReview,
@@ -242,13 +243,26 @@ export function ReviewPageClient({
           <p className="text-gray-600 mt-1">Review and approve AI-generated content</p>
         </div>
 
-        {/* Review All with AI button - can run alongside generation */}
-        {products.length > 0 && !hasActiveJob && (
-          <Button onClick={handleShowModeToggle} className="gap-2">
-            <Sparkles className="w-4 h-4" />
-            Review All with AI
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {/* Regenerate Rejected button */}
+          {clientId && stats && stats.manually_rejected > 0 && !hasActiveJob && (
+            <BatchRegenerateButton
+              clientId={clientId}
+              rejectedCount={stats.manually_rejected}
+              onRegenerateStart={(jobId) => {
+                router.refresh()
+              }}
+            />
+          )}
+
+          {/* Review All with AI button - can run alongside generation */}
+          {products.length > 0 && !hasActiveJob && (
+            <Button onClick={handleShowModeToggle} className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              Review All with AI
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Generation in progress banner */}
