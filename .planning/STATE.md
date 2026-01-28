@@ -389,6 +389,15 @@ None yet.
 - Error recovery re-records action if undo fails to restore undo capability
 - Ctrl+Shift+Z / Cmd+Shift+Z keyboard shortcut for redo
 
+**From 06-01 execution:**
+- JSONB rejection_reasons field on ProductGroup for structured rejection feedback
+- regeneration_count integer field tracks regeneration cycles (starts at 0)
+- Migration 022 adds both fields with index on regeneration_count
+- RejectionReasonType Literal validates 4 predefined reasons: off_brand_tone, generic_boring, factually_wrong, seo_issues
+- RejectWithReasonsRequest uses UUID product_group_id (fixed from plan's str type for consistency)
+- POST /api/review/reject-with-reasons endpoint stores reasons as JSONB array
+- Predefined rejection reasons only (no free text) per CONTEXT.md decision
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
