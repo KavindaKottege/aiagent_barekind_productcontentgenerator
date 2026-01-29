@@ -36,7 +36,7 @@
 - [x] **EXCL-09**: App groups option variant rows into single product for generation
 - [ ] **EXCL-10**: System provides all option values to AI when generating content for grouped products (Phase 4)
 - [x] **EXCL-11**: During review, grouped products appear as single item (not duplicated per option)
-- [ ] **EXCL-12**: On export, generated title and description are copied to all original rows that belong to the product group (Phase 7)
+- [x] **EXCL-12**: On export, generated title and description are copied to all original rows that belong to the product group (Phase 7)
 
 ### AI Content Generation
 
@@ -76,9 +76,9 @@
 
 ### Export
 
-- [ ] **EXP-01**: User can download original Excel with updated Product Name and Description
-- [ ] **EXP-02**: Downloaded Excel preserves all other columns and formatting
-- [ ] **EXP-03**: Downloaded Excel only includes approved products
+- [x] **EXP-01**: User can download original Excel with updated Product Name and Description
+- [x] **EXP-02**: Downloaded Excel preserves all other columns and formatting
+- [x] **EXP-03**: Downloaded Excel only includes approved products (original file patched in-place; rejected rows keep original values)
 
 ## v2 Requirements
 
@@ -136,18 +136,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLNT-05 | Phase 2 | Complete |
 | CLNT-06 | Phase 2 | Complete |
 | CLNT-07 | Phase 2 | Complete |
-| EXCL-01 | Phase 3 | Pending |
-| EXCL-02 | Phase 3 | Pending |
-| EXCL-03 | Phase 3 | Pending |
-| EXCL-04 | Phase 3 | Pending |
-| EXCL-05 | Phase 3 | Pending |
-| EXCL-06 | Phase 3 | Pending |
-| EXCL-07 | Phase 3 | Pending |
-| EXCL-08 | Phase 3 | Pending |
-| EXCL-09 | Phase 3 | Pending |
-| EXCL-10 | Phase 3 | Pending |
-| EXCL-11 | Phase 3 | Pending |
-| EXCL-12 | Phase 3 | Pending |
+| EXCL-01 | Phase 3 | Complete |
+| EXCL-02 | Phase 3 | Complete |
+| EXCL-03 | Phase 3 | Complete |
+| EXCL-04 | Phase 3 | Complete |
+| EXCL-05 | Phase 3 | Complete |
+| EXCL-06 | Phase 5 | Complete |
+| EXCL-07 | Phase 3 | Complete |
+| EXCL-08 | Phase 3 | Complete |
+| EXCL-09 | Phase 3 | Complete |
+| EXCL-10 | Phase 4 | Complete |
+| EXCL-11 | Phase 3 | Complete |
+| EXCL-12 | Phase 7 | Complete |
 | GEN-01 | Phase 4 | Complete |
 | GEN-02 | Phase 4 | Complete |
 | GEN-03 | Phase 4 | Complete |
@@ -175,9 +175,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REGEN-02 | Phase 6 | Complete |
 | REGEN-03 | Phase 6 | Complete |
 | REGEN-04 | Phase 6 | Complete |
-| EXP-01 | Phase 7 | Pending |
-| EXP-02 | Phase 7 | Pending |
-| EXP-03 | Phase 7 | Pending |
+| EXP-01 | Phase 7 | Complete |
+| EXP-02 | Phase 7 | Complete |
+| EXP-03 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 51 total (GEN-13 removed - Batch API has 24hr latency, incompatible with real-time UX)
@@ -186,4 +186,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 5 complete)*
+*Last updated: 2026-01-29 (Phase 7 complete — all v1 requirements done)*
