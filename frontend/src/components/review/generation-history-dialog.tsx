@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { History, Check, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react'
 import {
   GenerationHistoryItem,
@@ -56,15 +55,16 @@ function HistoryRow({
         item.is_current ? 'border-green-300 bg-green-50/50' : 'border-gray-200'
       }`}
     >
-      {/* Compact row */}
-      <div
-        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50/80 transition-colors"
+      {/* Compact row — fixed single-line height */}
+      <button
+        type="button"
+        className="w-full flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50/80 transition-colors text-left"
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
         )}
 
         <Badge
@@ -76,39 +76,38 @@ function HistoryRow({
           {versionLabel}
         </Badge>
 
-        <span className="text-sm text-gray-900 truncate flex-1 min-w-0">
+        <span className="text-sm text-gray-900 truncate flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {item.title || '(no title)'}
         </span>
 
-        <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+        <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap hidden sm:inline">
           {formatDate(item.created_at)}
         </span>
 
-        <span className="text-xs text-gray-400 flex-shrink-0 w-16 text-right">
+        <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
           {item.cost}
         </span>
 
         {item.is_current ? (
-          <Badge variant="outline" className="text-green-700 border-green-300 text-xs flex-shrink-0">
+          <Badge variant="outline" className="text-green-700 border-green-300 text-xs flex-shrink-0 whitespace-nowrap">
             <Check className="w-3 h-3 mr-1" />
             Current
           </Badge>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
+          <span
+            role="button"
+            className="flex-shrink-0 inline-flex items-center border rounded px-2 py-1 text-xs hover:bg-gray-100 whitespace-nowrap"
             onClick={(e) => {
               e.stopPropagation()
               onRestore(item.id)
             }}
-            disabled={isPending}
-            className="flex-shrink-0 h-7 text-xs px-2"
+            aria-disabled={isPending}
           >
             <RotateCcw className="w-3 h-3 mr-1" />
             Restore
-          </Button>
+          </span>
         )}
-      </div>
+      </button>
 
       {/* Expanded content */}
       {expanded && (
@@ -180,10 +179,8 @@ export function GenerationHistoryDialog({
     })
   }
 
-  // Version labels: v1 (oldest) to vN (newest)
   const getVersionLabel = (index: number) => {
     const versionNum = history.length - index
-    if (versionNum === 1) return 'v1'
     return `v${versionNum}`
   }
 
@@ -193,8 +190,8 @@ export function GenerationHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[70vh] flex flex-col overflow-hidden">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="sm:max-w-2xl !max-h-[70vh] !flex !flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 p-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <History className="w-5 h-5" />
             Generation History
@@ -206,7 +203,7 @@ export function GenerationHistoryDialog({
         </DialogHeader>
 
         {error && (
-          <div className="flex-shrink-0 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+          <div className="flex-shrink-0 mx-6 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
             {error}
           </div>
         )}
@@ -216,9 +213,8 @@ export function GenerationHistoryDialog({
         ) : history.length === 0 ? (
           <div className="py-8 text-center text-gray-500">No generation history found</div>
         ) : (
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="space-y-1.5 pr-4">
-              {/* Recent versions (always visible) */}
+          <div className="flex-1 overflow-y-auto min-h-0 px-6 pb-6">
+            <div className="space-y-1.5">
               {recentItems.map((item, index) => (
                 <HistoryRow
                   key={item.id}
@@ -229,7 +225,6 @@ export function GenerationHistoryDialog({
                 />
               ))}
 
-              {/* Older versions (collapsible) */}
               {hasOlder && (
                 <>
                   <button
@@ -259,7 +254,7 @@ export function GenerationHistoryDialog({
                 </>
               )}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </DialogContent>
     </Dialog>
