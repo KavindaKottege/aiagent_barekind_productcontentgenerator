@@ -48,6 +48,12 @@ async def upload_products(
         tmp_path = Path(tmp.name)
         shutil.copyfileobj(file.file, tmp)
 
+    # Also save a permanent copy for export (preserves formatting, extra sheets, etc.)
+    uploads_dir = Path(__file__).resolve().parent.parent.parent / "uploads"
+    uploads_dir.mkdir(exist_ok=True)
+    permanent_path = uploads_dir / f"{client_id}.xlsx"
+    shutil.copy2(str(tmp_path), str(permanent_path))
+
     parser = ExcelParser(tmp_path)
     mapper = ExactColumnMapper()
     grouper = VariantGrouper()

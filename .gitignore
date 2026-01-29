@@ -19,6 +19,9 @@ __pycache__/
 # Data files (keep templates, ignore user data)
 product_data_response.xlsx
 
+# Uploaded Excel files (user data)
+backend/uploads/*.xlsx
+
 # OS files
 .DS_Store
 Thumbs.db

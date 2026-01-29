@@ -1,136 +1,158 @@
-"""Excel export service for reconstructing original Excel structure with updated content."""
+"""Excel export service — modifies the original uploaded file in-place.
+
+Opens the original Excel file (preserving formatting, extra sheets, column
+positions, everything) and ONLY overwrites the Product Name and Description
+cells for approved product groups.  Matching is by (product_name,
+product_token, sku) — the same composite key used for variant grouping —
+so every variant row in a group gets the same generated content.
+"""
 
 from io import BytesIO
+from pathlib import Path
 
-from openpyxl import Workbook
-
-from app.services.column_mapper import ExactColumnMapper
+from openpyxl import load_workbook
 
 
 class ExcelExporter:
-    """Export products back to Excel format preserving original structure.
+    """Export by patching the original uploaded Excel file."""
 
-    Reconstructs the original uploaded Excel with only Product Name and
-    Description columns updated for approved/edited products. All other
-    columns and all original values are preserved as-is.
-    """
-
-    # Reverse map: Excel header name -> field name
-    REVERSE_MAP: dict[str, str] = {v: k for k, v in ExactColumnMapper.COLUMN_MAP.items()}
+    # Exact header strings from Faire templates
+    PRODUCT_NAME_HEADER = "Product Name (English)"
+    DESCRIPTION_HEADER = "Description (English)"
+    PRODUCT_TOKEN_HEADER = "Product Token"
+    SKU_HEADER = "SKU"
 
     def export(
         self,
-        products: list[dict],
-        column_order: list[str],
+        original_file_path: Path | str,
+        groups_lookup: dict[tuple[str, str, str], dict],
         include_pending: bool = False,
     ) -> BytesIO:
-        """Export products to an Excel workbook.
+        """Patch the original Excel with generated content for approved groups.
 
         Args:
-            products: List of product dicts with group info, ordered by row_index.
-                Each dict should contain:
-                - All mapped field values (product_name, description, etc.)
-                - unmapped_data: dict of unmapped column values
-                - review_status: from ProductGroup
-                - status: from ProductGroup (generation status)
-                - generated_title, generated_description: from ProductGroup
-                - edited_title, edited_description: from ProductGroup
-            column_order: Original Excel column headers in order.
-            include_pending: If True, also update content for generated products
-                that are not yet reviewed (and not rejected).
+            original_file_path: Path to the original uploaded .xlsx file.
+            groups_lookup: Dict keyed by (product_name, product_token, sku)
+                with values containing:
+                  - review_status, status (group generation status)
+                  - generated_title, generated_description
+                  - edited_title, edited_description
+            include_pending: Also update content for generated-but-unreviewed
+                products (not rejected).
 
         Returns:
-            BytesIO buffer containing the .xlsx file.
+            BytesIO buffer containing the patched .xlsx file.
         """
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Products"
+        # Load original workbook preserving formatting, styles, extra sheets
+        wb = load_workbook(str(original_file_path))
 
-        # Write header row
-        ws.append(column_order)
+        # Find the data sheet (Faire uses "Products" sheet name)
+        if "Products" in wb.sheetnames:
+            ws = wb["Products"]
+        else:
+            ws = wb.active
 
-        # Write data rows
-        for product in products:
-            use_generated = self._should_use_generated(product, include_pending)
-            row = self._build_row(product, column_order, use_generated)
-            ws.append(row)
+        # Locate required columns from the header row (row 1)
+        col_indices = self._find_columns(ws)
+        if not col_indices:
+            # If we can't find the columns, return the file unmodified
+            buffer = BytesIO()
+            wb.save(buffer)
+            buffer.seek(0)
+            wb.close()
+            return buffer
 
+        name_col, desc_col, token_col, sku_col = col_indices
+
+        # Walk every data row and patch approved products
+        for row_idx in range(2, ws.max_row + 1):
+            cell_name = ws.cell(row=row_idx, column=name_col).value
+            cell_token = ws.cell(row=row_idx, column=token_col).value
+            cell_sku = ws.cell(row=row_idx, column=sku_col).value
+
+            # Skip empty / header-repeat rows
+            if not cell_token or not cell_sku:
+                continue
+
+            # Build the same composite key the DB uses.
+            # Apply the same formula-injection sanitisation the upload parser
+            # applies so the key matches the stored value.
+            key = (
+                self._sanitize(cell_name) if cell_name else "",
+                str(cell_token),
+                str(cell_sku),
+            )
+
+            group = groups_lookup.get(key)
+            if group is None:
+                continue  # row not in our database
+
+            if not self._should_update(group, include_pending):
+                continue  # not approved, keep original values
+
+            # Compute effective title / description
+            effective_title = (
+                group.get("edited_title")
+                or group.get("generated_title")
+                or cell_name  # fallback: leave original
+            )
+            effective_desc = (
+                group.get("edited_description")
+                or group.get("generated_description")
+                or ws.cell(row=row_idx, column=desc_col).value
+            )
+
+            ws.cell(row=row_idx, column=name_col).value = effective_title
+            ws.cell(row=row_idx, column=desc_col).value = effective_desc
+
+        # Save to buffer
         buffer = BytesIO()
         wb.save(buffer)
         buffer.seek(0)
+        wb.close()
         return buffer
 
-    def _should_use_generated(self, product: dict, include_pending: bool) -> bool:
-        """Determine if a product should use generated content in the export.
+    # ------------------------------------------------------------------
+    # Internals
+    # ------------------------------------------------------------------
 
-        Rules:
-        - Approved or edited products always use generated/edited content.
-        - If include_pending is True, generated products that are not rejected
-          also use generated content.
-        - Rejected and non-generated products keep original values.
-        """
-        review_status = product.get("review_status")
-        group_status = product.get("group_status")
+    def _find_columns(self, ws) -> tuple[int, int, int, int] | None:
+        """Return (name_col, desc_col, token_col, sku_col) 1-indexed, or None."""
+        name_col = desc_col = token_col = sku_col = None
 
-        # Approved or edited: always use generated content
+        for col_idx, cell in enumerate(ws[1], 1):
+            header = cell.value
+            if header == self.PRODUCT_NAME_HEADER:
+                name_col = col_idx
+            elif header == self.DESCRIPTION_HEADER:
+                desc_col = col_idx
+            elif header == self.PRODUCT_TOKEN_HEADER:
+                token_col = col_idx
+            elif header == self.SKU_HEADER:
+                sku_col = col_idx
+
+        if all(v is not None for v in (name_col, desc_col, token_col, sku_col)):
+            return name_col, desc_col, token_col, sku_col
+        return None
+
+    @staticmethod
+    def _sanitize(value) -> str:
+        """Mirror the upload parser's formula-injection sanitisation."""
+        s = str(value) if value is not None else ""
+        if s and s[0] in ("=", "+", "-", "@"):
+            return "'" + s
+        return s
+
+    @staticmethod
+    def _should_update(group: dict, include_pending: bool) -> bool:
+        """Decide whether a group's rows should receive generated content."""
+        review_status = group.get("review_status")
+        gen_status = group.get("status")
+
         if review_status in ("approved", "edited"):
             return True
 
-        # Include pending: use generated content if generated and not rejected
-        if include_pending and group_status == "generated" and review_status != "rejected":
+        if include_pending and gen_status == "generated" and review_status != "rejected":
             return True
 
         return False
-
-    def _build_row(self, product: dict, column_order: list[str], use_generated: bool) -> list:
-        """Build a single row of data for the export.
-
-        For each column header in the original order:
-        - If it's a mapped column: use the product's field value
-          (with generated content substitution for product_name/description if use_generated)
-        - If it's an unmapped column: pull from unmapped_data dict
-        """
-        row = []
-        for col_header in column_order:
-            field_name = self.REVERSE_MAP.get(col_header)
-
-            if field_name:
-                value = self._get_mapped_value(product, field_name, use_generated)
-            else:
-                # Unmapped column: pull from unmapped_data
-                value = product.get("unmapped_data", {}).get(col_header, "")
-
-            row.append(value if value is not None else "")
-
-        return row
-
-    def _get_mapped_value(self, product: dict, field_name: str, use_generated: bool):
-        """Get the value for a mapped field, with generated content substitution."""
-        if field_name == "product_name" and use_generated:
-            # Prefer edited_title > generated_title > original product_name
-            return (
-                product.get("edited_title")
-                or product.get("generated_title")
-                or product.get("product_name", "")
-            )
-
-        if field_name == "description" and use_generated:
-            # Prefer edited_description > generated_description > original description
-            return (
-                product.get("edited_description")
-                or product.get("generated_description")
-                or product.get("description", "")
-            )
-
-        if field_name == "images":
-            # Join image URLs with space separator (Faire format)
-            images = product.get("images")
-            if isinstance(images, list):
-                return " ".join(str(url) for url in images if url)
-            return images or ""
-
-        if field_name == "made_to_order":
-            # Export boolean as-is; openpyxl handles True/False in Excel
-            return product.get("made_to_order")
-
-        return product.get(field_name, "")
