@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Review System** - Manual review workflow with keyboard shortcuts
 - [x] **Phase 6: Smart Regeneration** - Learning from rejections with enhanced prompts
 - [x] **Phase 7: Export & Polish** - Download approved content and final UX refinements
-- [ ] **Phase 8: Admin Debug Mode** - Debug window showing exact prompts sent to AI model
+- [x] **Phase 8: Admin Debug Mode** - Debug window showing exact prompts sent to AI model
 
 ## Phase Details
 
@@ -204,12 +204,13 @@ Plans:
   4. Debug frame updates in real-time as products are generated
   5. Debug mode persists across page navigation within the session
   6. Debug frame is only visible to admin users
-**Plans**: 2 plans
-**Status**: Not started
+**Plans**: 2 plans in 2 waves
+**Status**: Complete
+**Completed**: 2026-01-29
 
 Plans:
-- [ ] 08-01-PLAN.md — Backend: Debug API endpoint and frontend server action
-- [ ] 08-02-PLAN.md — Frontend: Debug context, collapsible panel, settings toggle, layout integration
+- [x] 08-01-PLAN.md — Backend: Debug API endpoint and frontend server action
+- [x] 08-02-PLAN.md — Frontend: Debug context, collapsible panel, settings toggle, layout integration
 
 ## Progress
 
@@ -225,8 +226,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Review System | 7/7 | Complete | 2026-01-29 |
 | 6. Smart Regeneration | 7/7 | Complete | 2026-01-29 |
 | 7. Export & Polish | 5/5 | Complete | 2026-01-29 |
-| 8. Admin Debug Mode | 0/2 | Not started | - |
+| 8. Admin Debug Mode | 2/2 | Complete | 2026-01-29 |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 8 planned — 2 plans in 2 waves)*
+*Last updated: 2026-01-29 (Phase 8 complete — all 8 phases done)*
