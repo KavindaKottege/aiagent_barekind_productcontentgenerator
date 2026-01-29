@@ -10,6 +10,7 @@ from sqlalchemy import insert, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models.client import Client
 from app.models.product import Product
 from app.models.product_group import ProductGroup
 from app.models.user import User
@@ -86,6 +87,18 @@ async def upload_products(
 
         # Group variants
         groups, products_with_groups = grouper.group_variants(mapped_products)
+
+        # Persist original column order on the client for export reconstruction
+        client_result = await db.execute(
+            select(Client).where(Client.id == client_id, Client.user_id == current_user.id)
+        )
+        client = client_result.scalar_one_or_none()
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found"
+            )
+        client.excel_column_order = headers
 
         # Delete existing products and groups for this client
         await db.execute(

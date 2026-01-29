@@ -41,6 +41,14 @@ class Client(Base):
         doc="List of product field names to include in AI prompts"
     )
 
+    # Original Excel column order (persists during upload for export reconstruction)
+    excel_column_order: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        default=None,
+        doc="Original Excel column headers in order, stored during upload"
+    )
+
     # Custom prompts (optional overrides of app defaults)
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     task1_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
