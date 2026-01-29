@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 ## Current Position
 
 Phase: 7 of 7 (Export & Polish) - IN PROGRESS
-Plan: 2 of 5 (07-02 toast, error boundaries, loading skeletons complete)
-Status: In progress - 2 of 5 Phase 7 plans executed
-Last activity: 2026-01-29 — Completed 07-02-PLAN.md (toast, error boundaries, loading skeletons)
+Plan: 4 of 5 (07-04 dashboard redesign & CSS transitions complete)
+Status: In progress - 4 of 5 Phase 7 plans executed
+Last activity: 2026-01-29 — Completed 07-04-PLAN.md (dashboard redesign & CSS transitions)
 
-Progress: [█████████░] 92% (37 of 40 plans complete)
+Progress: [█████████░] 97% (39 of 40 plans complete)
 
 ## Performance Metrics
 
@@ -233,7 +233,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 7 in progress. Toast, error boundaries, and loading skeletons complete.
+None - Phase 7 in progress. Toast, error boundaries, loading skeletons, and dashboard redesign complete.
 
 ### Next Phase Readiness
 
@@ -461,6 +461,7 @@ None - Phase 7 in progress. Toast, error boundaries, and loading skeletons compl
 **Phase 7 (Export & Polish) IN PROGRESS**
 - ✅ 07-01: Backend export system (migration, ExcelExporter, stats+download endpoints)
 - ✅ 07-02: Sonner toast system, error boundaries (3 levels), skeleton loading pages (4 pages)
+- ✅ 07-04: Dashboard redesign with guided empty state + CSS transitions
 
 **From 07-01 execution:**
 - Migration 023 adds excel_column_order JSONB column to clients table
@@ -483,12 +484,21 @@ None - Phase 7 in progress. Toast, error boundaries, and loading skeletons compl
 - Error boundaries use 'use client' directive with reset() function for recovery
 - Skeleton pages use Skeleton + Card components with space-y-6 wrapper pattern
 
+**From 07-04 execution:**
+- New user detection via clients.length === 0 for guided onboarding
+- 3-step onboarding: Create Client (active CTA), Upload Products (muted), Generate Content (muted)
+- Returning user quick-action cards: Products, Review, Clients, Settings (admin only)
+- card-hover CSS class for reusable hover lift effect (shadow + translateY)
+- animate-fade-in CSS class for page entrance animation (opacity + translateY)
+- 150ms smooth transitions on all buttons, links, role=button elements
+- skeleton-pulse CSS class for consistent 1.5s loading animation timing
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 07-01-PLAN.md (backend export system)
+Stopped at: Completed 07-04-PLAN.md (dashboard redesign & CSS transitions)
 Resume file: None
-Next: 07-03 (Export frontend dialog + button)
+Next: 07-05 (final polish pass)
 
 ---
 *State initialized: 2026-01-22*
