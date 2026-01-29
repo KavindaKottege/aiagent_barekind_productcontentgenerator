@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** ALL PHASES COMPLETE — v1 milestone ready for audit
+**Current focus:** Phase 8 — Admin Debug Mode (plan 01 of 02 complete)
 
 ## Current Position
 
-Phase: 7 of 7 (Export & Polish) - COMPLETE
-Plan: 5 of 5 (07-05 E2E verification checkpoint passed)
-Status: All 7 phases complete — 40 plans executed
-Last activity: 2026-01-29 — Phase 7 complete, export verified by user
+Phase: 8 of 8 (Admin Debug Mode) - IN PROGRESS
+Plan: 1 of 2 complete
+Status: 7 of 8 phases complete — 41 plans executed
+Last activity: 2026-01-29 — Completed 08-01-PLAN.md (debug API endpoint and server actions)
 
-Progress: [██████████] 100% (40 of 40 plans complete)
+Progress: [█████████░] 93% (41 of 42 plans complete)
 
 ## Performance Metrics
 
@@ -227,13 +227,24 @@ Recent decisions affecting current work:
 - Fetch-on-open dialog pattern: useEffect fetches data when dialog open=true
 - Server actions pattern follows review.ts for auth token handling
 
+### Roadmap Evolution
+
+- Phase 8 added: Admin Debug Mode — debug window showing exact prompts sent to AI model
+
 ### Pending Todos
 
 None yet.
 
+**From 08-01 execution:**
+- Admin-only debug endpoint pattern: get_current_admin dependency enforces admin access
+- UUID and Decimal fields converted to strings for JSON serialization in debug API
+- Client-latest convenience endpoint resolves latest job_id server-side for mid-generation debug panel
+- Frontend server actions return empty arrays on auth failure (non-admin sees nothing, no errors)
+- Incremental polling via `since` timestamp parameter for real-time debug updates
+
 ### Blockers/Concerns
 
-None - Phase 7 in progress. Toast, error boundaries, loading skeletons, frontend export UI, and dashboard redesign complete.
+None - Phase 8 plan 01 complete. Debug API data layer ready for debug panel UI (08-02).
 
 ### Next Phase Readiness
 
@@ -503,13 +514,16 @@ None - Phase 7 in progress. Toast, error boundaries, loading skeletons, frontend
 - 150ms smooth transitions on all buttons, links, role=button elements
 - skeleton-pulse CSS class for consistent 1.5s loading animation timing
 
+**Phase 8 (Admin Debug Mode) IN PROGRESS**
+- ✅ 08-01: Debug API endpoint and frontend server actions
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 07-03-PLAN.md (frontend export UI)
+Stopped at: Completed 08-01-PLAN.md (debug API endpoint and server actions)
 Resume file: None
-Next: 07-05 (final verification)
+Next: 08-02 (debug panel UI)
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-29*
+*Last updated: 2026-01-29 (08-01 complete)*
