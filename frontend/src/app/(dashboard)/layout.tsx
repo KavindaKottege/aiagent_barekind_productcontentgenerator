@@ -7,6 +7,7 @@ import { getClients } from "@/app/actions/clients";
 import { Button } from "@/components/ui/button";
 import { ClientSelector } from "@/components/client-selector";
 import { UploadButtonWrapper } from "@/components/upload-button-wrapper";
+import { ExportButton } from "@/components/export-button";
 
 export default async function DashboardLayout({
   children,
@@ -40,6 +41,7 @@ export default async function DashboardLayout({
                 </Link>
                 <ClientSelector clients={clients} />
                 <UploadButtonWrapper clients={clients} />
+                <ExportButton clients={clients} />
               </div>
               <nav className="flex items-center gap-4">
                 <Link href="/products" className="text-sm text-gray-300 hover:text-white">
