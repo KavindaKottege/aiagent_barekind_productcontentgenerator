@@ -45,6 +45,7 @@ from app.schemas.regeneration import (
     RestoreVersionResponse,
     get_positive_guidance,
 )
+from app.schemas.export import ExportStatsResponse
 from app.schemas.settings import HasApiKeyResponse, SettingsResponse, SettingsUpdate
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 
@@ -95,4 +96,5 @@ __all__ = [
     "RegenerateBatchRequest",
     "RegenerationJobResponse",
     "RegenerationEstimate",
+    "ExportStatsResponse",
 ]

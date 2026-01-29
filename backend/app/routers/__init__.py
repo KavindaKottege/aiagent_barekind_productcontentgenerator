@@ -1,5 +1,6 @@
 from app.routers.auth import router as auth_router
 from app.routers.clients import router as clients_router
+from app.routers.export import router as export_router
 from app.routers.generation import router as generation_router
 from app.routers.products import router as products_router
 from app.routers.regeneration import router as regeneration_router
@@ -14,4 +15,5 @@ __all__ = [
     "generation_router",
     "review_router",
     "regeneration_router",
+    "export_router",
 ]
