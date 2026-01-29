@@ -1,27 +1,31 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { verifySession } from "@/lib/dal";
+import { getUser } from "@/lib/dal";
 import { logout } from "@/app/actions/auth";
 import { getClients } from "@/app/actions/clients";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ClientSelector } from "@/components/client-selector";
 import { UploadButtonWrapper } from "@/components/upload-button-wrapper";
 import { ExportButton } from "@/components/export-button";
+import { DebugProvider } from "@/lib/debug-context";
+import { DebugPanel } from "@/components/debug-panel";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Verify session - will redirect to /login if not authenticated
-  await verifySession();
+  // Get user (also verifies session - redirects to /login if not authenticated)
+  const user = await getUser();
 
   // Fetch clients for selector
   const clients = await getClients();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <DebugProvider isAdmin={user.is_admin}>
+      <div className="min-h-screen bg-gray-50">
         <header className="bg-brand-dark shadow-sm border-b border-brand-dark-hover">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between">
@@ -65,9 +69,11 @@ export default async function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className={cn("max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8", user.is_admin && "pb-80")}>
           {children}
         </main>
+        <DebugPanel />
       </div>
+    </DebugProvider>
   );
 }

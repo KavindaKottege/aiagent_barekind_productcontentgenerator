@@ -4,6 +4,7 @@ import { getSettings } from "@/app/actions/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ApiKeyForm } from "@/components/forms/api-key-form";
+import { DebugToggle } from "@/components/debug-toggle";
 
 export default async function SettingsPage() {
   // Verify user is admin (redirects if not)
@@ -57,6 +58,18 @@ export default async function SettingsPage() {
                 <Link href="/settings/generation">
                   <Button variant="outline">Manage Generation Settings</Button>
                 </Link>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Debug Mode</CardTitle>
+                <CardDescription>
+                  View exact AI prompts and model parameters during content generation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DebugToggle />
               </CardContent>
             </Card>
           </>
