@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Review System** - Manual review workflow with keyboard shortcuts
 - [x] **Phase 6: Smart Regeneration** - Learning from rejections with enhanced prompts
 - [x] **Phase 7: Export & Polish** - Download approved content and final UX refinements
+- [ ] **Phase 8: Admin Debug Mode** - Debug window showing exact prompts sent to AI model
 
 ## Phase Details
 
@@ -192,10 +193,28 @@ Plans:
 - [x] 07-04-PLAN.md — Frontend: Dashboard redesign with guided empty state and CSS polish
 - [x] 07-05-PLAN.md — Checkpoint: End-to-end verification of export and polish
 
+### Phase 8: Admin Debug Mode
+**Goal**: Admin can enable a debug mode that shows the exact prompts and payloads sent to the AI model in a persistent bottom frame
+**Depends on**: Phase 7
+**Requirements**: None (developer/admin tooling)
+**Success Criteria** (what must be TRUE):
+  1. Admin can toggle debug mode on/off from the settings page
+  2. When enabled, a debug frame appears at the bottom of the screen
+  3. Debug frame shows the exact system prompt, user prompt, and model parameters sent to OpenAI for each generation
+  4. Debug frame updates in real-time as products are generated
+  5. Debug mode persists across page navigation within the session
+  6. Debug frame is only visible to admin users
+**Plans**: 2 plans
+**Status**: Not started
+
+Plans:
+- [ ] 08-01-PLAN.md — Backend: Debug API endpoint and frontend server action
+- [ ] 08-02-PLAN.md — Frontend: Debug context, collapsible panel, settings toggle, layout integration
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -206,7 +225,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 5. Review System | 7/7 | Complete | 2026-01-29 |
 | 6. Smart Regeneration | 7/7 | Complete | 2026-01-29 |
 | 7. Export & Polish | 5/5 | Complete | 2026-01-29 |
+| 8. Admin Debug Mode | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 7 complete — all phases done)*
+*Last updated: 2026-01-29 (Phase 8 planned — 2 plans in 2 waves)*
