@@ -181,10 +181,14 @@ Plans:
   5. Overall application has clean, modern SaaS-style dashboard interface
   6. Application provides robust error handling with clear user feedback messages
   7. Application is responsive across different screen sizes
-**Plans**: TBD
+**Plans**: 5 plans in 3 waves
 
 Plans:
-- [ ] TBD after planning
+- [ ] 07-01-PLAN.md — Backend: Migration, ExcelExporter service, export API endpoints
+- [ ] 07-02-PLAN.md — Frontend: Sonner toasts, Skeleton components, error boundaries, loading pages
+- [ ] 07-03-PLAN.md — Frontend: Export button, confirmation dialog, file download
+- [ ] 07-04-PLAN.md — Frontend: Dashboard redesign with guided empty state and CSS polish
+- [ ] 07-05-PLAN.md — Checkpoint: End-to-end verification of export and polish
 
 ## Progress
 
@@ -199,8 +203,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
 | 5. Review System | 7/7 | Complete | 2026-01-29 |
 | 6. Smart Regeneration | 7/7 | Complete | 2026-01-29 |
-| 7. Export & Polish | 0/TBD | Not started | - |
+| 7. Export & Polish | 0/5 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 6 complete)*
+*Last updated: 2026-01-29 (Phase 7 planned)*
