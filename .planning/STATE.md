@@ -459,8 +459,20 @@ None - Phase 7 in progress. Toast, error boundaries, and loading skeletons compl
 - Full feedback loop: reject with reasons -> view history -> restore -> regenerate single/batch -> improved content
 
 **Phase 7 (Export & Polish) IN PROGRESS**
-- ✅ 07-01: Migration + column order persistence for export reconstruction
+- ✅ 07-01: Backend export system (migration, ExcelExporter, stats+download endpoints)
 - ✅ 07-02: Sonner toast system, error boundaries (3 levels), skeleton loading pages (4 pages)
+
+**From 07-01 execution:**
+- Migration 023 adds excel_column_order JSONB column to clients table
+- Upload endpoint persists original Excel header order on client.excel_column_order
+- ExcelExporter service reconstructs Excel with original column order and updated content
+- REVERSE_MAP pattern: Excel header name -> field name from ExactColumnMapper.COLUMN_MAP
+- Export router: GET /api/export/{client_id}/stats for dialog, GET /api/export/{client_id} for download
+- Content substitution: approved/edited products use generated content; rejected/non-generated keep originals
+- Variant rows inherit generated content from ProductGroup (same group = same content)
+- include_pending query param controls whether pending-review products also get updated content
+- Column order fallback: derive from COLUMN_MAP values + unmapped_data keys when excel_column_order not stored
+- group_status key pattern avoids collision between Product.status and ProductGroup.status
 
 **From 07-02 execution:**
 - Sonner toast globally available via `import { toast } from 'sonner'`
@@ -474,9 +486,9 @@ None - Phase 7 in progress. Toast, error boundaries, and loading skeletons compl
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 07-02-PLAN.md (toast, error boundaries, loading skeletons)
+Stopped at: Completed 07-01-PLAN.md (backend export system)
 Resume file: None
-Next: 07-03 (Export backend endpoint)
+Next: 07-03 (Export frontend dialog + button)
 
 ---
 *State initialized: 2026-01-22*
