@@ -4,7 +4,6 @@ import Image from "next/image";
 import { getUser } from "@/lib/dal";
 import { logout } from "@/app/actions/auth";
 import { getClients } from "@/app/actions/clients";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ClientSelector } from "@/components/client-selector";
 import { UploadButtonWrapper } from "@/components/upload-button-wrapper";
@@ -25,8 +24,8 @@ export default async function DashboardLayout({
 
   return (
     <DebugProvider isAdmin={user.is_admin}>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-brand-dark shadow-sm border-b border-brand-dark-hover">
+      <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+        <header className="shrink-0 bg-brand-dark shadow-sm border-b border-brand-dark-hover">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
@@ -69,8 +68,10 @@ export default async function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className={cn("max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8", user.is_admin && "pb-80")}>
-          {children}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
         </main>
         <DebugPanel />
       </div>

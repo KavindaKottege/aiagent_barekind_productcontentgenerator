@@ -3,10 +3,15 @@
 import { useDebug } from '@/lib/debug-context'
 import { useSelectedClient } from '@/lib/client-context'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bug, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { Bug, ChevronDown, ChevronUp, Trash2, GripHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { getDebugToken, type DebugLogEntry } from '@/app/actions/debug'
+
+const HEIGHT_STORAGE_KEY = 'debugPanelHeight'
+const MIN_HEIGHT = 120
+const MAX_HEIGHT = 800
+const DEFAULT_HEIGHT = 320
 
 function parsePromptUsed(promptUsed: string): { system: string; user: string } {
   const systemMatch = promptUsed.match(
@@ -128,9 +133,22 @@ export function DebugPanel() {
   const [isExpanded, setIsExpanded] = useState(true)
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [panelHeight, setPanelHeight] = useState(DEFAULT_HEIGHT)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastTimestamp = useRef<string | null>(null)
   const prevClientId = useRef<string | null>(null)
+  const isDragging = useRef(false)
+  const dragStartY = useRef(0)
+  const dragStartHeight = useRef(0)
+
+  // Load saved height from sessionStorage
+  useEffect(() => {
+    const saved = sessionStorage.getItem(HEIGHT_STORAGE_KEY)
+    if (saved) {
+      const h = parseInt(saved, 10)
+      if (h >= MIN_HEIGHT && h <= MAX_HEIGHT) setPanelHeight(h)
+    }
+  }, [])
 
   // Get access token on mount
   useEffect(() => {
@@ -184,9 +202,7 @@ export function DebugPanel() {
       }
     }
 
-    // Initial poll
     poll()
-
     const interval = setInterval(poll, 2000)
     return () => clearInterval(interval)
   }, [isDebugEnabled, selectedClientId, accessToken, addLogs])
@@ -198,6 +214,50 @@ export function DebugPanel() {
     }
   }, [debugLogs.length, isExpanded])
 
+  // Drag resize handlers
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      isDragging.current = true
+      dragStartY.current = e.clientY
+      dragStartHeight.current = panelHeight
+      document.body.style.cursor = 'row-resize'
+      document.body.style.userSelect = 'none'
+
+      const handleDragMove = (ev: MouseEvent) => {
+        if (!isDragging.current) return
+        const delta = dragStartY.current - ev.clientY
+        const newHeight = Math.max(
+          MIN_HEIGHT,
+          Math.min(MAX_HEIGHT, dragStartHeight.current + delta)
+        )
+        setPanelHeight(newHeight)
+      }
+
+      const handleDragEnd = () => {
+        if (!isDragging.current) return
+        isDragging.current = false
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+        // Save on release
+        const delta = dragStartY.current - 0 // just save current
+        // Read from state via DOM to get the latest
+        document.removeEventListener('mousemove', handleDragMove)
+        document.removeEventListener('mouseup', handleDragEnd)
+      }
+
+      document.addEventListener('mousemove', handleDragMove)
+      document.addEventListener('mouseup', handleDragEnd)
+    },
+    [panelHeight]
+  )
+
+  // Persist height when it changes (debounced via drag end)
+  useEffect(() => {
+    sessionStorage.setItem(HEIGHT_STORAGE_KEY, String(panelHeight))
+  }, [panelHeight])
+
   if (!isDebugEnabled) return null
 
   const selectedLog = selectedLogId
@@ -205,10 +265,23 @@ export function DebugPanel() {
     : null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-orange-500/50 bg-gray-900 text-gray-100 shadow-2xl">
+    <div
+      className="flex flex-col border-t-2 border-orange-500/50 bg-gray-900 text-gray-100"
+      style={{ height: isExpanded ? panelHeight : 'auto' }}
+    >
+      {/* Drag handle */}
+      {isExpanded && (
+        <div
+          className="flex h-2 cursor-row-resize items-center justify-center bg-gray-800 hover:bg-gray-700 transition-colors"
+          onMouseDown={handleDragStart}
+        >
+          <GripHorizontal className="h-3 w-5 text-gray-500" />
+        </div>
+      )}
+
       {/* Header bar */}
       <div
-        className="flex cursor-pointer select-none items-center justify-between bg-gray-800/90 px-4 py-2 backdrop-blur"
+        className="flex shrink-0 cursor-pointer select-none items-center justify-between bg-gray-800/90 px-4 py-1.5 backdrop-blur"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">
@@ -250,9 +323,9 @@ export function DebugPanel() {
         </div>
       </div>
 
-      {/* Expandable log content */}
+      {/* Log content */}
       {isExpanded && (
-        <div className="flex h-72">
+        <div className="flex min-h-0 flex-1">
           {/* Left: Log list */}
           <div
             ref={scrollRef}
