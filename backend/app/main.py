@@ -8,6 +8,7 @@ from app.database import engine
 from app.routers import (
     auth_router,
     clients_router,
+    debug_router,
     export_router,
     generation_router,
     products_router,
@@ -51,6 +52,7 @@ app.include_router(generation_router, prefix="/api")
 app.include_router(review_router, prefix="/api")
 app.include_router(regeneration_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
+app.include_router(debug_router, prefix="/api")
 
 
 @app.get("/api/health")
