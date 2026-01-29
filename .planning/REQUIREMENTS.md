@@ -69,10 +69,10 @@
 
 ### Smart Regeneration
 
-- [ ] **REGEN-01**: User can provide rejection reason for rejected products
-- [ ] **REGEN-02**: System stores previous generation attempts per product
-- [ ] **REGEN-03**: System includes AI review feedback in regeneration context
-- [ ] **REGEN-04**: User can regenerate only rejected products (not entire batch)
+- [x] **REGEN-01**: User can provide rejection reason for rejected products
+- [x] **REGEN-02**: System stores previous generation attempts per product
+- [x] **REGEN-03**: System includes AI review feedback in regeneration context
+- [x] **REGEN-04**: User can regenerate only rejected products (not entire batch)
 
 ### Export
 
@@ -171,10 +171,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REV-07 | Phase 5 | Complete |
 | REV-08 | Phase 5 | Complete |
 | REV-09 | Phase 5 | Complete |
-| REGEN-01 | Phase 6 | Pending |
-| REGEN-02 | Phase 6 | Pending |
-| REGEN-03 | Phase 6 | Pending |
-| REGEN-04 | Phase 6 | Pending |
+| REGEN-01 | Phase 6 | Complete |
+| REGEN-02 | Phase 6 | Complete |
+| REGEN-03 | Phase 6 | Complete |
+| REGEN-04 | Phase 6 | Complete |
 | EXP-01 | Phase 7 | Pending |
 | EXP-02 | Phase 7 | Pending |
 | EXP-03 | Phase 7 | Pending |
