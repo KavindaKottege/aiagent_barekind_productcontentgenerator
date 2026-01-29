@@ -1,12 +1,14 @@
 """Regeneration API endpoints for smart regeneration workflow."""
 
+from collections import defaultdict
+from decimal import Decimal
 from typing import Annotated
 from uuid import UUID, uuid4
 
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -73,44 +75,84 @@ async def get_generation_history(
             detail="Not authorized to view this product's history",
         )
 
-    # Get all successful generation audits for this product
+    # Get all successful generation audits with either title or description.
+    # Title and description may be in separate audits (split generation) or
+    # combined in one audit (legacy generation). Group by job_id to combine.
     result = await db.execute(
         select(GenerationAudit)
         .where(GenerationAudit.product_group_id == product_group_id)
         .where(GenerationAudit.success == True)  # noqa: E712
-        .where(GenerationAudit.generated_title.isnot(None))
-        .where(GenerationAudit.generated_description.isnot(None))
-        .order_by(GenerationAudit.created_at.desc())
+        .where(
+            or_(
+                GenerationAudit.generated_title.isnot(None),
+                GenerationAudit.generated_description.isnot(None),
+            )
+        )
+        .order_by(GenerationAudit.created_at.asc())
     )
     audits = result.scalars().all()
+
+    # Group audits by job_id to combine split title/description records
+    job_groups: dict[UUID, list[GenerationAudit]] = defaultdict(list)
+    for audit in audits:
+        job_groups[audit.job_id].append(audit)
 
     # Determine current content for is_current flag
     current_title = group.edited_title or group.generated_title
     current_description = group.edited_description or group.generated_description
 
-    # Build history items
+    # Build history items from grouped audits (one entry per job)
+    combined_entries = []
+    for job_id, job_audits in job_groups.items():
+        title = None
+        description = None
+        total_cost = Decimal("0")
+        latest_time = job_audits[0].created_at
+        representative_id = job_audits[0].id
+        attempt = job_audits[0].attempt_number
+
+        for a in job_audits:
+            if a.generated_title:
+                title = a.generated_title
+                representative_id = a.id  # Prefer title audit as representative
+            if a.generated_description:
+                description = a.generated_description
+            total_cost += a.cost
+            if a.created_at > latest_time:
+                latest_time = a.created_at
+
+        combined_entries.append({
+            "id": representative_id,
+            "title": title,
+            "description": description,
+            "created_at": latest_time,
+            "cost": total_cost,
+            "attempt_number": attempt,
+        })
+
+    # Sort by created_at descending (most recent first)
+    combined_entries.sort(key=lambda x: x["created_at"], reverse=True)
+
+    # Build final history items
     history = []
-    for i, audit in enumerate(audits):
-        # Estimate regeneration number from job order
-        # Most recent = highest regeneration number, descending
+    for i, entry in enumerate(combined_entries):
         regen_num = group.regeneration_count - i if group.regeneration_count else 0
         if regen_num < 0:
             regen_num = 0
 
-        # Check if this audit's content matches current content
         is_current = (
-            audit.generated_title == current_title
-            and audit.generated_description == current_description
+            entry["title"] == current_title
+            and entry["description"] == current_description
         )
 
         history.append(
             GenerationHistoryItem(
-                id=str(audit.id),
-                title=audit.generated_title,
-                description=audit.generated_description,
-                created_at=audit.created_at,
-                cost=f"${audit.cost:.4f}",
-                attempt_number=audit.attempt_number,
+                id=str(entry["id"]),
+                title=entry["title"],
+                description=entry["description"],
+                created_at=entry["created_at"],
+                cost=f"${entry['cost']:.4f}",
+                attempt_number=entry["attempt_number"],
                 regeneration_number=regen_num,
                 is_current=is_current,
             )
@@ -177,13 +219,34 @@ async def restore_version(
             detail="Version does not belong to this product",
         )
 
+    # Resolve title and description from this audit and its sibling in the same job.
+    # Split generation creates separate title/description audits per job.
+    restored_title = audit.generated_title
+    restored_description = audit.generated_description
+
+    if restored_title is None or restored_description is None:
+        # Find sibling audit from same job with the missing field
+        sibling_result = await db.execute(
+            select(GenerationAudit)
+            .where(GenerationAudit.job_id == audit.job_id)
+            .where(GenerationAudit.product_group_id == product_group_id)
+            .where(GenerationAudit.success == True)  # noqa: E712
+            .where(GenerationAudit.id != audit.id)
+        )
+        siblings = sibling_result.scalars().all()
+        for sibling in siblings:
+            if restored_title is None and sibling.generated_title:
+                restored_title = sibling.generated_title
+            if restored_description is None and sibling.generated_description:
+                restored_description = sibling.generated_description
+
     # Restore content: copy audit content to generated_*, clear edits, reset review
     await db.execute(
         update(ProductGroup)
         .where(ProductGroup.id == product_group_id)
         .values(
-            generated_title=audit.generated_title,
-            generated_description=audit.generated_description,
+            generated_title=restored_title,
+            generated_description=restored_description,
             edited_title=None,
             edited_description=None,
             review_status=None,
@@ -195,8 +258,8 @@ async def restore_version(
     return RestoreVersionResponse(
         success=True,
         message="Version restored successfully",
-        restored_title=audit.generated_title,
-        restored_description=audit.generated_description,
+        restored_title=restored_title,
+        restored_description=restored_description,
     )
 
 
