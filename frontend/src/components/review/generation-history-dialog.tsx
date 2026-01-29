@@ -193,8 +193,8 @@ export function GenerationHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[70vh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <History className="w-5 h-5" />
             Generation History
@@ -206,7 +206,7 @@ export function GenerationHistoryDialog({
         </DialogHeader>
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+          <div className="flex-shrink-0 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
             {error}
           </div>
         )}
@@ -216,7 +216,7 @@ export function GenerationHistoryDialog({
         ) : history.length === 0 ? (
           <div className="py-8 text-center text-gray-500">No generation history found</div>
         ) : (
-          <ScrollArea className="max-h-[55vh]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="space-y-1.5 pr-4">
               {/* Recent versions (always visible) */}
               {recentItems.map((item, index) => (
