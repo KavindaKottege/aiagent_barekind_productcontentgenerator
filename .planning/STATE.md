@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** Phase 6 - Smart Regeneration
+**Current focus:** Phase 6 complete - Ready for Phase 7 (Export & Polish)
 
 ## Current Position
 
-Phase: 6 of 7 (Smart Regeneration)
-Plan: 6 of 7 (06-06 regeneration frontend UI complete)
-Status: In progress - Phase 6 wave 3 executing
-Last activity: 2026-01-29 — Completed 06-06-PLAN.md (regeneration frontend UI)
+Phase: 6 of 7 (Smart Regeneration) - COMPLETE
+Plan: 7 of 7 (06-07 batch regeneration UI complete)
+Status: Phase 6 complete - all 7 plans executed
+Last activity: 2026-01-29 — Completed 06-07-PLAN.md (batch regeneration UI)
 
-Progress: [█████████░] 89% (31 of 35 total plans complete)
+Progress: [██████████] 100% (35 of 35 planned - Phase 7 TBD)
 
 ## Performance Metrics
 
@@ -233,7 +233,7 @@ None yet.
 
 ### Blockers/Concerns
 
-**Phase 6 (Smart Regeneration):** May need research for feedback learning techniques and refinement loop implementations.
+None - Phase 6 complete. Phase 7 (Export & Polish) planning not yet started.
 
 ### Next Phase Readiness
 
@@ -437,12 +437,33 @@ None yet.
 - Worker passes regeneration_context to generate_title and generate_description
 - Full pipeline: endpoint resets product -> ARQ job -> worker detects regen -> builds context -> AI service injects feedback
 
+**From 06-07 execution:**
+- BatchRegenerateButton shared component used on both products and review pages
+- Estimate fetched lazily on dialog open (not on page mount) to minimize API calls
+- Button hidden when no rejected products exist (conditional visibility pattern)
+- History endpoint groups by job_id to handle split title/description audit records
+- History dialog UX: compact rows with version numbering (v1=oldest), collapsible older versions, fixed 70vh modal with scroll
+- Native overflow-y-auto preferred over ScrollArea for dialog scroll to avoid shadcn grid conflicts
+
+**Phase 6 (Smart Regeneration) COMPLETE AND VERIFIED ✓**
+- ✅ User can reject products with structured feedback reasons (checkboxes)
+- ✅ System uses rejection feedback to improve regenerated content
+- ✅ User can view generation history for any product
+- ✅ User can restore previous versions from history
+- ✅ User can regenerate a single rejected product
+- ✅ User can batch regenerate all rejected products
+- ✅ Batch regeneration shows count and estimated cost before confirmation
+- ✅ Regenerated content is different from rejected version (feedback-enhanced)
+- Verification: All success criteria passed via human-verify checkpoint
+- 7 plans: rejection feedback, prompt enhancement, history/restore endpoints, regeneration endpoints, frontend UI, batch UI
+- Full feedback loop: reject with reasons -> view history -> restore -> regenerate single/batch -> improved content
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-06-PLAN.md (regeneration frontend UI)
+Stopped at: Completed 06-07-PLAN.md (batch regeneration UI) - Phase 6 complete
 Resume file: None
-Next: Continue Phase 6 - remaining plan (06-07)
+Next: Phase 7 (Export & Polish) - planning not yet started
 
 ---
 *State initialized: 2026-01-22*
