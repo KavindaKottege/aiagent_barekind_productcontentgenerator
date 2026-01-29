@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** Phase 6 complete - Ready for Phase 7 (Export & Polish)
+**Current focus:** Phase 7 in progress - Export & Polish
 
 ## Current Position
 
-Phase: 6 of 7 (Smart Regeneration) - COMPLETE
-Plan: 7 of 7 (06-07 batch regeneration UI complete)
-Status: Phase 6 complete - all 7 plans executed
-Last activity: 2026-01-29 — Completed 06-07-PLAN.md (batch regeneration UI)
+Phase: 7 of 7 (Export & Polish) - IN PROGRESS
+Plan: 2 of 5 (07-02 toast, error boundaries, loading skeletons complete)
+Status: In progress - 2 of 5 Phase 7 plans executed
+Last activity: 2026-01-29 — Completed 07-02-PLAN.md (toast, error boundaries, loading skeletons)
 
-Progress: [██████████] 100% (35 of 35 planned - Phase 7 TBD)
+Progress: [█████████░] 92% (37 of 40 plans complete)
 
 ## Performance Metrics
 
@@ -233,7 +233,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 6 complete. Phase 7 (Export & Polish) planning not yet started.
+None - Phase 7 in progress. Toast, error boundaries, and loading skeletons complete.
 
 ### Next Phase Readiness
 
@@ -458,12 +458,25 @@ None - Phase 6 complete. Phase 7 (Export & Polish) planning not yet started.
 - 7 plans: rejection feedback, prompt enhancement, history/restore endpoints, regeneration endpoints, frontend UI, batch UI
 - Full feedback loop: reject with reasons -> view history -> restore -> regenerate single/batch -> improved content
 
+**Phase 7 (Export & Polish) IN PROGRESS**
+- ✅ 07-01: Migration + column order persistence for export reconstruction
+- ✅ 07-02: Sonner toast system, error boundaries (3 levels), skeleton loading pages (4 pages)
+
+**From 07-02 execution:**
+- Sonner toast globally available via `import { toast } from 'sonner'`
+- Toaster rendered in root layout with richColors and bottom-right position
+- 3-level error boundary hierarchy: global-error.tsx (replaces root layout), error.tsx (root), (dashboard)/error.tsx (keeps header)
+- 4 skeleton loading pages: products, review, clients, dashboard
+- next-themes installed as Sonner dependency
+- Error boundaries use 'use client' directive with reset() function for recovery
+- Skeleton pages use Skeleton + Card components with space-y-6 wrapper pattern
+
 ## Session Continuity
 
 Last session: 2026-01-29 (current)
-Stopped at: Completed 06-07-PLAN.md (batch regeneration UI) - Phase 6 complete
+Stopped at: Completed 07-02-PLAN.md (toast, error boundaries, loading skeletons)
 Resume file: None
-Next: Phase 7 (Export & Polish) - planning not yet started
+Next: 07-03 (Export backend endpoint)
 
 ---
 *State initialized: 2026-01-22*
