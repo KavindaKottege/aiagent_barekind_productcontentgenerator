@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-30)
 
 **Core value:** Generate professional, on-brand product content at scale with minimal friction
-**Current focus:** v2.0 Platform Deployment -- Phase 9 (Platform Brief & Containerization)
+**Current focus:** v2.0 Platform Deployment -- Phase 9 complete, ready for Phase 10
 
 ## Current Position
 
-Phase: 9 of 14 (Platform Brief & Containerization)
-Plan: 3 of 4 in current phase (09-01, 09-02, 09-03 complete)
-Status: In progress
-Last activity: 2026-01-30 -- Completed 09-03-PLAN.md (Docker Compose & CI Pipeline)
+Phase: 9 of 14 (Platform Brief & Containerization) -- COMPLETE
+Plan: 4 of 4 in current phase (09-01, 09-02, 09-03, 09-04 complete)
+Status: Phase complete
+Last activity: 2026-01-30 -- Completed 09-04-PLAN.md (Platform Brief & Entrypoint Script)
 
-Progress: [########..] 80% (v1.0 complete, v2.0 phase 9 plans 1-3 done)
+Progress: [#########.] 85% (v1.0 complete, v2.0 phase 9 complete)
 
 ## Performance Metrics
 
@@ -72,6 +72,9 @@ Recent decisions affecting current work:
 - DOCK-ISOLATION: Prod services have no port mappings; only reachable within Docker network
 - DOCK-CI-CACHE: GHA layer cache (type=gha,mode=max) for fast CI rebuilds
 - DOCK-CI-TAGS: SHA + latest tags on main branch pushes
+- BRIEF-ENTRYPOINT: Entrypoint script runs alembic upgrade head before exec, automatic migrations on startup
+- BRIEF-FORMAT: 12-section platform brief with appendices, optimized for AI consumer
+- BRIEF-RESPONSES: 11-item Required Responses checklist for platform operator
 
 ### Pending Todos
 
@@ -87,10 +90,10 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 09-03-PLAN.md (Docker Compose & CI Pipeline)
+Stopped at: Completed 09-04-PLAN.md (Platform Brief & Entrypoint Script) -- Phase 9 complete
 Resume file: None
-Next: Execute 09-04-PLAN.md
+Next: Phase 10 (Platform Integration)
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-30 (09-03 Docker Compose & CI Pipeline complete)*
+*Last updated: 2026-01-30 (09-04 Platform Brief & Entrypoint Script complete -- Phase 9 complete)*
