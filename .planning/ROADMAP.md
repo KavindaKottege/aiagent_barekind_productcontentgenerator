@@ -161,7 +161,13 @@ Plans:
   2. Running `docker compose up` starts FastAPI, ARQ worker, and Redis as healthy containers on an internal-only network
   3. Each container responds to a health check endpoint that container orchestration tools can poll
   4. Backend services are not reachable from the public internet (internal network only)
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md -- Dockerfile + .dockerignore (multi-stage build, non-root user)
+- [ ] 09-02-PLAN.md -- Health check endpoints (liveness + readiness)
+- [ ] 09-03-PLAN.md -- Docker Compose profiles + GitHub Actions CI
+- [ ] 09-04-PLAN.md -- Platform infrastructure brief + entrypoint script
 
 ### Phase 10: Database Migration
 **Goal**: All application data is tenant-isolated on a shared PostgreSQL database with both Drizzle and SQLAlchemy accessing the same schema
