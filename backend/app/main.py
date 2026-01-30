@@ -11,6 +11,7 @@ from app.routers import (
     debug_router,
     export_router,
     generation_router,
+    health_router,
     products_router,
     regeneration_router,
     review_router,
@@ -44,6 +45,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(health_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")
 app.include_router(clients_router, prefix="/api")
@@ -53,9 +55,3 @@ app.include_router(review_router, prefix="/api")
 app.include_router(regeneration_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
 app.include_router(debug_router, prefix="/api")
-
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
