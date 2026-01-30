@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 9 of 14 (Platform Brief & Containerization)
-Plan: 2 of 4 in current phase (09-01, 09-02 complete)
+Plan: 3 of 4 in current phase (09-01, 09-02, 09-03 complete)
 Status: In progress
-Last activity: 2026-01-30 -- Completed 09-01-PLAN.md (Backend Dockerfile)
+Last activity: 2026-01-30 -- Completed 09-03-PLAN.md (Docker Compose & CI Pipeline)
 
-Progress: [########..] 80% (v1.0 complete, v2.0 phase 9 in progress)
+Progress: [########..] 80% (v1.0 complete, v2.0 phase 9 plans 1-3 done)
 
 ## Performance Metrics
 
@@ -68,6 +68,10 @@ Recent decisions affecting current work:
 - DOCK-NO-CMD: No CMD in Dockerfile; docker-compose provides per-service command
 - DOCK-06-timeout: 5-second timeout for DB and Redis health checks
 - DOCK-06-health-first: Health router registered first in include_router order
+- DOCK-NETWORK: Standard bridge network (no internal:true); isolation via port omission
+- DOCK-ISOLATION: Prod services have no port mappings; only reachable within Docker network
+- DOCK-CI-CACHE: GHA layer cache (type=gha,mode=max) for fast CI rebuilds
+- DOCK-CI-TAGS: SHA + latest tags on main branch pushes
 
 ### Pending Todos
 
@@ -83,10 +87,10 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 09-01-PLAN.md (Backend Dockerfile)
+Stopped at: Completed 09-03-PLAN.md (Docker Compose & CI Pipeline)
 Resume file: None
-Next: Execute 09-03-PLAN.md
+Next: Execute 09-04-PLAN.md
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-30 (09-01 Backend Dockerfile complete)*
+*Last updated: 2026-01-30 (09-03 Docker Compose & CI Pipeline complete)*
