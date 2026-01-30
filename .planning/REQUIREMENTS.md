@@ -3,91 +3,79 @@
 **Defined:** 2026-01-22
 **Core Value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
 
-## v1 Requirements
+## v1.0 Requirements (Complete)
 
-### Authentication
+All 51 v1.0 requirements complete. See MILESTONES.md for details.
 
-- [x] **AUTH-01**: User can sign up with email and password
-- [x] **AUTH-02**: User can log in and stay logged in across sessions
-- [x] **AUTH-03**: User can log out from any page
-- [x] **AUTH-04**: User session persists across browser refresh
-- [x] **AUTH-05**: OpenAI API key configuration stored per application (single agency)
+## v2.0 Requirements — Platform Deployment
 
-### Client Profile Management
+Requirements for deploying to MadeByKav platform. Each maps to roadmap phases.
 
-- [x] **CLNT-01**: User can create new client profile with name
-- [x] **CLNT-02**: User can edit client profile (brand name, story, tone, language, guidelines)
-- [x] **CLNT-03**: User can store AI prompts per client (system prompt, task1, task2)
-- [x] **CLNT-04**: User can delete client profile
-- [x] **CLNT-05**: User can switch between client profiles in UI
-- [x] **CLNT-06**: Selected client profile persists across sessions
-- [x] **CLNT-07**: User can view list of all client profiles
+### Auth Migration
 
-### Excel Upload & Processing
+- [ ] **AUTH2-01**: App uses @madebykav/auth getAuthContext() for all server component auth checks
+- [ ] **AUTH2-02**: App uses @madebykav/auth requireAuth() for all API route auth checks
+- [ ] **AUTH2-03**: Login, signup, and logout pages are removed (platform handles user lifecycle)
+- [ ] **AUTH2-04**: All data queries are scoped by tenant_id from platform session context
+- [ ] **AUTH2-05**: Python backend validates requests via x-tenant-id and x-user-id internal headers from Next.js
+- [ ] **AUTH2-06**: Unauthenticated users are redirected to platform login (not an in-app login page)
 
-- [x] **EXCL-01**: User can upload Faire Excel template without pre-formatting
-- [x] **EXCL-02**: App automatically detects and maps Faire columns
-- [x] **EXCL-03**: User can select which product fields to use as AI inputs
-- [x] **EXCL-04**: User can filter products by status (which statuses to generate for)
-- [x] **EXCL-05**: App handles missing fields gracefully (prompts adapt)
-- [ ] **EXCL-06**: App warns user during review if selected fields were missing (Phase 5)
-- [x] **EXCL-07**: App uses streaming processing for large Excel files
-- [x] **EXCL-08**: App detects when multiple rows have identical Product Name, Product Token, and SKU (indicating option variants)
-- [x] **EXCL-09**: App groups option variant rows into single product for generation
-- [ ] **EXCL-10**: System provides all option values to AI when generating content for grouped products (Phase 4)
-- [x] **EXCL-11**: During review, grouped products appear as single item (not duplicated per option)
-- [x] **EXCL-12**: On export, generated title and description are copied to all original rows that belong to the product group (Phase 7)
+### Database Migration
 
-### AI Content Generation
+- [ ] **DB-01**: All database tables include tenant_id column (uuid, not null)
+- [ ] **DB-02**: Drizzle ORM schema exists for all tables, usable from Next.js server components and API routes
+- [ ] **DB-03**: SQLAlchemy models updated with tenant_id column replacing user_id
+- [ ] **DB-04**: All Next.js database queries use withTenant() wrapper for RLS enforcement
+- [ ] **DB-05**: All Python backend queries set tenant context via set_config('app.current_tenant_id', ...) for RLS
+- [ ] **DB-06**: RLS policies applied to all app tables using platform's tenant isolation pattern
+- [ ] **DB-07**: Alembic migrations updated for tenant_id schema (runnable on shared database)
+- [ ] **DB-08**: Table names prefixed with app slug to avoid collisions in shared database
 
-- [x] **GEN-01**: User can generate content for 5-10,000 products per upload
-- [x] **GEN-02**: System builds prompts dynamically based on available product fields
-- [x] **GEN-03**: System validates character limits (30-60 for titles, 2000-3000 for descriptions)
-- [x] **GEN-04**: System retries generations that violate character limits
-- [x] **GEN-05**: User sees real-time progress during generation (shows X of Y products completed, current cost)
-- [x] **GEN-06**: System tracks OpenAI API costs per generation batch with running total
-- [x] **GEN-07**: System handles OpenAI rate limits with exponential backoff and queuing
-- [x] **GEN-08**: System retries failed generations automatically
-- [x] **GEN-09**: System uses background job queue for long-running generation
-- [x] **GEN-10**: User can pause generation in progress
-- [x] **GEN-11**: User can resume paused or interrupted generation from where it stopped
-- [x] **GEN-12**: System uses GPT-5.2 for content generation
-- [x] **GEN-14**: System enforces soft cap at $500 per batch - prompts user with progress and costs when reached
-- [x] **GEN-15**: User must explicitly choose to continue or stop when $500 soft cap is hit
+### UI Migration
 
-### Review & Approval
+- [ ] **UI-01**: All UI components import from @madebykav/ui instead of local shadcn/ui
+- [ ] **UI-02**: Auth-related pages (login, signup) are removed from the app
+- [ ] **UI-03**: App layout works within platform embedding (tenant subdomain, /app/ path)
+- [ ] **UI-04**: Navigation and header adapted for platform context (no standalone app chrome for auth)
 
-- [x] **REV-01**: User can manually review each product (approve/reject)
-- [x] **REV-02**: User can navigate products with keyboard shortcuts
-- [x] **REV-03**: UI auto-advances to next product after approve/reject
-- [x] **REV-04**: User can choose AI-assisted review mode (GPT-5.2 recommendations)
-- [x] **REV-05**: User can choose AI-auto review mode (auto-approve with optional review)
-- [x] **REV-06**: User can undo/redo review decisions during session
-- [x] **REV-07**: Review shows warnings for products with missing selected fields
-- [x] **REV-08**: User can start reviewing completed products while generation is still running
-- [x] **REV-09**: Review UI updates in real-time as new products complete generation
+### Backend Containerization
 
-### Smart Regeneration
+- [ ] **DOCK-01**: Production Dockerfile exists for FastAPI backend service
+- [ ] **DOCK-02**: Production Dockerfile exists for ARQ worker service
+- [ ] **DOCK-03**: Redis service is configured for production use
+- [ ] **DOCK-04**: Docker Compose file orchestrates all backend services (FastAPI + ARQ + Redis)
+- [ ] **DOCK-05**: Backend services are on internal network only (not exposed to public internet)
+- [ ] **DOCK-06**: Health check endpoints exist for container orchestration
 
-- [x] **REGEN-01**: User can provide rejection reason for rejected products
-- [x] **REGEN-02**: System stores previous generation attempts per product
-- [x] **REGEN-03**: System includes AI review feedback in regeneration context
-- [x] **REGEN-04**: User can regenerate only rejected products (not entire batch)
+### API Proxy Layer
 
-### Export
+- [ ] **PROXY-01**: Next.js API routes forward requests to Python backend with tenant context headers
+- [ ] **PROXY-02**: SSE streams from Python backend are proxied through Next.js to the browser
+- [ ] **PROXY-03**: Excel file uploads are proxied through Next.js to Python backend (up to 10MB)
+- [ ] **PROXY-04**: Error responses from Python backend are properly forwarded to the frontend
 
-- [x] **EXP-01**: User can download original Excel with updated Product Name and Description
-- [x] **EXP-02**: Downloaded Excel preserves all other columns and formatting
-- [x] **EXP-03**: Downloaded Excel only includes approved products (original file patched in-place; rejected rows keep original values)
+### Per-Tenant Configuration
 
-## v2 Requirements
+- [ ] **CFG-01**: OpenAI API key is stored per tenant in the database
+- [ ] **CFG-02**: Settings page allows tenant to configure their OpenAI API key
+- [ ] **CFG-03**: Python backend reads the tenant's API key when running AI generation
+- [ ] **CFG-04**: App gracefully handles missing API key (shows setup prompt, blocks generation)
+
+### Platform Brief
+
+- [ ] **BRIEF-01**: Infrastructure requirements document describes all services needed on the platform
+- [ ] **BRIEF-02**: Document includes Docker container specifications (images, ports, volumes, env vars)
+- [ ] **BRIEF-03**: Document includes networking requirements (internal service communication)
+- [ ] **BRIEF-04**: Document includes environment variable configuration for all services
+
+## Future Requirements
+
+Deferred beyond v2.0.
 
 ### Multi-Agency Support
 
 - **MULTI-01**: Multiple agencies can use the app with isolated data
-- **MULTI-02**: Each agency has its own workspace and API key configuration
-- **MULTI-03**: Organization management (create/invite team members)
-- **MULTI-04**: PostgreSQL Row Level Security for multi-tenant isolation
+- **MULTI-02**: Organization management (invite team members)
 
 ### Advanced Features
 
@@ -95,28 +83,19 @@
 - **ADV-02**: Template library for common product types
 - **ADV-03**: Bulk prompt testing (A/B test different prompts)
 - **ADV-04**: API access for programmatic content generation
-- **ADV-05**: Shopify/WooCommerce platform integrations
-- **ADV-06**: Multi-level approval workflows (designer → manager → client)
-- **ADV-07**: White-label UI customization
-
-### Multi-Language
-
-- **LANG-01**: Generate content in multiple languages
-- **LANG-02**: Language selection per client profile
-- **LANG-03**: Multi-language output in single batch
+- **ADV-05**: Platform integrations (Shopify, WooCommerce)
+- **ADV-06**: Multi-language content generation
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Client-facing login | Team-only for v1, clients don't need app access yet |
-| Product catalog storage | Profiles store prompts/brand only, not product data |
-| Alternative LLM providers | OpenAI only - proven quality, existing integration |
-| Real-time collaboration | Single-user workflow sufficient for v1 |
-| Custom Excel templates | Faire format only - known format, specific use case |
-| Built-in image generation | Use existing product images, don't generate new ones |
-| Auto-publish to platforms | Manual export workflow maintains control |
-| Version history for content | Regeneration stores attempts, but no full versioning system |
+| Using @madebykav/ai SDK for generation | App needs LangChain structured output, direct OpenAI API access required |
+| Automated data migration from dev DB | Manual initial setup; production starts fresh |
+| Custom domain per tenant | Platform handles subdomain routing |
+| Alternative LLM providers | OpenAI only for now |
+| Real-time collaboration | Single-user workflow per tenant |
+| Custom Excel templates | Faire format only |
 
 ## Traceability
 
@@ -124,66 +103,48 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Complete |
-| AUTH-04 | Phase 1 | Complete |
-| AUTH-05 | Phase 1 | Complete |
-| CLNT-01 | Phase 2 | Complete |
-| CLNT-02 | Phase 2 | Complete |
-| CLNT-03 | Phase 2 | Complete |
-| CLNT-04 | Phase 2 | Complete |
-| CLNT-05 | Phase 2 | Complete |
-| CLNT-06 | Phase 2 | Complete |
-| CLNT-07 | Phase 2 | Complete |
-| EXCL-01 | Phase 3 | Complete |
-| EXCL-02 | Phase 3 | Complete |
-| EXCL-03 | Phase 3 | Complete |
-| EXCL-04 | Phase 3 | Complete |
-| EXCL-05 | Phase 3 | Complete |
-| EXCL-06 | Phase 5 | Complete |
-| EXCL-07 | Phase 3 | Complete |
-| EXCL-08 | Phase 3 | Complete |
-| EXCL-09 | Phase 3 | Complete |
-| EXCL-10 | Phase 4 | Complete |
-| EXCL-11 | Phase 3 | Complete |
-| EXCL-12 | Phase 7 | Complete |
-| GEN-01 | Phase 4 | Complete |
-| GEN-02 | Phase 4 | Complete |
-| GEN-03 | Phase 4 | Complete |
-| GEN-04 | Phase 4 | Complete |
-| GEN-05 | Phase 4 | Complete |
-| GEN-06 | Phase 4 | Complete |
-| GEN-07 | Phase 4 | Complete |
-| GEN-08 | Phase 4 | Complete |
-| GEN-09 | Phase 4 | Complete |
-| GEN-10 | Phase 4 | Complete |
-| GEN-11 | Phase 4 | Complete |
-| GEN-12 | Phase 4 | Complete |
-| GEN-14 | Phase 4 | Complete |
-| GEN-15 | Phase 4 | Complete |
-| REV-01 | Phase 5 | Complete |
-| REV-02 | Phase 5 | Complete |
-| REV-03 | Phase 5 | Complete |
-| REV-04 | Phase 5 | Complete |
-| REV-05 | Phase 5 | Complete |
-| REV-06 | Phase 5 | Complete |
-| REV-07 | Phase 5 | Complete |
-| REV-08 | Phase 5 | Complete |
-| REV-09 | Phase 5 | Complete |
-| REGEN-01 | Phase 6 | Complete |
-| REGEN-02 | Phase 6 | Complete |
-| REGEN-03 | Phase 6 | Complete |
-| REGEN-04 | Phase 6 | Complete |
-| EXP-01 | Phase 7 | Complete |
-| EXP-02 | Phase 7 | Complete |
-| EXP-03 | Phase 7 | Complete |
+| AUTH2-01 | TBD | Pending |
+| AUTH2-02 | TBD | Pending |
+| AUTH2-03 | TBD | Pending |
+| AUTH2-04 | TBD | Pending |
+| AUTH2-05 | TBD | Pending |
+| AUTH2-06 | TBD | Pending |
+| DB-01 | TBD | Pending |
+| DB-02 | TBD | Pending |
+| DB-03 | TBD | Pending |
+| DB-04 | TBD | Pending |
+| DB-05 | TBD | Pending |
+| DB-06 | TBD | Pending |
+| DB-07 | TBD | Pending |
+| DB-08 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+| UI-04 | TBD | Pending |
+| DOCK-01 | TBD | Pending |
+| DOCK-02 | TBD | Pending |
+| DOCK-03 | TBD | Pending |
+| DOCK-04 | TBD | Pending |
+| DOCK-05 | TBD | Pending |
+| DOCK-06 | TBD | Pending |
+| PROXY-01 | TBD | Pending |
+| PROXY-02 | TBD | Pending |
+| PROXY-03 | TBD | Pending |
+| PROXY-04 | TBD | Pending |
+| CFG-01 | TBD | Pending |
+| CFG-02 | TBD | Pending |
+| CFG-03 | TBD | Pending |
+| CFG-04 | TBD | Pending |
+| BRIEF-01 | TBD | Pending |
+| BRIEF-02 | TBD | Pending |
+| BRIEF-03 | TBD | Pending |
+| BRIEF-04 | TBD | Pending |
 
 **Coverage:**
-- v1 requirements: 51 total (GEN-13 removed - Batch API has 24hr latency, incompatible with real-time UX)
-- Mapped to phases: 51
-- Unmapped: 0
+- v2.0 requirements: 36 total
+- Mapped to phases: 0 (pending roadmap creation)
+- Unmapped: 36
 
 ---
-*Requirements defined: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 7 complete — all v1 requirements done)*
+*Requirements defined: 2026-01-22 (v1.0), updated 2026-01-30 (v2.0)*
+*Last updated: 2026-01-30 (v2.0 requirements defined)*
