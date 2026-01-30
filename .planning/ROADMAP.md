@@ -1,16 +1,14 @@
 # Roadmap: Candid Founders Content Generator
 
-## Overview
+## Milestones
 
-Transform a working Streamlit prototype into a commercial-grade SaaS platform for marketing agencies. The journey establishes modern Next.js + FastAPI architecture with multi-tenant isolation, then builds the core workflow (client management -> Excel upload -> AI generation -> review -> export) with cost controls and quality safeguards throughout. Each phase delivers a verifiable capability that moves agencies from manual product content creation to AI-powered bulk generation at scale.
+- v1.0 MVP - Phases 1-8 (shipped 2026-01-29)
+- v2.0 Platform Deployment - Phases 9-14 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
+<details>
+<summary>v1.0 MVP (Phases 1-8) - SHIPPED 2026-01-29</summary>
 
 - [x] **Phase 1: Foundation & Authentication** - Modern architecture with secure multi-tenant auth
 - [x] **Phase 2: Client Management** - Client profiles with brand voice and prompt configuration
@@ -21,20 +19,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Export & Polish** - Download approved content and final UX refinements
 - [x] **Phase 8: Admin Debug Mode** - Debug window showing exact prompts sent to AI model
 
-## Phase Details
-
 ### Phase 1: Foundation & Authentication
 **Goal**: Establish production-ready architecture with secure user authentication and multi-tenant data isolation
 **Depends on**: Nothing (first phase)
 **Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05
-**Success Criteria** (what must be TRUE):
-  1. User can sign up with email and password
-  2. User can log in and remain authenticated across browser sessions
-  3. User can log out from any page
-  4. Authentication persists across browser refresh without re-login
-  5. OpenAI API key is configured and stored securely per application instance
-  6. Database enforces row-level security to prevent cross-tenant data access
-**Plans**: 5 plans in 3 waves (includes 1 gap closure plan)
 **Status**: Complete
 **Completed**: 2026-01-22
 
@@ -49,15 +37,6 @@ Plans:
 **Goal**: Users can create and manage client profiles with brand-specific prompts and guidelines
 **Depends on**: Phase 1
 **Requirements**: CLNT-01, CLNT-02, CLNT-03, CLNT-04, CLNT-05, CLNT-06, CLNT-07
-**Success Criteria** (what must be TRUE):
-  1. User can create new client profile with name
-  2. User can edit client profile to include brand name, story, tone, language, and guidelines
-  3. User can configure AI prompts per client (system prompt, task1, task2)
-  4. User can delete client profile when no longer needed
-  5. User can switch between client profiles in the UI
-  6. Selected client profile persists across sessions
-  7. User can view list of all client profiles in their account
-**Plans**: 5 plans in 2 waves
 **Status**: Complete
 **Completed**: 2026-01-22
 
@@ -72,16 +51,6 @@ Plans:
 **Goal**: Users can upload raw Faire Excel files and configure product field mapping for AI generation
 **Depends on**: Phase 2
 **Requirements**: EXCL-01, EXCL-02, EXCL-03, EXCL-04, EXCL-05, EXCL-06, EXCL-07, EXCL-08, EXCL-09, EXCL-10, EXCL-11, EXCL-12
-**Success Criteria** (what must be TRUE):
-  1. User can upload Faire Excel template without manual pre-formatting
-  2. App automatically detects and maps Faire columns to product fields
-  3. User can select which product fields to use as AI inputs during generation
-  4. User can filter which product statuses to generate content for
-  5. App handles missing product fields gracefully without crashing
-  6. App processes large Excel files (5,000+ products) without memory errors
-  7. App detects product option variants (identical Name, Token, SKU) and groups them for single generation
-  8. Grouped products display as single item in UI (not duplicated per option)
-**Plans**: 5 plans in 4 waves
 **Status**: Complete
 **Completed**: 2026-01-22
 
@@ -96,20 +65,6 @@ Plans:
 **Goal**: Users can generate optimized product titles and descriptions at scale with real-time cost and progress tracking
 **Depends on**: Phase 3
 **Requirements**: GEN-01, GEN-02, GEN-03, GEN-04, GEN-05, GEN-06, GEN-07, GEN-08, GEN-09, GEN-10, GEN-11, GEN-12, GEN-14, GEN-15
-**Success Criteria** (what must be TRUE):
-  1. User can generate content for 5-10,000 products per upload
-  2. System builds prompts dynamically based on available product fields
-  3. Generated titles meet character limits (30-60 chars) and descriptions meet limits (2000-3000 chars)
-  4. System automatically retries generations that violate character limits
-  5. User sees real-time progress showing X of Y products completed and current cost total
-  6. System tracks OpenAI API costs per generation batch with running total displayed
-  7. System handles OpenAI rate limits automatically with exponential backoff
-  8. Failed generations retry automatically without user intervention
-  9. Long-running generations execute in background without blocking UI
-  10. User can pause generation in progress
-  11. User can resume paused or interrupted generation from where it stopped
-  12. System enforces $500 soft cap per batch and prompts user to explicitly continue or stop
-**Plans**: 6 plans in 4 waves
 **Status**: Complete
 **Completed**: 2026-01-23
 
@@ -125,17 +80,6 @@ Plans:
 **Goal**: Users can efficiently review generated content with keyboard-driven workflow
 **Depends on**: Phase 4
 **Requirements**: REV-01, REV-02, REV-03, REV-04, REV-05, REV-06, REV-07, REV-08, REV-09
-**Success Criteria** (what must be TRUE):
-  1. User can manually review each product with approve/reject/edit actions
-  2. User can navigate products using keyboard shortcuts
-  3. UI auto-advances to next product after approve or reject action
-  4. User can choose AI-assisted review mode to get GPT-5.2 recommendations
-  5. User can choose AI-auto review mode for automatic approval with optional manual review
-  6. User can undo and redo review decisions during active session
-  7. Review UI displays warnings when products are missing selected fields
-  8. User can start reviewing completed products while generation is still running
-  9. Review UI updates in real-time as new products complete generation
-**Plans**: 7 plans in 3 waves (includes 1 gap closure plan)
 **Status**: Complete
 **Completed**: 2026-01-29
 
@@ -152,12 +96,6 @@ Plans:
 **Goal**: Users can regenerate rejected products with enhanced prompts that learn from rejection feedback
 **Depends on**: Phase 5
 **Requirements**: REGEN-01, REGEN-02, REGEN-03, REGEN-04
-**Success Criteria** (what must be TRUE):
-  1. User can provide rejection reason when rejecting a product
-  2. System stores previous generation attempts per product
-  3. System includes AI review feedback in regeneration prompts when available
-  4. User can regenerate only rejected products without re-running entire batch
-**Plans**: 7 plans in 3 waves
 **Status**: Complete
 **Completed**: 2026-01-29
 
@@ -174,15 +112,6 @@ Plans:
 **Goal**: Users can download approved content in original Excel format with all columns preserved
 **Depends on**: Phase 6
 **Requirements**: EXP-01, EXP-02, EXP-03
-**Success Criteria** (what must be TRUE):
-  1. User can download original Excel file with updated Product Name and Description columns
-  2. Downloaded Excel preserves all other columns and formatting from original upload
-  3. Downloaded Excel only includes approved products (rejected products excluded)
-  4. For grouped option variants, generated title and description are copied to all original rows
-  5. Overall application has clean, modern SaaS-style dashboard interface
-  6. Application provides robust error handling with clear user feedback messages
-  7. Application is responsive across different screen sizes
-**Plans**: 5 plans in 3 waves
 **Status**: Complete
 **Completed**: 2026-01-29
 
@@ -197,14 +126,6 @@ Plans:
 **Goal**: Admin can enable a debug mode that shows the exact prompts and payloads sent to the AI model in a persistent bottom frame
 **Depends on**: Phase 7
 **Requirements**: None (developer/admin tooling)
-**Success Criteria** (what must be TRUE):
-  1. Admin can toggle debug mode on/off from the settings page
-  2. When enabled, a debug frame appears at the bottom of the screen
-  3. Debug frame shows the exact system prompt, user prompt, and model parameters sent to OpenAI for each generation
-  4. Debug frame updates in real-time as products are generated
-  5. Debug mode persists across page navigation within the session
-  6. Debug frame is only visible to admin users
-**Plans**: 2 plans in 2 waves
 **Status**: Complete
 **Completed**: 2026-01-29
 
@@ -212,22 +133,114 @@ Plans:
 - [x] 08-01-PLAN.md — Backend: Debug API endpoint and frontend server action
 - [x] 08-02-PLAN.md — Frontend: Debug context, collapsible panel, settings toggle, layout integration
 
+</details>
+
+## v2.0 Platform Deployment (In Progress)
+
+**Milestone Goal:** Deploy the Content Generator to the MadeByKav platform without losing any functionality or reliability, using platform SDKs for auth, database, and UI.
+
+**Phase Numbering:**
+- Integer phases (9, 10, ...): Planned milestone work
+- Decimal phases (9.1, 9.2): Urgent insertions (marked with INSERTED)
+
+- [ ] **Phase 9: Platform Brief & Containerization** - Infrastructure docs and production Docker setup
+- [ ] **Phase 10: Database Migration** - Tenant isolation with dual ORM on shared PostgreSQL
+- [ ] **Phase 11: Auth & UI Migration** - Platform SDK auth and UI component swap
+- [ ] **Phase 12: API Proxy Layer** - Next.js gateway proxying to internal Python backend
+- [ ] **Phase 13: Per-Tenant Configuration** - Tenant-scoped OpenAI API keys and settings
+- [ ] **Phase 14: Integration Verification** - End-to-end platform deployment validation
+
+## Phase Details
+
+### Phase 9: Platform Brief & Containerization
+**Goal**: Platform operator has a complete infrastructure specification and production-ready Docker containers for all backend services
+**Depends on**: Phase 8 (v1.0 complete)
+**Requirements**: BRIEF-01, BRIEF-02, BRIEF-03, BRIEF-04, DOCK-01, DOCK-02, DOCK-03, DOCK-04, DOCK-05, DOCK-06
+**Success Criteria** (what must be TRUE):
+  1. A document exists that tells the platform operator exactly what services to provision, what ports to open, what volumes to mount, and what environment variables to set -- without needing to read any source code
+  2. Running `docker compose up` starts FastAPI, ARQ worker, and Redis as healthy containers on an internal-only network
+  3. Each container responds to a health check endpoint that container orchestration tools can poll
+  4. Backend services are not reachable from the public internet (internal network only)
+**Plans**: TBD
+
+### Phase 10: Database Migration
+**Goal**: All application data is tenant-isolated on a shared PostgreSQL database with both Drizzle and SQLAlchemy accessing the same schema
+**Depends on**: Phase 9
+**Requirements**: DB-01, DB-02, DB-03, DB-04, DB-05, DB-06, DB-07, DB-08
+**Success Criteria** (what must be TRUE):
+  1. Every app table has a tenant_id column and a table name prefixed with the app slug, so multiple apps share the database without collisions
+  2. Drizzle ORM schema exists and can query all tables from Next.js server components and API routes using a withTenant() wrapper
+  3. SQLAlchemy models use tenant_id (not user_id) and all queries go through set_config() RLS enforcement
+  4. Running Alembic migrations on the shared database creates/updates all tables with RLS policies applied -- no manual SQL needed
+  5. A query from tenant A cannot return data belonging to tenant B (RLS enforced at the database level)
+**Plans**: TBD
+
+### Phase 11: Auth & UI Migration
+**Goal**: The app authenticates through the MadeByKav platform and uses platform UI components with no standalone auth pages
+**Depends on**: Phase 10
+**Requirements**: AUTH2-01, AUTH2-02, AUTH2-03, AUTH2-04, AUTH2-05, AUTH2-06, UI-01, UI-02, UI-03, UI-04
+**Success Criteria** (what must be TRUE):
+  1. Server components use getAuthContext() and API routes use requireAuth() from @madebykav/auth -- no custom JWT or session logic remains
+  2. Visiting the app without a valid session redirects to the platform login page (not an in-app login page)
+  3. All login, signup, and logout pages are removed from the app codebase
+  4. All UI components render from @madebykav/ui -- no local shadcn/ui copies remain
+  5. The app loads correctly at tenantname.madebykav.com/app/content-generator with platform header and navigation
+**Plans**: TBD
+
+### Phase 12: API Proxy Layer
+**Goal**: The Next.js frontend seamlessly forwards all API requests to the internal Python backend with tenant context, including SSE streams and file uploads
+**Depends on**: Phase 11
+**Requirements**: PROXY-01, PROXY-02, PROXY-03, PROXY-04
+**Success Criteria** (what must be TRUE):
+  1. Frontend API calls go through Next.js API routes that inject x-tenant-id and x-user-id headers before forwarding to the Python backend
+  2. SSE progress streams during AI generation flow from Python through Next.js to the browser without dropping events or stalling
+  3. Uploading a 10MB Excel file through the proxy completes successfully and reaches the Python backend
+  4. When the Python backend returns an error (4xx or 5xx), the frontend displays the correct error message to the user
+**Plans**: TBD
+
+### Phase 13: Per-Tenant Configuration
+**Goal**: Each tenant manages their own OpenAI API key and the app gracefully handles tenants who have not yet configured one
+**Depends on**: Phase 12
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04
+**Success Criteria** (what must be TRUE):
+  1. A settings page exists where the tenant can enter, update, and verify their OpenAI API key
+  2. The Python backend uses the tenant's stored API key (not a global env var) when running AI generation
+  3. A tenant without a configured API key sees a setup prompt and cannot start generation until a key is provided
+**Plans**: TBD
+
+### Phase 14: Integration Verification
+**Goal**: The fully migrated app works end-to-end on the MadeByKav platform with no regressions from v1.0 functionality
+**Depends on**: Phase 13
+**Requirements**: (verification phase -- validates all v2.0 requirements together)
+**Success Criteria** (what must be TRUE):
+  1. A new tenant can access the app, configure their API key, create a client, upload an Excel file, generate content, review it, and export -- the complete v1.0 workflow works on the platform
+  2. Two different tenants logged in simultaneously cannot see each other's clients, products, or generated content
+  3. Stopping and restarting Docker containers does not lose any data or break in-progress generation jobs
+  4. The debug panel from Phase 8 still works within the platform-embedded layout
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 -> 14
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 5/5 | Complete | 2026-01-22 |
-| 2. Client Management | 5/5 | Complete | 2026-01-22 |
-| 3. Excel Processing | 5/5 | Complete | 2026-01-22 |
-| 4. AI Generation Core | 6/6 | Complete | 2026-01-23 |
-| 5. Review System | 7/7 | Complete | 2026-01-29 |
-| 6. Smart Regeneration | 7/7 | Complete | 2026-01-29 |
-| 7. Export & Polish | 5/5 | Complete | 2026-01-29 |
-| 8. Admin Debug Mode | 2/2 | Complete | 2026-01-29 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation & Authentication | v1.0 | 5/5 | Complete | 2026-01-22 |
+| 2. Client Management | v1.0 | 5/5 | Complete | 2026-01-22 |
+| 3. Excel Processing | v1.0 | 5/5 | Complete | 2026-01-22 |
+| 4. AI Generation Core | v1.0 | 6/6 | Complete | 2026-01-23 |
+| 5. Review System | v1.0 | 7/7 | Complete | 2026-01-29 |
+| 6. Smart Regeneration | v1.0 | 7/7 | Complete | 2026-01-29 |
+| 7. Export & Polish | v1.0 | 5/5 | Complete | 2026-01-29 |
+| 8. Admin Debug Mode | v1.0 | 2/2 | Complete | 2026-01-29 |
+| 9. Platform Brief & Containerization | v2.0 | 0/TBD | Not started | - |
+| 10. Database Migration | v2.0 | 0/TBD | Not started | - |
+| 11. Auth & UI Migration | v2.0 | 0/TBD | Not started | - |
+| 12. API Proxy Layer | v2.0 | 0/TBD | Not started | - |
+| 13. Per-Tenant Configuration | v2.0 | 0/TBD | Not started | - |
+| 14. Integration Verification | v2.0 | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 8 complete — all 8 phases done)*
+*Last updated: 2026-01-30 (v2.0 milestone roadmap created)*

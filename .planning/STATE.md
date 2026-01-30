@@ -4,15 +4,37 @@
 
 See: .planning/PROJECT.md (updated 2026-01-30)
 
-**Core value:** Generate professional, on-brand product content at scale with minimal friction - agencies can confidently use this with clients without worrying about workflow bottlenecks or unprofessional UX
-**Current focus:** Milestone v2.0 — Platform Deployment (defining requirements)
+**Core value:** Generate professional, on-brand product content at scale with minimal friction
+**Current focus:** v2.0 Platform Deployment -- Phase 9 (Platform Brief & Containerization)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements for v2.0
-Last activity: 2026-01-30 — Milestone v2.0 started
+Phase: 9 of 14 (Platform Brief & Containerization)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-01-30 -- v2.0 roadmap created
+
+Progress: [########..] 80% (v1.0 complete, v2.0 starting)
+
+## Performance Metrics
+
+**Velocity (v1.0):**
+- Total plans completed: 42
+- Phases completed: 8
+- Total execution time: ~7 days (2026-01-22 to 2026-01-29)
+
+**By Phase (v1.0):**
+
+| Phase | Plans | Status |
+|-------|-------|--------|
+| 1. Foundation | 5 | Complete |
+| 2. Client Mgmt | 5 | Complete |
+| 3. Excel | 5 | Complete |
+| 4. AI Gen | 6 | Complete |
+| 5. Review | 7 | Complete |
+| 6. Regen | 7 | Complete |
+| 7. Export | 5 | Complete |
+| 8. Debug | 2 | Complete |
 
 ## Accumulated Context
 
@@ -29,28 +51,14 @@ Recent decisions affecting current work:
 - Next.js acts as API gateway, proxies to Python backend with tenant context
 - Dual ORM: Drizzle (Next.js) + SQLAlchemy (Python) on shared PostgreSQL
 - Per-tenant OpenAI API key managed at platform level
-- Session-based auth (mbk_session cookie, sessions table in PostgreSQL)
-- Platform passes x-tenant-id and x-app-slug headers to apps
-- Tenant isolation via PostgreSQL RLS with set_config('app.current_tenant_id', tenantId, true)
 
 ### From v1.0 (carried forward)
-
-Key architectural decisions that affect v2.0 migration:
 
 - Async-only SQLAlchemy with asyncpg (no sync fallback)
 - ARQ + Redis for background job processing
 - SSE for real-time progress streaming (500ms polling)
 - LangChain with structured output for AI generation
-- Tiktoken for token counting and cost tracking
-- 3 retries max for character limit violations
-- JSONB columns for flexible data (unmapped_data, rejection_reasons, ai_input_fields)
-- Generation audit trail (GenerationAudit model)
-- Dual review status pattern (manual + AI review status)
-
-### Roadmap Evolution
-
-- v1.0 complete: 8 phases, 42 plans executed
-- v2.0 started: Platform Deployment milestone
+- JSONB columns for flexible data
 
 ### Pending Todos
 
@@ -63,22 +71,13 @@ None yet.
 - Dual ORM on shared database needs careful migration coordination
 - SSE proxying through Next.js needs testing for reliability
 
-### Next Phase Readiness
-
-**v1.0 COMPLETE**
-- All 8 phases complete, all 51 v1 requirements met
-- Full workflow: auth → clients → upload → generate → review → regenerate → export → debug
-
-**v2.0 IN PROGRESS**
-- Defining requirements and roadmap
-
 ## Session Continuity
 
-Last session: 2026-01-30 (current)
-Stopped at: Defining v2.0 milestone requirements
+Last session: 2026-01-30
+Stopped at: v2.0 roadmap created, ready to plan Phase 9
 Resume file: None
-Next: Complete requirements definition and roadmap creation
+Next: `/gsd:plan-phase 9`
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-30 (v2.0 milestone start)*
+*Last updated: 2026-01-30 (v2.0 roadmap created)*

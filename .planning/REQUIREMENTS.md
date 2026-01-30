@@ -103,48 +103,49 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH2-01 | TBD | Pending |
-| AUTH2-02 | TBD | Pending |
-| AUTH2-03 | TBD | Pending |
-| AUTH2-04 | TBD | Pending |
-| AUTH2-05 | TBD | Pending |
-| AUTH2-06 | TBD | Pending |
-| DB-01 | TBD | Pending |
-| DB-02 | TBD | Pending |
-| DB-03 | TBD | Pending |
-| DB-04 | TBD | Pending |
-| DB-05 | TBD | Pending |
-| DB-06 | TBD | Pending |
-| DB-07 | TBD | Pending |
-| DB-08 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
-| DOCK-01 | TBD | Pending |
-| DOCK-02 | TBD | Pending |
-| DOCK-03 | TBD | Pending |
-| DOCK-04 | TBD | Pending |
-| DOCK-05 | TBD | Pending |
-| DOCK-06 | TBD | Pending |
-| PROXY-01 | TBD | Pending |
-| PROXY-02 | TBD | Pending |
-| PROXY-03 | TBD | Pending |
-| PROXY-04 | TBD | Pending |
-| CFG-01 | TBD | Pending |
-| CFG-02 | TBD | Pending |
-| CFG-03 | TBD | Pending |
-| CFG-04 | TBD | Pending |
-| BRIEF-01 | TBD | Pending |
-| BRIEF-02 | TBD | Pending |
-| BRIEF-03 | TBD | Pending |
-| BRIEF-04 | TBD | Pending |
+| AUTH2-01 | Phase 11 | Pending |
+| AUTH2-02 | Phase 11 | Pending |
+| AUTH2-03 | Phase 11 | Pending |
+| AUTH2-04 | Phase 11 | Pending |
+| AUTH2-05 | Phase 11 | Pending |
+| AUTH2-06 | Phase 11 | Pending |
+| DB-01 | Phase 10 | Pending |
+| DB-02 | Phase 10 | Pending |
+| DB-03 | Phase 10 | Pending |
+| DB-04 | Phase 10 | Pending |
+| DB-05 | Phase 10 | Pending |
+| DB-06 | Phase 10 | Pending |
+| DB-07 | Phase 10 | Pending |
+| DB-08 | Phase 10 | Pending |
+| UI-01 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Pending |
+| UI-03 | Phase 11 | Pending |
+| UI-04 | Phase 11 | Pending |
+| DOCK-01 | Phase 9 | Pending |
+| DOCK-02 | Phase 9 | Pending |
+| DOCK-03 | Phase 9 | Pending |
+| DOCK-04 | Phase 9 | Pending |
+| DOCK-05 | Phase 9 | Pending |
+| DOCK-06 | Phase 9 | Pending |
+| PROXY-01 | Phase 12 | Pending |
+| PROXY-02 | Phase 12 | Pending |
+| PROXY-03 | Phase 12 | Pending |
+| PROXY-04 | Phase 12 | Pending |
+| CFG-01 | Phase 13 | Pending |
+| CFG-02 | Phase 13 | Pending |
+| CFG-03 | Phase 13 | Pending |
+| CFG-04 | Phase 13 | Pending |
+| BRIEF-01 | Phase 9 | Pending |
+| BRIEF-02 | Phase 9 | Pending |
+| BRIEF-03 | Phase 9 | Pending |
+| BRIEF-04 | Phase 9 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 36 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 36
+- Mapped to phases: 36 (Phases 9-13)
+- Unmapped: 0
+- Phase 14 is a verification phase (no new requirements, validates all v2.0 requirements together)
 
 ---
 *Requirements defined: 2026-01-22 (v1.0), updated 2026-01-30 (v2.0)*
-*Last updated: 2026-01-30 (v2.0 requirements defined)*
+*Last updated: 2026-01-30 (v2.0 traceability complete)*
