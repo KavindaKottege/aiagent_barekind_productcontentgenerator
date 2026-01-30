@@ -143,7 +143,7 @@ Plans:
 - Integer phases (9, 10, ...): Planned milestone work
 - Decimal phases (9.1, 9.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 9: Platform Brief & Containerization** - Infrastructure docs and production Docker setup
+- [x] **Phase 9: Platform Brief & Containerization** - Infrastructure docs and production Docker setup
 - [ ] **Phase 10: Database Migration** - Tenant isolation with dual ORM on shared PostgreSQL
 - [ ] **Phase 11: Auth & UI Migration** - Platform SDK auth and UI component swap
 - [ ] **Phase 12: API Proxy Layer** - Next.js gateway proxying to internal Python backend
@@ -161,13 +161,14 @@ Plans:
   2. Running `docker compose up` starts FastAPI, ARQ worker, and Redis as healthy containers on an internal-only network
   3. Each container responds to a health check endpoint that container orchestration tools can poll
   4. Backend services are not reachable from the public internet (internal network only)
-**Plans:** 4 plans
+**Status**: Complete
+**Completed**: 2026-01-30
 
 Plans:
-- [ ] 09-01-PLAN.md -- Dockerfile + .dockerignore (multi-stage build, non-root user)
-- [ ] 09-02-PLAN.md -- Health check endpoints (liveness + readiness)
-- [ ] 09-03-PLAN.md -- Docker Compose profiles + GitHub Actions CI
-- [ ] 09-04-PLAN.md -- Platform infrastructure brief + entrypoint script
+- [x] 09-01-PLAN.md -- Dockerfile + .dockerignore (multi-stage build, non-root user)
+- [x] 09-02-PLAN.md -- Health check endpoints (liveness + readiness)
+- [x] 09-03-PLAN.md -- Docker Compose profiles + GitHub Actions CI
+- [x] 09-04-PLAN.md -- Platform infrastructure brief + entrypoint script
 
 ### Phase 10: Database Migration
 **Goal**: All application data is tenant-isolated on a shared PostgreSQL database with both Drizzle and SQLAlchemy accessing the same schema
@@ -240,7 +241,7 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 -> 14
 | 6. Smart Regeneration | v1.0 | 7/7 | Complete | 2026-01-29 |
 | 7. Export & Polish | v1.0 | 5/5 | Complete | 2026-01-29 |
 | 8. Admin Debug Mode | v1.0 | 2/2 | Complete | 2026-01-29 |
-| 9. Platform Brief & Containerization | v2.0 | 0/TBD | Not started | - |
+| 9. Platform Brief & Containerization | v2.0 | 4/4 | Complete | 2026-01-30 |
 | 10. Database Migration | v2.0 | 0/TBD | Not started | - |
 | 11. Auth & UI Migration | v2.0 | 0/TBD | Not started | - |
 | 12. API Proxy Layer | v2.0 | 0/TBD | Not started | - |
@@ -249,4 +250,4 @@ Phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 -> 14
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-30 (v2.0 milestone roadmap created)*
+*Last updated: 2026-01-30 (Phase 9 complete)*

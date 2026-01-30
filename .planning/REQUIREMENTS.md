@@ -40,12 +40,12 @@ Requirements for deploying to MadeByKav platform. Each maps to roadmap phases.
 
 ### Backend Containerization
 
-- [ ] **DOCK-01**: Production Dockerfile exists for FastAPI backend service
-- [ ] **DOCK-02**: Production Dockerfile exists for ARQ worker service
-- [ ] **DOCK-03**: Redis service is configured for production use
-- [ ] **DOCK-04**: Docker Compose file orchestrates all backend services (FastAPI + ARQ + Redis)
-- [ ] **DOCK-05**: Backend services are on internal network only (not exposed to public internet)
-- [ ] **DOCK-06**: Health check endpoints exist for container orchestration
+- [x] **DOCK-01**: Production Dockerfile exists for FastAPI backend service
+- [x] **DOCK-02**: Production Dockerfile exists for ARQ worker service
+- [x] **DOCK-03**: Redis service is configured for production use
+- [x] **DOCK-04**: Docker Compose file orchestrates all backend services (FastAPI + ARQ + Redis)
+- [x] **DOCK-05**: Backend services are on internal network only (not exposed to public internet)
+- [x] **DOCK-06**: Health check endpoints exist for container orchestration
 
 ### API Proxy Layer
 
@@ -63,10 +63,10 @@ Requirements for deploying to MadeByKav platform. Each maps to roadmap phases.
 
 ### Platform Brief
 
-- [ ] **BRIEF-01**: Infrastructure requirements document describes all services needed on the platform
-- [ ] **BRIEF-02**: Document includes Docker container specifications (images, ports, volumes, env vars)
-- [ ] **BRIEF-03**: Document includes networking requirements (internal service communication)
-- [ ] **BRIEF-04**: Document includes environment variable configuration for all services
+- [x] **BRIEF-01**: Infrastructure requirements document describes all services needed on the platform
+- [x] **BRIEF-02**: Document includes Docker container specifications (images, ports, volumes, env vars)
+- [x] **BRIEF-03**: Document includes networking requirements (internal service communication)
+- [x] **BRIEF-04**: Document includes environment variable configuration for all services
 
 ## Future Requirements
 
@@ -121,12 +121,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-02 | Phase 11 | Pending |
 | UI-03 | Phase 11 | Pending |
 | UI-04 | Phase 11 | Pending |
-| DOCK-01 | Phase 9 | Pending |
-| DOCK-02 | Phase 9 | Pending |
-| DOCK-03 | Phase 9 | Pending |
-| DOCK-04 | Phase 9 | Pending |
-| DOCK-05 | Phase 9 | Pending |
-| DOCK-06 | Phase 9 | Pending |
+| DOCK-01 | Phase 9 | Complete |
+| DOCK-02 | Phase 9 | Complete |
+| DOCK-03 | Phase 9 | Complete |
+| DOCK-04 | Phase 9 | Complete |
+| DOCK-05 | Phase 9 | Complete |
+| DOCK-06 | Phase 9 | Complete |
 | PROXY-01 | Phase 12 | Pending |
 | PROXY-02 | Phase 12 | Pending |
 | PROXY-03 | Phase 12 | Pending |
@@ -135,10 +135,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-02 | Phase 13 | Pending |
 | CFG-03 | Phase 13 | Pending |
 | CFG-04 | Phase 13 | Pending |
-| BRIEF-01 | Phase 9 | Pending |
-| BRIEF-02 | Phase 9 | Pending |
-| BRIEF-03 | Phase 9 | Pending |
-| BRIEF-04 | Phase 9 | Pending |
+| BRIEF-01 | Phase 9 | Complete |
+| BRIEF-02 | Phase 9 | Complete |
+| BRIEF-03 | Phase 9 | Complete |
+| BRIEF-04 | Phase 9 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 36 total
