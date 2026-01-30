@@ -59,6 +59,10 @@ COPY --chown=appuser:appuser backend/app /app/app
 COPY --chown=appuser:appuser backend/alembic /app/alembic
 COPY --chown=appuser:appuser backend/alembic.ini /app/alembic.ini
 
+# Copy entrypoint script (runs migrations before starting the app)
+COPY --chown=appuser:appuser backend/scripts/entrypoint.sh /app/scripts/entrypoint.sh
+RUN chmod +x /app/scripts/entrypoint.sh
+
 # Create uploads directory for file processing (owned by appuser)
 RUN mkdir -p /app/uploads && chown appuser:appuser /app/uploads
 
@@ -67,6 +71,9 @@ USER appuser
 
 # Document the port (informational only, does not publish)
 EXPOSE 8000
+
+# Entrypoint runs Alembic migrations, then execs the command from docker-compose
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
 
 # No CMD -- docker-compose provides the command:
 #   API:    uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
