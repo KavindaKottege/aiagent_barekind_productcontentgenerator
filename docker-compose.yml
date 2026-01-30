@@ -1,9 +1,41 @@
-version: '3.9'
+# ==============================================================================
+# Docker Compose -- SEO Content Generator
+#
+# Usage:
+#   Dev:  docker compose --profile dev up   (postgres, pgadmin, redis)
+#   Prod: docker compose --profile prod up  (api, worker, redis)
+#
+# Redis starts with ALL profiles (no profiles key).
+# Prod services have NO port mappings -- they are only reachable within
+# the Docker network. The platform reverse proxy routes traffic to the API.
+# ==============================================================================
 
 services:
+  # ----------------------------------------------------------------------------
+  # Redis -- shared across dev and prod (no profiles key)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: cg-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ----------------------------------------------------------------------------
+  # PostgreSQL -- dev only
+  # ----------------------------------------------------------------------------
   postgres:
     image: postgres:16
-    container_name: dev_postgres
+    container_name: cg-postgres
+    profiles: ["dev"]
     environment:
       POSTGRES_USER: devuser
       POSTGRES_PASSWORD: devpassword
@@ -18,36 +50,86 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - backend
 
-  redis:
-    image: redis:7-alpine
-    container_name: dev_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
+  # ----------------------------------------------------------------------------
+  # pgAdmin -- dev only
+  # ----------------------------------------------------------------------------
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: dev_pgadmin
+    container_name: cg-pgadmin
+    profiles: ["dev"]
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: "False"
     ports:
       - "5050:80"
     depends_on:
       - postgres
     restart: unless-stopped
+    networks:
+      - backend
+
+  # ----------------------------------------------------------------------------
+  # API -- prod only (no port mapping, internal only)
+  # ----------------------------------------------------------------------------
+  api:
+    image: ghcr.io/kavindakottege/madebykav_seocontentgenerator:latest
+    container_name: cg-api
+    profiles: ["prod"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - backend
+    volumes:
+      - uploads_data:/app/uploads
+
+  # ----------------------------------------------------------------------------
+  # Worker -- prod only (no port mapping, internal only)
+  # ----------------------------------------------------------------------------
+  worker:
+    image: ghcr.io/kavindakottege/madebykav_seocontentgenerator:latest
+    container_name: cg-worker
+    profiles: ["prod"]
+    command: ["arq", "app.workers.worker_settings.WorkerSettings"]
+    env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "arq", "app.workers.worker_settings.WorkerSettings", "--check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
 
 volumes:
+  redis_data:
+    driver: local
   postgres_data:
     driver: local
-  redis_data:
+  uploads_data:
     driver: local
