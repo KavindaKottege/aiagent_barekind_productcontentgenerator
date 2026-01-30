@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-30)
 ## Current Position
 
 Phase: 9 of 14 (Platform Brief & Containerization)
-Plan: 2 of 4 in current phase
+Plan: 2 of 4 in current phase (09-01, 09-02 complete)
 Status: In progress
-Last activity: 2026-01-30 -- Completed 09-02-PLAN.md (Health Check Endpoints)
+Last activity: 2026-01-30 -- Completed 09-01-PLAN.md (Backend Dockerfile)
 
 Progress: [########..] 80% (v1.0 complete, v2.0 phase 9 in progress)
 
@@ -62,6 +62,10 @@ Recent decisions affecting current work:
 
 ### Phase 9 Decisions
 
+- DOCK-IMAGE-PATTERN: Single multi-stage image serves both API and worker
+- DOCK-BASE-IMAGE: python:3.13-slim-bookworm (not Alpine, due to C extensions)
+- DOCK-CHOWN-STRATEGY: Use COPY --chown instead of RUN chown -R (40% size reduction)
+- DOCK-NO-CMD: No CMD in Dockerfile; docker-compose provides per-service command
 - DOCK-06-timeout: 5-second timeout for DB and Redis health checks
 - DOCK-06-health-first: Health router registered first in include_router order
 
@@ -79,10 +83,10 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed 09-02-PLAN.md (Health Check Endpoints)
+Stopped at: Completed 09-01-PLAN.md (Backend Dockerfile)
 Resume file: None
 Next: Execute 09-03-PLAN.md
 
 ---
 *State initialized: 2026-01-22*
-*Last updated: 2026-01-30 (09-02 Health Check Endpoints complete)*
+*Last updated: 2026-01-30 (09-01 Backend Dockerfile complete)*
